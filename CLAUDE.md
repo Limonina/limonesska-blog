@@ -41,9 +41,15 @@ Stick to these variables when adding UI.
 
 ## Assets
 
-- SVG assets: `src/assets/` (processed by Astro's Image component)
+- SVG assets: `src/assets/` (через `import` + `<Image>`) — для всего кроме анимированных иконок
+- UI-иконки меню: `src/assets/icons/` — имена файлов могут быть кириллическими
+- SVG-иконки с hover-анимацией вшиваются инлайново (`<svg>…</svg>` прямо в шаблон), а не через `<Image>`. При обновлении SVG-файлов инлайн в `.astro` нужно обновлять вручную.
 - Favicon/public files: `public/`
 - Import images via `import` + `<Image>` component, not raw `<img src>`
+
+## Interactivity
+
+Vanilla JS помещается в `<script>` блоки внутри `.astro` файлов. Никаких внешних модулей и JS-фреймворков — только прямые DOM-вызовы.
 
 ## Deployment
 

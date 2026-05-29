@@ -1,0 +1,28 @@
+---
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+interface Props {
+  name: string;
+  width?: number;
+  height?: number;
+  class?: string;
+}
+
+const { name, width = 28, height = 28, class: extraClass } = Astro.props;
+
+const iconsDir = join(dirname(fileURLToPath(import.meta.url)), '../assets/icons');
+let svg = '';
+try {
+  svg = readFileSync(join(iconsDir, `${name}.svg`), 'utf-8');
+  svg = svg.replace(/(<svg\b[^>]*)\s+width="[^"]*"/, `$1 width="${width}"`);
+  svg = svg.replace(/(<svg\b[^>]*)\s+height="[^"]*"/, `$1 height="${height}"`);
+  if (extraClass) {
+    svg = svg.replace(/(<svg\b)/, `$1 class="${extraClass}"`);
+  }
+} catch {
+  // icon not found — render nothing
+}
+---
+<Fragment set:html={svg} />
