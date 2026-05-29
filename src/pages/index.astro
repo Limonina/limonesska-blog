@@ -43,8 +43,12 @@ import timeIcon from '../assets/icons/time.svg';
 
         /* --- ШАПКА --- */
         .site-header {
-            width: 100%; display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid #eaeaea; padding: 20px 40px; background: #ffffff;
+            position: fixed; top: 14px; left: 24px; right: 24px; z-index: 100;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 18px 36px; background: rgba(250,250,250,0.75);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-radius: 14px;
+            box-shadow: 0 6px 28px rgba(0,0,0,0.08);
             font-family: var(--font-ui); font-size: var(--size-base);
         }
         .logo-link { display: flex; align-items: center; text-decoration: none; }
@@ -122,7 +126,7 @@ import timeIcon from '../assets/icons/time.svg';
         .menu-item:hover .bracket-right { transform: translateX(0); }
 
         .main-content {
-            max-width: 1600px; margin: 0 auto; width: 100%; padding: 60px 40px;
+            max-width: 1600px; margin: 0 auto; width: 100%; padding: 150px 40px 60px;
         }
 
         /* --- ВЕРХНИЙ БЛОК --- */
@@ -258,7 +262,7 @@ import timeIcon from '../assets/icons/time.svg';
             .popular-card { height: 500px; }
         }
         @media (max-width: 768px) {
-            .main-content { padding: 40px 20px; }
+            .main-content { padding: 110px 20px 40px; }
             .top-section { grid-template-columns: 1fr; gap: 40px; }
             .editors-column { grid-column: span 1; grid-template-columns: 1fr; }
             .quote-widget { grid-column: span 1; }
