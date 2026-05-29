@@ -1,16 +1,103 @@
 ---
+const year = new Date().getFullYear();
 ---
 
 <footer class="site-footer">
-    <div>© 2026 limonesska | Цифровой сад</div>
-    <div>Сделано с любовью и кодом</div>
+    <div class="site-footer-inner">
+        <div class="footer-brand">
+            <h2 class="footer-heading">Хочешь следить за садом?</h2>
+            <a class="footer-sub" href="/rss.xml">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 11a9 9 0 0 1 9 9h2.5A11.5 11.5 0 0 0 4 8.5V11Zm0 5a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm0-9a16 16 0 0 1 16 16h2.5A18.5 18.5 0 0 0 4 4.5V7Z"/></svg>
+                Подписаться через RSS
+            </a>
+
+            <div class="footer-social">
+                <a href="#" aria-label="Telegram" title="Telegram">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M21.94 4.27a1.3 1.3 0 0 0-1.35-.2L3.3 10.74c-.98.38-.95 1.79.05 2.13l4.3 1.46 1.64 5.14a1 1 0 0 0 1.65.42l2.4-2.27 4.3 3.16a1.3 1.3 0 0 0 2.04-.83l3.06-14.5a1.3 1.3 0 0 0-.4-1.18ZM9.7 14.1l-.4 3.9-1.2-3.86 9.2-6.1L9.7 14.1Z"/></svg>
+                </a>
+                <a href="#" aria-label="Instagram" title="Instagram">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+                </a>
+                <a href="#" aria-label="GitHub" title="GitHub">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.1-1.47-1.1-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.56 9.56 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg>
+                </a>
+            </div>
+
+            <div class="footer-copy">© {year} limonesska · Цифровой сад</div>
+        </div>
+
+        <nav class="footer-nav">
+            <div class="footer-col">
+                <div class="footer-col-title">Разделы</div>
+                <a href="/diary">Дневник</a>
+                <a href="/projects">Проекты</a>
+                <a href="/blog">Блог</a>
+                <a href="/library">Библиотека</a>
+                <a href="/notes">Заметки</a>
+            </div>
+            <div class="footer-col">
+                <div class="footer-col-title">Ещё</div>
+                <a href="/about">Обо мне</a>
+                <a href="/now">Now</a>
+                <a href="/colophon">Колофон</a>
+                <a href="/tools">Инструментарий</a>
+                <a href="/glossary">Глоссарий</a>
+                <a href="/contacts">Контакты</a>
+            </div>
+        </nav>
+    </div>
+
+    <div class="footer-legal">
+        <a href="/privacy">Политика конфиденциальности</a>
+        <a href="/cookie">Cookie</a>
+        <span class="footer-legal-tail">Сделано с любовью и кодом</span>
+    </div>
 </footer>
 
 <style is:global>
-    /* ПОДВАЛ */
-    .site-footer { font-family: var(--font-ui); width: 100%; border-top: 1px solid var(--color-border); padding-top: 30px; display: flex; justify-content: space-between; font-size: var(--size-small); color: var(--color-text-faint); }
+    .site-footer { background: #f3f1ee; border-top: 1px solid var(--color-border); font-family: var(--font-ui); }
+    .site-footer-inner {
+        max-width: 1600px; margin: 0 auto; padding: 100px 40px 48px;
+        display: grid; grid-template-columns: 1.5fr 1fr; gap: 56px; align-items: start;
+    }
+
+    .footer-heading {
+        font-family: var(--font-display); font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 700;
+        color: var(--color-text); line-height: 1.1; margin: 0 0 22px; max-width: 420px;
+    }
+    .footer-sub {
+        display: inline-flex; align-items: center; gap: 9px;
+        font-family: var(--font-ui); font-size: var(--size-base); font-weight: 600;
+        color: var(--color-text); text-decoration: none;
+        border: 1px solid var(--color-text); border-radius: 999px; padding: 12px 22px;
+        transition: background 0.2s, color 0.2s;
+    }
+    .footer-sub:hover { background: var(--color-text); color: var(--color-bg); }
+
+    .footer-social { display: flex; gap: 16px; margin: 30px 0 18px; }
+    .footer-social a { color: var(--color-text-muted); transition: color 0.2s, transform 0.2s; display: flex; }
+    .footer-social a:hover { color: var(--color-accent); transform: translateY(-2px); }
+    .footer-copy { font-size: var(--size-small); color: var(--color-text-faint); }
+
+    .footer-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+    .footer-col { display: flex; flex-direction: column; gap: 12px; }
+    .footer-col-title { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: var(--color-text); margin-bottom: 6px; }
+    .footer-col a { font-family: var(--font-ui); font-size: var(--size-base); color: var(--color-text-muted); text-decoration: none; transition: color 0.2s, padding-left 0.2s; width: fit-content; }
+    .footer-col a:hover { color: var(--color-accent); padding-left: 4px; }
+
+    .footer-legal {
+        max-width: 1600px; margin: 0 auto; padding: 24px 40px;
+        border-top: 1px solid var(--color-border);
+        display: flex; gap: 24px; align-items: center;
+        font-size: var(--size-small); color: var(--color-text-faint);
+    }
+    .footer-legal a { color: var(--color-text-faint); text-decoration: none; transition: color 0.2s; }
+    .footer-legal a:hover { color: var(--color-accent); }
+    .footer-legal-tail { margin-left: auto; }
 
     @media (max-width: 768px) {
-        .site-footer { flex-direction: column; gap: 10px; text-align: center; }
+        .site-footer-inner { grid-template-columns: 1fr; gap: 44px; padding: 70px 20px 32px; }
+        .footer-legal { flex-wrap: wrap; gap: 12px 20px; padding: 20px; }
+        .footer-legal-tail { margin-left: 0; width: 100%; }
     }
 </style>

@@ -1,0 +1,42 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import EntryList from '../../components/EntryList.astro';
+
+export async function getStaticPaths() {
+  const blog = await getCollection('blog');
+  const notes = await getCollection('notes');
+  const all = [
+    ...blog.map((e) => ({ e, kind: 'Статья', base: '/blog' })),
+    ...notes.map((e) => ({ e, kind: 'Заметка', base: '/notes' })),
+  ];
+
+  const subs = new Set<string>();
+  all.forEach(({ e }) => { if (e.data.subcategory) subs.add(e.data.subcategory); });
+
+  const fmt = (d: Date) => d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  return [...subs].map((subcategory) => ({
+    params: { subcategory },
+    props: {
+      subcategory,
+      items: all
+        .filter(({ e }) => e.data.subcategory === subcategory)
+        .sort((a, b) => +b.e.data.pubDate - +a.e.data.pubDate)
+        .map(({ e, kind, base }) => ({
+          href: `${base}/${e.id}`,
+          title: e.data.title,
+          description: e.data.description,
+          date: fmt(e.data.pubDate),
+          kind,
+        })),
+    },
+  }));
+}
+
+const { subcategory, items } = Astro.props;
+---
+
+<BaseLayout title={`${subcategory} | limonesska`}>
+    <EntryList heading={subcategory} subtitle="Подрубрика" items={items} />
+</BaseLayout>

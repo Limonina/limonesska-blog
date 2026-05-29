@@ -1,0 +1,66 @@
+---
+interface Item {
+  href: string;
+  title: string;
+  description?: string;
+  date: string;
+  kind: string; // "Статья" / "Заметка"
+}
+
+interface Props {
+  heading: string;
+  subtitle?: string;
+  items: Item[];
+}
+
+const { heading, subtitle, items } = Astro.props;
+---
+
+<div class="entry-index">
+    <h1 class="entry-index-title">{heading}</h1>
+    {subtitle && <p class="entry-index-subtitle">{subtitle}</p>}
+
+    <div class="entry-list">
+        {items.map((it) => (
+            <a href={it.href} class="entry-list-item">
+                <div class="entry-list-meta">
+                    <span>{it.kind}</span>
+                    <span class="entry-list-dot">•</span>
+                    <span>{it.date}</span>
+                </div>
+                <h2 class="entry-list-heading">{it.title}</h2>
+                {it.description && <p class="entry-list-desc">{it.description}</p>}
+            </a>
+        ))}
+    </div>
+</div>
+
+<style is:global>
+    .entry-index { max-width: 760px; margin: 0 auto; }
+    .entry-index-title {
+        font-family: var(--font-display); font-size: var(--size-mega); font-weight: 700;
+        line-height: 1.1; letter-spacing: -1px; margin: 0 0 10px; color: var(--color-text);
+    }
+    .entry-index-subtitle { font-family: var(--font-vollkorn); font-size: var(--size-base); color: var(--color-text-soft); margin: 0 0 50px; }
+
+    .entry-list { display: flex; flex-direction: column; }
+    .entry-list-item {
+        display: block; text-decoration: none; color: inherit;
+        padding: 28px 0; border-top: 1px solid var(--color-border); transition: padding 0.2s;
+    }
+    .entry-list-item:last-child { border-bottom: 1px solid var(--color-border); }
+    .entry-list-item:hover { padding-left: 8px; }
+    .entry-list-item:hover .entry-list-heading { color: var(--color-accent); }
+
+    .entry-list-meta {
+        font-family: var(--font-ui); font-size: var(--size-small); color: var(--color-text-faint);
+        text-transform: uppercase; letter-spacing: 0.5px;
+        display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+    }
+    .entry-list-dot { color: #ccc; }
+    .entry-list-heading {
+        font-family: var(--font-vollkorn); font-size: var(--size-h3); font-weight: 700;
+        line-height: 1.3; margin: 0; color: var(--color-text); transition: color 0.2s;
+    }
+    .entry-list-desc { font-family: var(--font-vollkorn); font-size: var(--size-base); color: var(--color-text-soft); line-height: 1.5; margin: 8px 0 0; }
+</style>

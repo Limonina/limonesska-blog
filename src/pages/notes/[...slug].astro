@@ -19,9 +19,14 @@ const readingTime = Math.max(1, Math.round(words / 150));
 
 <PostLayout
     title={note.data.title}
-    pubDate={note.data.pubDate}
-    tags={note.data.tags}
     description={note.data.description}
+    pubDate={note.data.pubDate}
+    updatedDate={note.data.updatedDate}
+    tags={note.data.tags}
+    category={note.data.category}
+    subcategory={note.data.subcategory}
+    stage={note.data.stage}
+    audience={note.data.audience}
     readingTime={readingTime}
     backHref="/notes"
     backLabel="Все заметки"

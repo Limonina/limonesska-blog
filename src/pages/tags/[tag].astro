@@ -1,0 +1,51 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import EntryList from '../../components/EntryList.astro';
+
+export async function getStaticPaths() {
+  const blog = await getCollection('blog');
+  const notes = await getCollection('notes');
+  const all = [
+    ...blog.map((e) => ({ e, kind: 'Статья', base: '/blog' })),
+    ...notes.map((e) => ({ e, kind: 'Заметка', base: '/notes' })),
+  ];
+
+  const tags = new Set<string>();
+  all.forEach(({ e }) => e.data.tags.forEach((t) => tags.add(t)));
+
+  const fmt = (d: Date) => d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  return [...tags].map((tag) => ({
+    params: { tag },
+    props: {
+      tag,
+      items: all
+        .filter(({ e }) => e.data.tags.includes(tag))
+        .sort((a, b) => +b.e.data.pubDate - +a.e.data.pubDate)
+        .map(({ e, kind, base }) => ({
+          href: `${base}/${e.id}`,
+          title: e.data.title,
+          description: e.data.description,
+          date: fmt(e.data.pubDate),
+          kind,
+        })),
+    },
+  }));
+}
+
+const { tag, items } = Astro.props;
+
+const plural = (n: number, one: string, few: string, many: string) => {
+  const m10 = n % 10;
+  const m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return one;
+  if (m10 >= 2 && m10 <= 4 && !(m100 >= 12 && m100 <= 14)) return few;
+  return many;
+};
+const word = plural(items.length, 'запись', 'записи', 'записей');
+---
+
+<BaseLayout title={`#${tag} | limonesska`}>
+    <EntryList heading={`#${tag}`} subtitle={`Всё по тегу — ${items.length} ${word}`} items={items} />
+</BaseLayout>

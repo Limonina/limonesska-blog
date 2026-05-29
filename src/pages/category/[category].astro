@@ -1,0 +1,42 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import EntryList from '../../components/EntryList.astro';
+
+export async function getStaticPaths() {
+  const blog = await getCollection('blog');
+  const notes = await getCollection('notes');
+  const all = [
+    ...blog.map((e) => ({ e, kind: 'Статья', base: '/blog' })),
+    ...notes.map((e) => ({ e, kind: 'Заметка', base: '/notes' })),
+  ];
+
+  const cats = new Set<string>();
+  all.forEach(({ e }) => { if (e.data.category) cats.add(e.data.category); });
+
+  const fmt = (d: Date) => d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  return [...cats].map((category) => ({
+    params: { category },
+    props: {
+      category,
+      items: all
+        .filter(({ e }) => e.data.category === category)
+        .sort((a, b) => +b.e.data.pubDate - +a.e.data.pubDate)
+        .map(({ e, kind, base }) => ({
+          href: `${base}/${e.id}`,
+          title: e.data.title,
+          description: e.data.description,
+          date: fmt(e.data.pubDate),
+          kind,
+        })),
+    },
+  }));
+}
+
+const { category, items } = Astro.props;
+---
+
+<BaseLayout title={`${category} | limonesska`}>
+    <EntryList heading={category} subtitle="Рубрика" items={items} />
+</BaseLayout>

@@ -4,26 +4,42 @@ import PostLayout from '../../layouts/PostLayout.astro';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
+  const notes = await getCollection('notes');
   return posts.map((post) => ({
     params: { slug: post.id },
-    props: { post },
+    props: {
+      post,
+      relatedNotes: notes
+        .filter((n) => n.data.post === post.id)
+        .sort((a, b) => +b.data.pubDate - +a.data.pubDate)
+        .map((n) => ({
+          href: `/notes/${n.id}`,
+          title: n.data.title,
+          description: n.data.description,
+        })),
+    },
   }));
 }
 
-const { post } = Astro.props;
+const { post, relatedNotes } = Astro.props;
 const { Content } = await render(post);
 
-// Оценка времени чтения (~150 слов/мин для русского текста)
 const words = post.body ? post.body.trim().split(/\s+/).length : 0;
 const readingTime = Math.max(1, Math.round(words / 150));
 ---
 
 <PostLayout
     title={post.data.title}
-    pubDate={post.data.pubDate}
-    tags={post.data.tags}
     description={post.data.description}
+    pubDate={post.data.pubDate}
+    updatedDate={post.data.updatedDate}
+    tags={post.data.tags}
+    category={post.data.category}
+    subcategory={post.data.subcategory}
+    stage={post.data.stage}
+    audience={post.data.audience}
     readingTime={readingTime}
+    relatedNotes={relatedNotes}
 >
     <Content />
 </PostLayout>

@@ -1,125 +1,547 @@
 ---
 import BaseLayout from './BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+
+interface RelatedNote {
+  href: string;
+  title: string;
+  description?: string;
+}
 
 interface Props {
   title: string;
-  pubDate: Date;
-  tags?: string[];
   description?: string;
+  pubDate: Date;
+  updatedDate?: Date;
+  tags?: string[];
+  category?: string;
+  subcategory?: string;
+  stage?: 'base' | 'advanced' | 'max';
+  audience?: string;
   readingTime?: number;
   backHref?: string;
   backLabel?: string;
+  relatedNotes?: RelatedNote[];
 }
 
 const {
   title,
+  description,
   pubDate,
+  updatedDate,
   tags = [],
+  category,
+  subcategory,
+  stage,
+  audience,
   readingTime,
   backHref = '/blog',
   backLabel = 'Все статьи',
+  relatedNotes = [],
 } = Astro.props;
 
-const formattedDate = pubDate.toLocaleDateString('ru-RU', {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-});
+const fmt = (d: Date) =>
+  d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+
+const enc = (s: string) => encodeURIComponent(s);
+
+const slug = Astro.url.pathname;
 ---
 
 <BaseLayout title={`${title} | limonesska`}>
-    <article class="post">
-        <header class="post-header">
-            <a href={backHref} class="post-back">← {backLabel}</a>
-            <h1 class="post-title">{title}</h1>
-            <div class="post-meta">
-                <span>{formattedDate}</span>
-                {readingTime && (
-                    <>
-                        <span class="post-meta-dot">•</span>
-                        <span>{readingTime} мин чтения</span>
-                    </>
-                )}
-            </div>
-            {tags.length > 0 && (
-                <div class="post-tags">
-                    {tags.map((tag) => <span class="post-tag-pill">#{tag}</span>)}
-                </div>
-            )}
-        </header>
+    <aside class="post-toc" id="post-toc" hidden>
+        <button class="post-toc-toggle" id="post-toc-toggle" aria-expanded="false">
+            <svg class="post-toc-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+            Содержание
+        </button>
+        <nav class="post-toc-nav" id="post-toc-nav"></nav>
+    </aside>
 
-        <div class="prose">
+    <article class="post">
+        <a href={backHref} class="post-back"><span class="post-back-arrow">←</span><span>{backLabel}</span></a>
+
+        {(category || stage || subcategory) && (
+            <div class="post-metainfo">
+                {category && <a class="post-rubric" href={`/category/${enc(category)}`}>{category}</a>}
+                {stage && <Icon name={`star_${stage}`} width={14} height={14} class="post-stage" />}
+                {subcategory && <a class="post-subrubric" href={`/subcategory/${enc(subcategory)}`}>{subcategory}</a>}
+            </div>
+        )}
+
+        <h1 class="post-title">{title}</h1>
+        {description && <p class="post-desc">{description}</p>}
+
+        <hr class="post-divider" />
+
+        <div class="post-meta-cols">
+            <div class="post-meta-tags">
+                {tags.map((t) => <a class="post-tag" href={`/tags/${enc(t)}`}>#{t}</a>)}
+            </div>
+            <div class="post-meta-dates">
+                <div>Опубликовано: {fmt(pubDate)}</div>
+                {updatedDate && <div>Обновлено: {fmt(updatedDate)}</div>}
+                {readingTime && <div>{readingTime} мин чтения</div>}
+            </div>
+        </div>
+
+        {audience && (
+            <div class="post-audience">
+                <span class="post-audience-label">Предполагаемая аудитория</span>
+                <span class="post-audience-text">{audience}</span>
+            </div>
+        )}
+
+        <div class="prose" id="post-prose">
             <slot />
         </div>
+
+        <section class="post-footnotes" id="post-footnotes" hidden>
+            <ol class="post-footnotes-list" id="post-footnotes-list"></ol>
+        </section>
+
+        <section class="post-backlinks">
+            {relatedNotes.length > 0 && (
+                <>
+                    <h2 class="post-backlinks-title">Заметки к этому посту</h2>
+                    <div class="post-backlinks-grid">
+                        {relatedNotes.map((n) => (
+                            <a href={n.href} class="backlink-card">
+                                <span class="backlink-icon"></span>
+                                <span class="backlink-text">
+                                    <span class="backlink-card-title">{n.title}</span>
+                                    {n.description && <span class="backlink-card-desc">{n.description}</span>}
+                                </span>
+                            </a>
+                        ))}
+                    </div>
+                </>
+            )}
+
+            <div class={relatedNotes.length > 0 ? 'post-likes post-likes--divided' : 'post-likes'}>
+                <button class="like-btn" id="like-btn" data-slug={slug} aria-pressed="false" aria-label="Нравится">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+                </button>
+                <span class="like-count" id="like-count">0</span>
+                <span class="like-label">нравится</span>
+            </div>
+        </section>
     </article>
 </BaseLayout>
 
 <style is:global>
-    .post { max-width: 760px; margin: 0 auto; }
+    /* ============ КАРКАС ============ */
+    .post { max-width: 760px; margin: 0 auto; position: relative; }
 
-    /* --- ШАПКА ПОСТА --- */
-    .post-header { border-bottom: 1px solid var(--color-border); padding-bottom: 30px; margin-bottom: 40px; }
     .post-back {
         font-family: var(--font-ui); font-size: var(--size-small); color: var(--color-text-muted);
         text-decoration: none; text-transform: uppercase; letter-spacing: 0.5px;
-        display: inline-block; margin-bottom: 24px; transition: color 0.2s;
+        display: inline-flex; align-items: center; gap: 7px; margin-bottom: 24px;
+        transition: color 0.2s, gap 0.25s ease;
     }
-    .post-back:hover { color: var(--color-accent); }
+    .post-back:hover { color: var(--color-accent); gap: 14px; }
+    .post-back > span { display: inline-flex; align-items: center; line-height: 1; }
+    .post-back-arrow { font-size: 1.25em; line-height: 1; transform: translateY(-0.06em); }
+
+    /* ---- Метаинфо ---- */
+    .post-metainfo {
+        display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+        font-family: var(--font-ui); font-size: var(--size-small);
+        text-transform: uppercase; letter-spacing: 1px; font-weight: 700;
+    }
+    .post-rubric, .post-subrubric {
+        text-decoration: none; padding-bottom: 3px;
+        background-image: linear-gradient(var(--color-accent), var(--color-accent)), linear-gradient(var(--color-accent), var(--color-accent));
+        background-position: left bottom, right bottom;
+        background-size: 0% 1.5px, 0% 1.5px; background-repeat: no-repeat;
+        transition: background-size 0.4s ease, color 0.3s ease;
+    }
+    .post-rubric { color: var(--color-accent); }
+    .post-subrubric { color: var(--color-text); }
+    .post-rubric:hover, .post-subrubric:hover { background-size: 50% 1.5px, 50% 1.5px; }
+    .post-subrubric:hover { color: var(--color-accent); }
+    .post-stage { display: block; }
+
     .post-title {
         font-family: var(--font-display); font-size: var(--size-mega);
-        font-weight: 700; line-height: 1.1; letter-spacing: -1px; margin: 0 0 18px; color: var(--color-text);
+        font-weight: 700; line-height: 1.1; letter-spacing: -1px; margin: 0 0 16px; color: var(--color-text);
     }
-    .post-meta {
-        font-family: var(--font-ui); font-size: var(--size-small); color: var(--color-text-faint);
-        text-transform: uppercase; letter-spacing: 0.5px;
-        display: flex; align-items: center; gap: 8px; margin-bottom: 18px;
+    .post-desc {
+        font-family: var(--font-vollkorn); font-size: var(--size-medium);
+        color: var(--color-text-soft); line-height: 1.5; margin: 0;
     }
-    .post-meta-dot { color: #ccc; }
-    .post-tags { display: flex; gap: 8px; flex-wrap: wrap; }
-    .post-tag-pill {
-        font-family: var(--font-ui); font-size: var(--size-small);
-        background: var(--color-surface); border: 1px solid var(--color-border);
-        padding: 6px 14px; border-radius: 20px; color: var(--color-text-soft);
+    .post-divider { border: none; border-top: 1px solid var(--color-border); margin: 28px 0; }
+
+    /* ---- Теги | даты ---- */
+    .post-meta-cols { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-bottom: 28px; }
+    .post-meta-tags { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; line-height: 1.2; }
+    .post-meta-tags .post-tag {
+        font-family: var(--font-vollkorn); font-size: var(--size-small);
+        color: var(--color-accent); font-weight: 600; text-decoration: none; padding-bottom: 3px;
+        background-image: linear-gradient(var(--color-accent), var(--color-accent)), linear-gradient(var(--color-accent), var(--color-accent));
+        background-position: left bottom, right bottom;
+        background-size: 0% 1.5px, 0% 1.5px; background-repeat: no-repeat;
+        transition: background-size 0.4s ease; line-height: 1.2; padding-bottom: 1px;
+    }
+    .post-meta-tags .post-tag:hover { background-size: 50% 1.5px, 50% 1.5px; }
+    .post-meta-dates {
+        font-family: var(--font-vollkorn); font-size: var(--size-small);
+        color: var(--color-text-muted); text-align: right; line-height: 1.6;
     }
 
-    /* --- ТИПОГРАФИКА КОНТЕНТА --- */
-    .prose { font-family: var(--font-vollkorn); color: var(--color-text); line-height: 1.7; }
+    /* ---- Аудитория: выпуклый неоморфизм ---- */
+    .post-audience {
+        display: flex; gap: 20px; align-items: baseline;
+        background: var(--color-bg); border-radius: 16px; padding: 20px 24px; margin-bottom: 44px;
+        box-shadow: 6px 6px 16px rgba(0,0,0,0.08), -6px -6px 16px rgba(255,255,255,0.95);
+    }
+    .post-audience-label {
+        font-family: var(--font-ui); font-size: var(--size-small); font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-link);
+        flex-shrink: 0; white-space: nowrap; padding-top: 2px;
+    }
+    .post-audience-text { font-family: var(--font-vollkorn); font-size: var(--size-base); color: var(--color-text-soft); line-height: 1.5; }
+
+    /* ============ TOC (у левого края, фиксированное) ============ */
+    .post-toc {
+        position: fixed; left: 56px; top: 170px; width: 200px; z-index: 50;
+        font-family: var(--font-ui);
+    }
+    .post-toc-toggle {
+        display: flex; align-items: center; gap: 6px; background: none; border: none; cursor: pointer;
+        font-family: var(--font-ui); font-size: var(--size-small); font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text); padding: 0;
+    }
+    .post-toc-caret { transition: transform 0.25s ease; flex-shrink: 0; }
+    .post-toc.is-open .post-toc-caret { transform: rotate(90deg); }
+    .post-toc-nav {
+        margin-top: 14px; border-left: 1px solid var(--color-border);
+        max-height: 0; overflow: hidden; opacity: 0;
+        transition: max-height 0.35s ease, opacity 0.3s ease;
+    }
+    .post-toc.is-open .post-toc-nav { max-height: 70vh; overflow-y: auto; opacity: 1; }
+    .post-toc-nav a {
+        display: block; text-decoration: none; color: var(--color-text-muted);
+        font-size: var(--size-small); line-height: 1.4; padding: 5px 0 5px 14px; transition: color 0.2s;
+    }
+    .post-toc-nav a:hover { color: var(--color-accent); }
+    .post-toc-nav a.lvl-3 { padding-left: 28px; font-size: 0.78rem; }
+
+    /* ============ ТИПОГРАФИКА ============ */
+    .prose { font-family: var(--font-vollkorn); color: var(--color-text); line-height: 1.78; font-size: 1.0625rem; }
     .prose > :first-child { margin-top: 0; }
-
+    .prose > p:first-of-type::first-letter {
+        float: left; font-family: var(--font-display); font-weight: 700;
+        font-size: 3.6em; line-height: 0.74; padding: 0.05em 0.1em 0 0; color: var(--color-text);
+    }
     .prose h2 {
         font-family: var(--font-display); font-size: var(--size-h2); font-weight: 700;
-        line-height: 1.2; margin: 1.8em 0 0.6em; color: var(--color-text);
+        line-height: 1.2; margin: 1.8em 0 0.6em; color: var(--color-text); scroll-margin-top: 110px;
     }
     .prose h3 {
         font-family: var(--font-display); font-size: var(--size-h3); font-weight: 700;
-        line-height: 1.25; margin: 1.5em 0 0.5em; color: var(--color-text);
+        line-height: 1.25; margin: 1.5em 0 0.5em; color: var(--color-text); scroll-margin-top: 110px;
     }
     .prose p { margin: 0 0 1.4em; }
-
-    .prose a {
-        color: var(--color-accent); text-decoration: underline; text-underline-offset: 2px;
-    }
-    .prose a:hover { text-decoration: none; }
-
     .prose blockquote {
         border-left: 3px solid var(--color-accent); margin: 1.6em 0;
-        padding: 0.2em 0 0.2em 1.3em; color: var(--color-text-soft); font-style: italic;
+        padding: 0.1em 0 0.1em 1.3em; color: var(--color-text-soft); font-style: italic;
     }
-
-    .prose ul, .prose ol { padding-left: 1.4em; margin: 0 0 1.4em; }
-    .prose li { margin-bottom: 0.5em; }
-
+    .prose blockquote p { margin: 0; }
+    .prose ul { list-style: none; padding-left: 1.7em; margin: 0 0 1.4em; }
+    .prose ul li { position: relative; margin-bottom: 0.6em; }
+    .prose ul li::before {
+        content: ''; position: absolute; left: -1.6em; top: 0.32em; width: 13px; height: 16px;
+        background: url('/icons/item.svg') no-repeat center / contain;
+    }
+    .prose ol { padding-left: 1.5em; margin: 0 0 1.4em; }
+    .prose ol li { margin-bottom: 0.6em; }
     .prose code {
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        background: var(--color-border-soft); padding: 0.15em 0.4em;
-        border-radius: 5px; font-size: 0.9em;
+        background: var(--color-border-soft); padding: 0.15em 0.4em; border-radius: 5px; font-size: 0.9em;
     }
     .prose pre {
         background: var(--color-text); color: var(--color-bg);
         padding: 1.2em 1.4em; border-radius: 12px; overflow-x: auto; margin: 1.6em 0;
     }
     .prose pre code { background: none; padding: 0; color: inherit; }
-
     .prose img { max-width: 100%; height: auto; border-radius: 12px; margin: 1.6em 0; }
     .prose hr { border: none; border-top: 1px solid var(--color-border); margin: 2.5em 0; }
+
+    /* ============ ССЫЛКИ ============ */
+    /* Базовая (обычная) ссылка: акцент + серая линия чуть ниже */
+    .prose a {
+        color: var(--color-accent); text-decoration: none;
+        border-bottom: 1px solid var(--color-border); padding-bottom: 2px;
+        transition: color 0.25s ease, border-color 0.25s ease;
+    }
+    .prose a:hover { border-bottom-color: var(--color-accent); }
+
+    /* Спецссылки — общий контейнер для всплывашки */
+    .prose a[data-link-type] { position: relative; }
+
+    /* Внешняя: акцент + серая линия (как обычная) + коричневый hover */
+    .prose a[data-link-type="external"]:hover { color: var(--color-accent-2); border-bottom-color: var(--color-accent-2); }
+    /* Аннотированная: акцент, БЕЗ линии */
+    .prose a[data-link-type="annotated"] { border-bottom: none; padding-bottom: 0; }
+    /* На свой пост: синяя, без линии */
+    .prose a[data-link-type="internal"] { color: var(--color-link); border-bottom: none; padding-bottom: 0; }
+    /* Цитата: как обычная (акцент + линия) */
+    .prose a[data-link-type="quote"] { /* наследует базовый стиль */ }
+
+    /* ---- Всплывающая карточка ---- */
+    .link-pop {
+        position: absolute; left: 50%; bottom: 100%; transform: translateX(-50%) translateY(8px);
+        margin-bottom: 12px; width: max-content; max-width: 340px;
+        background: var(--color-surface); color: var(--color-text-soft);
+        border: 1px solid var(--color-border); border-radius: 12px; padding: 14px 16px;
+        box-shadow: 0 14px 44px rgba(0,0,0,0.14);
+        font-family: var(--font-vollkorn); font-size: 0.92rem; line-height: 1.5; font-style: normal; white-space: normal;
+        opacity: 0; visibility: hidden; pointer-events: none;
+        transition: opacity 0.45s ease, transform 0.45s ease; transition-delay: 0.08s; z-index: 40;
+    }
+    .prose a[data-link-type]:hover .link-pop { opacity: 1; visibility: visible; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+    /* мостик, чтобы карточка не пропадала при переводе курсора */
+    .link-pop::before { content: ''; position: absolute; top: 100%; left: 0; right: 0; height: 16px; }
+    /* треугольничек по центру вниз к слову */
+    .link-pop::after {
+        content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+        border: 8px solid transparent; border-top-color: var(--color-surface);
+        margin-top: -1px;
+    }
+    /* Вариант «снизу» — когда сверху нет места */
+    .prose a.pop-below .link-pop {
+        bottom: auto; top: 100%; margin-bottom: 0; margin-top: 12px;
+        transform: translateX(-50%) translateY(-8px);
+    }
+    .prose a.pop-below[data-link-type]:hover .link-pop { transform: translateX(-50%) translateY(0); }
+    .prose a.pop-below .link-pop::before { top: auto; bottom: 100%; }
+    .prose a.pop-below .link-pop::after {
+        top: auto; bottom: 100%; margin-top: 0; margin-bottom: -1px;
+        border-top-color: transparent; border-bottom-color: var(--color-surface);
+    }
+    .link-pop-url { font-family: var(--font-ui); font-size: 0.8rem; color: var(--color-text); word-break: break-all; }
+    .link-pop-title { display: block; font-family: var(--font-display); font-weight: 700; color: var(--color-text); font-size: var(--size-base); line-height: 1.3; }
+    .link-pop-byline { display: block; font-family: var(--font-ui); font-size: 0.7rem; color: var(--color-text-muted); margin: 4px 0 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .link-pop-label { display: block; font-family: var(--font-ui); font-size: 0.66rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--color-accent); margin-bottom: 4px; }
+    .link-pop-desc { display: block; margin-top: 6px; color: var(--color-text-muted); }
+    .link-pop-text { display: block; max-height: 180px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--color-border) transparent; padding-right: 6px; }
+    .link-pop-text::-webkit-scrollbar { width: 5px; -webkit-appearance: none; }
+    .link-pop-text::-webkit-scrollbar-track { background: transparent; }
+    .link-pop-text::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+    .link-pop-text::-webkit-scrollbar-button,
+    .link-pop-text::-webkit-scrollbar-button:single-button,
+    .link-pop-text::-webkit-scrollbar-button:vertical:increment,
+    .link-pop-text::-webkit-scrollbar-button:vertical:decrement { display: none; height: 0; width: 0; background: transparent; }
+    .link-pop-quote { display: block; font-style: italic; color: var(--color-text); }
+    .link-pop-quote + .link-pop-source { display: block; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--color-border); font-family: var(--font-ui); font-size: 0.72rem; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* ---- Сноски (синие, один шрифт) ---- */
+    .prose sup[data-note] {
+        color: var(--color-link); cursor: pointer; font-weight: 700;
+        font-family: var(--font-ui); font-size: 0.7rem; vertical-align: super; padding: 0 1px;
+    }
+    .sidenote { position: absolute; left: calc(100% + 32px); width: 210px; font-family: var(--font-vollkorn); font-size: 0.85rem; line-height: 1.5; color: var(--color-text-muted); }
+    .sidenote-num { color: var(--color-link); font-weight: 700; font-family: var(--font-ui); font-size: 0.7rem; vertical-align: super; margin-right: 4px; }
+
+    .post-footnotes { margin-top: 50px; padding-top: 20px; border-top: 1px solid var(--color-border); }
+    .post-footnotes-list { font-family: var(--font-vollkorn); font-size: 0.9rem; color: var(--color-text-soft); line-height: 1.5; padding-left: 1.2em; margin: 0; }
+    .post-footnotes-list li { margin-bottom: 8px; }
+    .post-footnotes-list li::marker { color: var(--color-link); font-family: var(--font-ui); }
+
+    /* ============ БЭКЛИНКИ ============ */
+    .post-backlinks { margin-top: 60px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 18px; padding: 32px 34px; }
+    .post-backlinks-title { font-family: var(--font-display); font-size: var(--size-h3); font-weight: 700; color: var(--color-text); margin: 0 0 22px; }
+    .post-backlinks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .backlink-card { display: flex; gap: 12px; text-decoration: none; color: inherit; border: none; padding: 0; }
+    .backlink-icon { flex-shrink: 0; width: 16px; height: 20px; margin-top: 3px; background: url('/icons/item.svg') no-repeat center / contain; }
+    .backlink-text { display: flex; flex-direction: column; gap: 4px; }
+    .backlink-card-title { font-family: var(--font-display); font-size: var(--size-base); font-weight: 700; line-height: 1.25; color: var(--color-text); transition: color 0.2s; }
+    .backlink-card:hover .backlink-card-title { color: var(--color-accent); }
+    .backlink-card-desc { font-family: var(--font-vollkorn); font-size: 0.9rem; color: var(--color-text-muted); line-height: 1.4; }
+
+    /* ---- Лайк ---- */
+    .post-likes { display: flex; align-items: center; gap: 10px; }
+    .post-likes--divided { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--color-border); }
+    .like-btn { background: none; border: none; cursor: pointer; color: var(--color-text-muted); padding: 4px; display: flex; transition: color 0.2s, transform 0.15s; }
+    .like-btn:hover { color: var(--color-accent); transform: scale(1.12); }
+    .like-btn.is-liked { color: var(--color-accent); }
+    .like-btn.is-liked svg { fill: var(--color-accent); }
+    .like-count { font-family: var(--font-ui); font-weight: 700; color: var(--color-text); font-size: var(--size-base); }
+    .like-label { font-family: var(--font-ui); font-size: var(--size-small); color: var(--color-text-muted); }
+
+    /* Наезд блока на подвал */
+    .main-content:has(.post-backlinks) { padding-bottom: 0; }
+    .post-backlinks { position: relative; z-index: 1; margin-bottom: -56px; }
+
+    /* ============ АДАПТИВ ============ */
+    @media (max-width: 1259px) {
+        .post-toc { display: none; }       /* нет места слева — прячем оглавление */
+        .sidenote { display: none; }        /* сноски уходят в список снизу */
+        .post-footnotes:not(:empty) { display: block; }
+    }
+    @media (min-width: 1260px) {
+        .post-footnotes { display: none; }  /* на широком — сноски на полях, нижний список не нужен */
+    }
+    @media (max-width: 600px) {
+        .post-backlinks-grid { grid-template-columns: 1fr; }
+        .post-meta-cols { flex-direction: column; }
+        .post-meta-dates { text-align: left; }
+        .post-backlinks { padding: 24px; }
+    }
 </style>
+
+<script>
+    function initPost() {
+        const prose = document.getElementById('post-prose');
+        const post = document.querySelector('.post');
+        if (!prose || !post) return;
+
+        const isWide = () => window.matchMedia('(min-width: 1260px)').matches;
+
+        // ---- TOC ----
+        const headings = Array.from(prose.querySelectorAll('h2, h3'));
+        const tocEl = document.getElementById('post-toc');
+        const tocNav = document.getElementById('post-toc-nav');
+        const tocToggle = document.getElementById('post-toc-toggle');
+        const slugify = (s) => s.toLowerCase().trim().replace(/[^\wа-яё\s-]/gi, '').replace(/\s+/g, '-');
+
+        if (headings.length && tocEl && tocNav && tocToggle) {
+            const used = {};
+            headings.forEach((h) => {
+                let id = h.id || slugify(h.textContent || '');
+                if (used[id]) { id = id + '-' + ++used[id]; } else { used[id] = 1; }
+                h.id = id;
+                const a = document.createElement('a');
+                a.href = '#' + id;
+                a.textContent = h.textContent;
+                a.className = h.tagName === 'H3' ? 'lvl-3' : 'lvl-2';
+                tocNav.appendChild(a);
+            });
+            tocEl.hidden = false;
+            tocEl.classList.add('is-open');
+            tocToggle.setAttribute('aria-expanded', 'true');
+            tocToggle.addEventListener('click', () => {
+                const open = tocEl.classList.toggle('is-open');
+                tocToggle.setAttribute('aria-expanded', String(open));
+            });
+
+            // TOC начинается на уровне блока «Аудитория» (берём его ЖИВУЮ позицию в окне),
+            // затем прилипает к шапке и сворачивается
+            const STICK_TOP = 170;
+            const anchorEl = document.querySelector('.post-audience') || document.querySelector('.post-divider') || prose;
+            const setOpen = (open) => {
+                tocEl.classList.toggle('is-open', open);
+                tocToggle.setAttribute('aria-expanded', String(open));
+            };
+            const onScroll = () => {
+                const rectTop = anchorEl.getBoundingClientRect().top; // позиция в окне, обновляется при скролле
+                const top = Math.max(STICK_TOP, rectTop);
+                tocEl.style.top = top + 'px';
+                const stuck = top <= STICK_TOP + 1;
+                setOpen(!stuck); // развёрнут, пока не прилип; прилип — свернулся
+            };
+            onScroll();
+            window.addEventListener('scroll', onScroll, { passive: true });
+            window.addEventListener('resize', onScroll);
+            window.addEventListener('load', onScroll);
+        }
+
+        // ---- Сноски ----
+        const markers = Array.from(prose.querySelectorAll('sup[data-note]'));
+        const fnList = document.getElementById('post-footnotes-list');
+        const fnSection = document.getElementById('post-footnotes');
+        const sidenotes = [];
+        markers.forEach((m, i) => {
+            const num = i + 1;
+            const note = m.getAttribute('data-note') || '';
+            m.textContent = num;
+            const sn = document.createElement('aside');
+            sn.className = 'sidenote';
+            sn.innerHTML = '<span class="sidenote-num">' + num + '</span>' + note;
+            post.appendChild(sn);
+            sidenotes.push({ marker: m, el: sn });
+            if (fnList) {
+                const li = document.createElement('li');
+                li.textContent = note;
+                fnList.appendChild(li);
+            }
+        });
+        if (markers.length && fnSection) fnSection.hidden = false;
+
+        // ---- Всплывающие карточки у ссылок ----
+        const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        document.querySelectorAll('.prose a[data-link-type]').forEach((a) => {
+            const type = a.getAttribute('data-link-type');
+            if (a.querySelector('.link-pop')) return;
+            let inner = '';
+            if (type === 'external') {
+                inner = '<span class="link-pop-url">' + esc(a.getAttribute('href')) + ' ⧉</span>';
+            } else if (type === 'internal') {
+                inner =
+                    '<span class="link-pop-title">' + esc(a.getAttribute('data-title') || a.textContent) + '</span>' +
+                    (a.getAttribute('data-desc') ? '<span class="link-pop-desc">' + esc(a.getAttribute('data-desc')) + '</span>' : '');
+            } else if (type === 'annotated') {
+                const byline = [a.getAttribute('data-author'), a.getAttribute('data-year')].filter(Boolean).join(' · ');
+                inner =
+                    '<span class="link-pop-title">' + esc(a.getAttribute('data-title') || a.textContent) + '</span>' +
+                    (byline ? '<span class="link-pop-byline">' + esc(byline) + '</span>' : '') +
+                    '<span class="link-pop-label">Аннотация</span>' +
+                    '<span class="link-pop-text">' + esc(a.getAttribute('data-annotation')) + '</span>';
+            } else if (type === 'quote') {
+                inner =
+                    '<span class="link-pop-quote">«' + esc(a.getAttribute('data-quote')) + '»</span>' +
+                    (a.getAttribute('data-source') ? '<span class="link-pop-source">' + esc(a.getAttribute('data-source')) + '</span>' : '');
+            } else {
+                return;
+            }
+            const pop = document.createElement('span');
+            pop.className = 'link-pop';
+            pop.innerHTML = inner;
+            a.appendChild(pop);
+
+            // если сверху не хватает места (учитываем летающую шапку ~110px) — карточку вниз
+            a.addEventListener('mouseenter', () => {
+                const needed = pop.offsetHeight + 28 + 110;
+                a.classList.toggle('pop-below', a.getBoundingClientRect().top < needed);
+            });
+        });
+
+        // ---- Лайк (локально, localStorage) ----
+        const likeBtn = document.getElementById('like-btn');
+        const countEl = document.getElementById('like-count');
+        if (likeBtn && countEl) {
+            const key = 'like:' + likeBtn.dataset.slug;
+            const render = (on) => {
+                likeBtn.classList.toggle('is-liked', on);
+                likeBtn.setAttribute('aria-pressed', String(on));
+                countEl.textContent = on ? '1' : '0';
+            };
+            render(localStorage.getItem(key) === '1');
+            likeBtn.addEventListener('click', () => {
+                const next = localStorage.getItem(key) !== '1';
+                if (next) localStorage.setItem(key, '1');
+                else localStorage.removeItem(key);
+                render(next);
+            });
+        }
+
+        // ---- Позиционирование сносок на полях ----
+        function positionSidenotes() {
+            if (!isWide()) return;
+            let lastBottom = 0;
+            sidenotes.forEach(({ marker, el }) => {
+                const y = Math.max(marker.offsetTop, lastBottom);
+                el.style.top = y + 'px';
+                lastBottom = y + el.offsetHeight + 16;
+            });
+        }
+        positionSidenotes();
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(positionSidenotes);
+        window.addEventListener('load', positionSidenotes);
+        let rT;
+        window.addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(positionSidenotes, 150); });
+    }
+
+    if (document.readyState !== 'loading') initPost();
+    else document.addEventListener('DOMContentLoaded', initPost);
+</script>
