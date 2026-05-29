@@ -1,0 +1,29 @@
+---
+import { getCollection, render } from 'astro:content';
+import PostLayout from '../../layouts/PostLayout.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map((post) => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+// Оценка времени чтения (~150 слов/мин для русского текста)
+const words = post.body ? post.body.trim().split(/\s+/).length : 0;
+const readingTime = Math.max(1, Math.round(words / 150));
+---
+
+<PostLayout
+    title={post.data.title}
+    pubDate={post.data.pubDate}
+    tags={post.data.tags}
+    description={post.data.description}
+    readingTime={readingTime}
+>
+    <Content />
+</PostLayout>

@@ -1,552 +1,232 @@
 ---
-import { Image } from 'astro:assets';
-import myLogo from '../assets/limonesska_logo.svg';
-import timeIcon from '../assets/icons/time.svg';
-import Icon from '../components/Icon.astro';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostCard from '../components/PostCard.astro';
+
+const sortByDate = (a, b) => +b.data.pubDate - +a.data.pubDate;
+
+const blogPosts = (await getCollection('blog')).sort(sortByDate);
+const notes = (await getCollection('notes')).sort(sortByDate);
+
+const latestPosts = blogPosts.slice(0, 4);
+const freshNotes = notes.slice(0, 3);
+
+const formatDate = (date) =>
+  date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
 ---
 
-<html lang="ru">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" type="image/svg+xml" href="/limonesska_logo_circle.svg" />
-    <link rel="icon" href="/limonesska_logo_circle.ico" />
-    <meta name="generator" content={Astro.generator} />
-    <title>limonesska | Цифровой сад</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Vollkorn:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
-    
-    <style is:global>
-        :root {
-            /* 3 СТРОГИХ ШРИФТА */
-            --font-display: 'Playfair Display', serif;
-            --font-vollkorn: 'Vollkorn', serif;
-            --font-ui: 'Manrope', sans-serif;
+<BaseLayout title="limonesska | Цифровой сад">
 
-            /* 4 СТРОГИХ РАЗМЕРА */
-            --size-mega: clamp(2.5rem, 4vw, 3.5rem); 
-            --size-medium: 1.25rem;                  
-            --size-base: 1rem;                       
-            --size-small: 0.75rem;                   
-        }
+    <section class="top-section">
 
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background: #fafafa;
-            color: #1a1a1a;
-            -webkit-font-smoothing: antialiased;
-            font-size: 17px; 
-            font-variant-numeric: lining-nums; 
-        }
-        *, *:before, *:after { box-sizing: border-box; }
+        <div class="intro-block">
+            <h1 class="hero-title">Строю системы там, где другие видят хаос.</h1>
+            <p class="hero-subtitle">
+                Управление данными, дизайн смыслов и непрерывное обучение.
+                Добро пожаловать в мой цифровой сад — место, где идеи прорастают и превращаются в структуры.
+            </p>
+            <div class="button-group">
+                <a href="/blog" class="btn-primary">Читать блог</a>
+                <a href="/about" class="btn-secondary">Обо мне</a>
+            </div>
 
-        /* --- ШАПКА --- */
-        .site-header {
-            position: fixed; top: 14px; left: 24px; right: 24px; z-index: 100;
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 18px 36px; background: rgba(250,250,250,0.75);
-            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border-radius: 14px;
-            box-shadow: 0 6px 28px rgba(0,0,0,0.08);
-            font-family: var(--font-ui); font-size: var(--size-base);
-        }
-        .logo-link { display: flex; align-items: center; text-decoration: none; }
-        .logo-img { height: 40px; width: auto; }
-        
-        .dropdown { position: relative; display: inline-block; }
-        .header-nav { display: flex; align-items: center; gap: 20px; }
+            <div class="tags-block">
+                <div class="tags-header">Популярные темы</div>
+                <div class="tags-list">
+                    <a href="#" class="tag-pill">#систематизация</a>
+                    <a href="#" class="tag-pill">#дизайн-смыслов</a>
+                    <a href="#" class="tag-pill">#инди-хакер</a>
+                    <a href="#" class="tag-pill">#astro-build</a>
+                </div>
+            </div>
+        </div>
 
-        .garden-link {
-            font-family: var(--font-ui); font-size: var(--size-base); font-weight: 600;
-            text-decoration: none; color: #1a1a1a; position: relative; padding-bottom: 2px;
-            background-image: linear-gradient(#FF5C00, #FF5C00), linear-gradient(#FF5C00, #FF5C00);
-            background-position: left bottom, right bottom;
-            background-size: 0% 1.5px, 0% 1.5px;
-            background-repeat: no-repeat;
-            transition: color 0.35s ease, background-size 0.4s ease;
-        }
-        .garden-link:hover {
-            color: #FF5C00;
-            background-size: 50% 1.5px, 50% 1.5px;
-        }
+        <a href="/blog/moving-to-astro" class="popular-card">
+            <img src="https://images.unsplash.com/photo-1586075010923-2dd4570fb338?q=80&w=800&auto=format&fit=crop" class="popular-bg-img" alt="System" />
 
-        .dropbtn {
-            background: none; border: none; cursor: pointer; padding: 8px;
-            color: #1a1a1a; transition: color 0.35s ease;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 8px; perspective: 400px;
-        }
-        .dropbtn:hover { color: #FF5C00; }
-        .menu-chevron { transition: transform 0.65s ease; display: block; }
-        .dropbtn:hover .menu-chevron { transform: rotateY(180deg); }
-        .dropdown-content {
-            display: none; position: absolute; right: 0; background-color: #fff;
-            min-width: 560px;
-            box-shadow: 0px 12px 40px rgba(0,0,0,0.08); border-radius: 16px; z-index: 10;
-            border: 1px solid #eaeaea; padding: 8px;
-        }
-        .dropdown.is-open .dropdown-content { display: block; }
-
-        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-        .menu-item {
-            display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px;
-            border-radius: 10px; text-decoration: none; color: inherit;
-            transition: transform 0.4s ease, background 0.4s ease;
-        }
-        .menu-item:hover { background: rgba(0,0,0,0.03); transform: translateY(-1px); }
-        .menu-item:hover .menu-title { color: #FF5C00; }
-        .menu-icon {
-            width: 32px; height: 32px; flex-shrink: 0;
-            display: flex; align-items: center; justify-content: center; position: relative;
-            transition: transform 0.4s ease;
-        }
-        .menu-item:hover .menu-icon { transform: scale(1.08); }
-        .menu-text { display: flex; flex-direction: column; }
-        .menu-title {
-            font-family: var(--font-ui); font-weight: 600; font-size: var(--size-base);
-            color: #1a1a1a; transition: color 0.4s ease; display: block; margin-bottom: 4px;
-        }
-        .menu-desc {
-            font-family: var(--font-vollkorn); font-size: 0.875rem; color: #888;
-            line-height: 1.45; display: block;
-        }
-        .projects-icon .icon-default,
-        .projects-icon .icon-hover {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center; transition: opacity 0.4s ease;
-        }
-        .projects-icon .icon-hover { opacity: 0; }
-        .menu-item:hover .projects-icon .icon-default { opacity: 0; }
-        .menu-item:hover .projects-icon .icon-hover { opacity: 1; }
-        .icon-brackets { display: flex; align-items: center; gap: 3px; }
-        .bracket-left { transition: transform 0.4s ease; transform: translateX(8px); }
-        .bracket-right { transition: transform 0.4s ease; transform: translateX(-8px); }
-        .menu-item:hover .bracket-left { transform: translateX(0); }
-        .menu-item:hover .bracket-right { transform: translateX(0); }
-
-        .main-content {
-            max-width: 1600px; margin: 0 auto; width: 100%; padding: 150px 40px 60px;
-        }
-
-        /* --- ВЕРХНИЙ БЛОК --- */
-        .top-section {
-            display: grid;
-            grid-template-columns: 1.4fr 1.1fr 0.9fr; 
-            gap: 40px; margin-bottom: 80px; align-items: start;
-        }
-
-        /* 1. ЛЕВАЯ КОЛОНКА */
-        .intro-block { display: flex; flex-direction: column; height: 600px; justify-content: flex-start; }
-        
-        .hero-title { 
-            font-family: var(--font-display); font-size: var(--size-mega); 
-            font-weight: 700; line-height: 1.1; margin: 0 0 25px 0; letter-spacing: -1px; color: #111;
-        }
-        
-        .hero-subtitle { 
-            font-family: var(--font-vollkorn); font-size: var(--size-base); 
-            color: #444; line-height: 1.6; margin: 0; 
-        }
-        
-        .button-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 40px; margin-bottom: 50px; font-family: var(--font-ui); }
-        .btn-primary { background: #000; color: #fff; border: 1px solid #000; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-size: var(--size-medium); font-weight: 600; transition: 0.2s; text-align: center; }
-        .btn-primary:hover { background: #333; border-color: #333; }
-        .btn-secondary { background: #fff; color: #000; border: 1px solid #ddd; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-size: var(--size-medium); font-weight: 600; transition: 0.2s; text-align: center; }
-        .btn-secondary:hover { border-color: #aaa; background: #f9f9f9; }
-
-        .tags-block { margin-top: auto; padding-bottom: 25px; font-family: var(--font-ui); }
-        .tags-header { font-size: var(--size-medium); font-weight: 700; color: #1a1a1a; margin-bottom: 16px; }
-        .tags-list { display: flex; gap: 10px; flex-wrap: wrap; }
-        
-        .tag-pill {
-            background: #fff; border: 1px solid #eaeaea; padding: 8px 16px; border-radius: 20px;
-            font-size: var(--size-small); font-weight: 500; text-decoration: none; color: #444; transition: 0.2s;
-        }
-        .tag-pill:hover { background: #000; color: #fff; border-color: #000; }
-
-        /* 2. ЦЕНТРАЛЬНАЯ КАРТОЧКА */
-        .popular-card {
-            position: relative; background: #fff; border-radius: 16px; overflow: hidden; text-decoration: none; color: inherit; transition: 0.3s;
-            height: 600px; width: 100%; display: flex;
-        }
-        .popular-bg-img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; z-index: 1; }
-        .popular-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 60%; background: linear-gradient(to top, rgba(0,0,0,0.3), transparent); z-index: 2; }
-
-        .popular-overlay-content {
-            position: absolute; bottom: 60px; left: 30px; width: calc(100% - 48px); max-width: 310px; 
-            background: #ffffff; padding: 24px; border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.08); z-index: 3;
-            display: flex; flex-direction: column; gap: 8px;
-        }
-        
-        .post-tag { 
-            font-family: var(--font-ui); font-size: var(--size-small); 
-            font-weight: 700; color: #888; display: inline-block; text-transform: uppercase; letter-spacing: 1px;
-        }
-        .popular-overlay-content h3 { font-family: var(--font-vollkorn); margin: 0; font-size: var(--size-medium); line-height: 1.3; font-weight: 700; color: #1a1a1a; }
-        .popular-overlay-content p { font-family: var(--font-vollkorn); margin: 0; font-size: var(--size-base); color: #555; line-height: 1.5; }
-        
-        .popular-author-meta { font-family: var(--font-ui); font-size: var(--size-small); color: #999; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .author-name { color: #1a1a1a; font-weight: 700; } 
-
-        /* 3. ПРАВАЯ КОЛОНКА */
-        .editors-column { display: flex; flex-direction: column; gap: 16px; height: 600px; }
-        .column-title { font-family: var(--font-ui); font-size: var(--size-medium); font-weight: 700; color: #1a1a1a; margin: 0 0 5px 0; border-bottom: 1px solid #eaeaea; padding-bottom: 8px; }
-        
-        .editors-card { display: flex; gap: 16px; align-items: center; text-decoration: none; color: inherit; padding: 8px; border-radius: 12px; transition: 0.25s; }
-        .editors-card:hover { background: rgba(0, 0, 0, 0.03); transform: translateX(3px); }
-        .editors-card img { width: 85px; height: 115px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid #f0f0f0; }
-        .editors-card-content { display: flex; flex-direction: column; gap: 4px; }
-        
-        .side-tag { font-family: var(--font-ui); font-size: var(--size-small); text-transform: uppercase; font-weight: 700; color: #888; display: block; letter-spacing: 1px;}
-        
-        .editors-card h4 { font-family: var(--font-vollkorn); margin: 0; font-size: var(--size-base); line-height: 1.3; font-weight: 700; color: #1a1a1a; }
-        .editors-date { font-family: var(--font-ui); font-size: var(--size-small); color: #999; text-transform: uppercase; letter-spacing: 0.5px; }
-
-        .quote-widget { margin-top: auto; padding: 20px 10px; position: relative; }
-        .quote-icon { font-family: var(--font-display); font-size: 5rem; color: #eaeaea; position: absolute; top: -10px; left: 0; line-height: 1; z-index: 1; user-select: none; }
-        .quote-text { font-family: var(--font-display); font-style: italic; font-size: var(--size-medium); font-weight: 700; color: #222; line-height: 1.5; position: relative; z-index: 2; padding-left: 10px; }
-        .quote-author { font-family: var(--font-vollkorn); margin-top: 15px; padding-left: 10px; font-size: var(--size-base); color: #888; }
-
-        /* --- НОВЫЕ СТАТЬИ --- */
-        .latest-section { margin-top: 150px; }
-
-        .section-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-        .section-header-flex h2 { font-family: var(--font-ui); font-size: var(--size-medium); font-weight: 700; margin: 0; color: #1a1a1a; }
-        .view-all-link { font-family: var(--font-ui); display: flex; align-items: center; gap: 6px; color: #000; text-decoration: none; font-size: var(--size-base); font-weight: 600; transition: gap 0.2s; }
-        .view-all-link:hover { gap: 10px; }
-
-        .latest-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 80px; }
-        .latest-card { background: #fff; border: 1px solid #eaeaea; border-radius: 16px; overflow: hidden; text-decoration: none; color: inherit; transition: 0.3s; display: flex; flex-direction: column; }
-        .latest-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.04); border-color: #ddd; }
-        
-        .latest-card > img { width: 100%; height: 200px; object-fit: cover; border-bottom: 1px solid #eaeaea; }
-        
-        .latest-card-content { padding: 20px; display: flex; flex-direction: column; gap: 12px; flex-grow: 1; }
-        .latest-card h3 { font-family: var(--font-vollkorn); margin: 0; font-size: var(--size-medium); font-weight: 700; line-height: 1.3; color: #1a1a1a; }
-        .latest-card p { font-family: var(--font-vollkorn); margin: 0; font-size: var(--size-base); color: #555; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-        
-        .latest-properties-footer { font-family: var(--font-ui); margin-top: auto; padding-top: 15px; border-top: 1px solid #f5f5f5; display: flex; justify-content: space-between; align-items: center; font-size: var(--size-small); color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
-        
-        .properties-left { display: flex; align-items: center; }
-        .dot-separator { margin: 0 8px; color: #ccc; }
-        .read-time-block { display: flex; align-items: center; gap: 6px; }
-        
-        .time-icon { 
-            width: 14px !important; 
-            height: 14px !important; 
-            min-width: 14px !important; 
-            flex-shrink: 0; 
-            opacity: 0.7; 
-            border: none !important;
-        }
-        
-        .bookmark-icon-btn { background: none; border: none; padding: 4px; color: #aaa; cursor: pointer; transition: color 0.2s; display: flex; align-items: center; justify-content: center; }
-        .bookmark-icon-btn:hover { color: #000; }
-        .bookmark-icon-btn svg { 
-            width: 18px !important; 
-            height: 18px !important; 
-            min-width: 18px !important;
-            flex-shrink: 0;
-        } 
-
-        /* ПОДВАЛ */
-        .site-footer { font-family: var(--font-ui); width: 100%; border-top: 1px solid #eaeaea; padding-top: 30px; display: flex; justify-content: space-between; font-size: var(--size-small); color: #999; }
-        
-        @media (max-width: 1400px) { .latest-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); } }
-        @media (max-width: 1100px) {
-            .top-section { grid-template-columns: 1fr 1fr; }
-            .editors-column { grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; height: auto; }
-            .quote-widget { grid-column: span 2; }
-            .popular-card { height: 500px; }
-        }
-        @media (max-width: 768px) {
-            .main-content { padding: 110px 20px 40px; }
-            .top-section { grid-template-columns: 1fr; gap: 40px; }
-            .editors-column { grid-column: span 1; grid-template-columns: 1fr; }
-            .quote-widget { grid-column: span 1; }
-            .intro-block { height: auto; }
-            .btn-primary, .btn-secondary { width: 100%; }
-            .popular-card { height: 450px; }
-            .site-footer { flex-direction: column; gap: 10px; text-align: center; }
-        }
-    </style>
-</head>
-<body>
-    
-    <header class="site-header">
-        <a href="/" class="logo-link">
-            <Image src={myLogo} alt="limonesska logo" class="logo-img" />
+            <div class="popular-overlay-content">
+                <span class="post-tag">Популярное</span>
+                <h3>Сжигаю мосты: почему я ухожу с WordPress на Astro</h3>
+                <p>Отказ от тяжелых баз данных в пользу легкости текстовых файлов.</p>
+                <div class="popular-author-meta">
+                    by <span class="author-name">Limonesska</span> • 16 мая 2026
+                </div>
+            </div>
         </a>
-        <div class="header-nav">
-        <a href="/" class="garden-link">Мой сад</a>
-        <div class="dropdown">
-            <button class="dropbtn" id="menu-toggle" aria-label="Меню">
-                <svg class="menu-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"/>
-                </svg>
-            </button>
-            <div class="dropdown-content">
-                <div class="menu-grid">
 
-                    <a href="/diary" class="menu-item">
-                        <div class="menu-icon">
-                            <Icon name="Дневник" />
-                        </div>
-                        <div class="menu-text">
-                            <span class="menu-title">Дневник</span>
-                            <span class="menu-desc">Хроника в реальном времени: рутина, поездки, игры и всё, что просто происходит</span>
-                        </div>
-                    </a>
+        <div class="editors-column">
+            <h3 class="column-title">Свежие заметки</h3>
 
-                    <a href="/projects" class="menu-item">
-                        <div class="menu-icon projects-icon">
-                            <div class="icon-default">
-                                <Icon name="код_1" />
-                            </div>
-                            <div class="icon-hover">
-                                <div class="icon-brackets">
-                                    <Icon name="код_левая" width={14} height={28} class="bracket-left" />
-                                    <Icon name="код_правая" width={14} height={28} class="bracket-right" />
-                                </div>
-                            </div>
-                        </div>
-                        <div class="menu-text">
-                            <span class="menu-title">Проекты</span>
-                            <span class="menu-desc">Что-то построенное. Что-то строится. А что-то даже не знает, чем закончится</span>
-                        </div>
-                    </a>
+            {freshNotes.map((note) => (
+                <a href={`/notes/${note.id}`} class="editors-card editors-card--note">
+                    <div class="editors-card-content">
+                        {note.data.tags.length > 0 && <span class="side-tag">#{note.data.tags[0]}</span>}
+                        <h4>{note.data.title}</h4>
+                        <span class="editors-date">{formatDate(note.data.pubDate)}</span>
+                    </div>
+                </a>
+            ))}
 
-                    <a href="/blog" class="menu-item">
-                        <div class="menu-icon">
-                            <Icon name="star_max" />
-                        </div>
-                        <div class="menu-text">
-                            <span class="menu-title">Блог</span>
-                            <span class="menu-desc">Тексты, которые пишутся дольше всего. Психология, эзотерика, планы и финансы — да, всё в одном блоге</span>
-                        </div>
-                    </a>
-
-                    <a href="/library" class="menu-item">
-                        <div class="menu-icon">
-                            <Icon name="Библиотека" />
-                        </div>
-                        <div class="menu-text">
-                            <span class="menu-title">Библиотека</span>
-                            <span class="menu-desc">Прочитанное с инсайтами и очередь из книг, которая меня переживёт</span>
-                        </div>
-                    </a>
-
-                    <a href="/notes" class="menu-item">
-                        <div class="menu-icon">
-                            <Icon name="star_base" />
-                        </div>
-                        <div class="menu-text">
-                            <span class="menu-title">Заметки</span>
-                            <span class="menu-desc">Мой хаос того, что ещё не до конца понимаю</span>
-                        </div>
-                    </a>
-
-                </div>
+            <div class="quote-widget">
+                <div class="quote-icon">“</div>
+                <div class="quote-text">За каждой красивой и работающей системой всегда стоят часы структурированного хаоса.</div>
+                <div class="quote-author">— Limonesska</div>
             </div>
         </div>
-        </div>
-    </header>
 
-    <main class="main-content">
-        
-        <section class="top-section">
-            
-            <div class="intro-block">
-                <h1 class="hero-title">Строю системы там, где другие видят хаос.</h1>
-                <p class="hero-subtitle">
-                    Управление данными, дизайн смыслов и непрерывное обучение. 
-                    Добро пожаловать в мой цифровой сад — место, где идеи прорастают и превращаются в структуры.
-                </p>
-                <div class="button-group">
-                    <a href="/blog" class="btn-primary">Читать блог</a>
-                    <a href="/about" class="btn-secondary">Обо мне</a>
-                </div>
+    </section>
 
-                <div class="tags-block">
-                    <div class="tags-header">Популярные темы</div>
-                    <div class="tags-list">
-                        <a href="#" class="tag-pill">#систематизация</a>
-                        <a href="#" class="tag-pill">#дизайн-смыслов</a>
-                        <a href="#" class="tag-pill">#инди-хакер</a>
-                        <a href="#" class="tag-pill">#astro-build</a>
-                    </div>
-                </div>
-            </div>
-
-            <a href="/blog/moving-to-astro" class="popular-card">
-                <img src="https://images.unsplash.com/photo-1586075010923-2dd4570fb338?q=80&w=800&auto=format&fit=crop" class="popular-bg-img" alt="System" />
-                
-                <div class="popular-overlay-content">
-                    <span class="post-tag">Популярное</span>
-                    <h3>Сжигаю мосты: почему я ухожу с WordPress на Astro</h3>
-                    <p>Отказ от тяжелых баз данных в пользу легкости текстовых файлов.</p>
-                    <div class="popular-author-meta">
-                        by <span class="author-name">Limonesska</span> • 16 мая 2026
-                    </div>
-                </div>
+    <section class="latest-section">
+        <div class="section-header-flex">
+            <h2>Новые статьи</h2>
+            <a href="/blog" class="view-all-link">
+                Все статьи <span>→</span>
             </a>
+        </div>
 
-            <div class="editors-column">
-                <h3 class="column-title">Свежие заметки</h3>
-                
-                <a href="/blog/dns-battle" class="editors-card">
-                    <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=200&auto=format&fit=crop" alt="DNS cover" />
-                    <div class="editors-card-content">
-                        <span class="side-tag">Интернет</span>
-                        <h4>Битва за limonesska.ru: DNS и ревность</h4>
-                        <span class="editors-date">17 мая 2026</span>
-                    </div>
-                </a>
+        <div class="latest-grid">
+            {latestPosts.map((post) => <PostCard post={post} />)}
+        </div>
+    </section>
 
-                <a href="/blog/terminal-initiation" class="editors-card">
-                    <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=200&auto=format&fit=crop" alt="Code cover" />
-                    <div class="editors-card-content">
-                        <span class="side-tag">Код</span>
-                        <h4>Красный текст в терминале — это инициация</h4>
-                        <span class="editors-date">16 мая 2026</span>
-                    </div>
-                </a>
+</BaseLayout>
 
-                <a href="/diary" class="editors-card">
-                    <img src="https://images.unsplash.com/photo-1517842645767-c639042777db?q=80&w=200&auto=format&fit=crop" alt="Diary cover" />
-                    <div class="editors-card-content">
-                        <span class="side-tag">Дневник</span>
-                        <h4>Целеполагание: Состояние на миллион</h4>
-                        <span class="editors-date">15 мая 2026</span>
-                    </div>
-                </a>
+<style is:global>
+    /* --- ВЕРХНИЙ БЛОК --- */
+    .top-section {
+        display: grid;
+        grid-template-columns: 1.4fr 1.1fr 0.9fr;
+        gap: 40px; margin-bottom: 80px; align-items: start;
+    }
 
-                <div class="quote-widget">
-                    <div class="quote-icon">“</div>
-                    <div class="quote-text">За каждой красивой и работающей системой всегда стоят часы структурированного хаоса.</div>
-                    <div class="quote-author">— Limonesska</div>
-                </div>
-            </div>
+    /* 1. ЛЕВАЯ КОЛОНКА */
+    .intro-block { display: flex; flex-direction: column; height: 600px; justify-content: flex-start; }
 
-        </section>
+    .hero-title {
+        font-family: var(--font-display); font-size: var(--size-mega);
+        font-weight: 700; line-height: 1.1; margin: 0 0 25px 0; letter-spacing: -1px; color: var(--color-text);
+    }
 
-        <section class="latest-section">
-            <div class="section-header-flex">
-                <h2>Новые статьи</h2>
-                <a href="/blog" class="view-all-link">
-                    Все статьи <span>→</span>
-                </a>
-            </div>
-            
-            <div class="latest-grid">
-                
-                <article class="latest-card">
-                    <img src="https://images.unsplash.com/photo-1457369804613-52c61a468e7d?q=80&w=500&auto=format&fit=crop" alt="Chaos to order" />
-                    <div class="latest-card-content">
-                        <span class="post-tag">Эссе</span>
-                        <h3>Как структурировать хаос в рабочих процессах</h3>
-                        <p>«Не бывает непреодолимых преград — есть только задачи, которые ещё не обрели свою структуру».</p>
-                        <div class="latest-properties-footer">
-                            <div class="properties-left">
-                                <span>14 мая 2026</span>
-                                <span class="dot-separator">•</span>
-                                <span class="read-time-block"><Image src={timeIcon} alt="Время" width="14" height="14" class="time-icon" /> 5 мин чтения</span>
-                            </div>
-                            <button class="bookmark-icon-btn" title="Сохранить в закладки">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
-                            </button>
-                        </div>
-                    </div>
-                </article>
+    .hero-subtitle {
+        font-family: var(--font-vollkorn); font-size: var(--size-base);
+        color: var(--color-text-soft); line-height: 1.6; margin: 0;
+    }
 
-                <article class="latest-card">
-                    <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=500&auto=format&fit=crop" alt="Files data" />
-                    <div class="latest-card-content">
-                        <span class="post-tag">Заметка</span>
-                        <h3>Почему я выбираю текстовые файлы</h3>
-                        <p>«Мой сайт теперь — это мой Цифровой сад, который я выращиваю в редакторе кода».</p>
-                        <div class="latest-properties-footer">
-                            <div class="properties-left">
-                                <span>12 мая 2026</span>
-                                <span class="dot-separator">•</span>
-                                <span class="read-time-block"><Image src={timeIcon} alt="Время" width="14" height="14" class="time-icon" /> 3 мин чтения</span>
-                            </div>
-                            <button class="bookmark-icon-btn" title="Сохранить в закладки">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
-                            </button>
-                        </div>
-                    </div>
-                </article>
+    .button-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 40px; margin-bottom: 50px; font-family: var(--font-ui); }
+    .btn-primary { background: #000; color: var(--color-surface); border: 1px solid #000; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-size: var(--size-medium); font-weight: 600; transition: 0.2s; text-align: center; }
+    .btn-primary:hover { background: #333; border-color: #333; }
+    .btn-secondary { background: var(--color-surface); color: #000; border: 1px solid #ddd; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-size: var(--size-medium); font-weight: 600; transition: 0.2s; text-align: center; }
+    .btn-secondary:hover { border-color: #aaa; background: #f9f9f9; }
 
-                <article class="latest-card">
-                    <img src="https://images.unsplash.com/photo-1531403009284-440f080d1e12?q=80&w=500&auto=format&fit=crop" alt="Notion design" />
-                    <div class="latest-card-content">
-                        <span class="post-tag">Проекты</span>
-                        <h3>Идеальный трекер привычек в Notion</h3>
-                        <p>Разбираю свою систему, основанную на дизайне смыслов и управлении состояниями.</p>
-                        <div class="latest-properties-footer">
-                            <div class="properties-left">
-                                <span>10 мая 2026</span>
-                                <span class="dot-separator">•</span>
-                                <span class="read-time-block"><Image src={timeIcon} alt="Время" width="14" height="14" class="time-icon" /> 7 мин чтения</span>
-                            </div>
-                            <button class="bookmark-icon-btn" title="Сохранить в закладки">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
-                            </button>
-                        </div>
-                    </div>
-                </article>
+    .tags-block { margin-top: auto; padding-bottom: 25px; font-family: var(--font-ui); }
+    .tags-header { font-size: var(--size-medium); font-weight: 700; color: var(--color-text); margin-bottom: 16px; }
+    .tags-list { display: flex; gap: 10px; flex-wrap: wrap; }
 
-                <article class="latest-card">
-                    <img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=500&auto=format&fit=crop" alt="Feedback review" />
-                    <div class="latest-card-content">
-                        <span class="post-tag">Разбор</span>
-                        <h3>Анатомия фидбека: как читать отказы</h3>
-                        <p>Разбираем логику работодателя и то, как ИИ-текст интерпретируется компаниями.</p>
-                        <div class="latest-properties-footer">
-                            <div class="properties-left">
-                                <span>08 мая 2026</span>
-                                <span class="dot-separator">•</span>
-                                <span class="read-time-block"><Image src={timeIcon} alt="Время" width="14" height="14" class="time-icon" /> 6 мин чтения</span>
-                            </div>
-                            <button class="bookmark-icon-btn" title="Сохранить в закладки">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
-                            </button>
-                        </div>
-                    </div>
-                </article>
+    .tag-pill {
+        background: var(--color-surface); border: 1px solid var(--color-border); padding: 8px 16px; border-radius: 20px;
+        font-size: var(--size-small); font-weight: 500; text-decoration: none; color: var(--color-text-soft); transition: 0.2s;
+    }
+    .tag-pill:hover { background: #000; color: var(--color-surface); border-color: #000; }
 
-            </div>
-        </section>
+    /* 2. ЦЕНТРАЛЬНАЯ КАРТОЧКА */
+    .popular-card {
+        position: relative; background: var(--color-surface); border-radius: 16px; overflow: hidden; text-decoration: none; color: inherit; transition: 0.3s;
+        height: 600px; width: 100%; display: flex;
+    }
+    .popular-bg-img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; z-index: 1; }
+    .popular-card::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 60%; background: linear-gradient(to top, rgba(0,0,0,0.3), transparent); z-index: 2; }
 
-        <footer class="site-footer">
-            <div>© 2026 limonesska | Цифровой сад</div>
-            <div>Сделано с любовью и кодом</div>
-        </footer>
-        
-    </main>
+    .popular-overlay-content {
+        position: absolute; bottom: 60px; left: 30px; width: calc(100% - 48px); max-width: 310px;
+        background: var(--color-surface); padding: 24px; border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.08); z-index: 3;
+        display: flex; flex-direction: column; gap: 8px;
+    }
 
-<script>
-    const menuToggle = document.getElementById('menu-toggle');
-    const menuDropdown = menuToggle.closest('.dropdown');
+    .post-tag {
+        font-family: var(--font-ui); font-size: var(--size-small);
+        font-weight: 700; color: var(--color-text-muted); display: inline-block; text-transform: uppercase; letter-spacing: 1px;
+    }
+    .popular-overlay-content h3 { font-family: var(--font-vollkorn); margin: 0; font-size: var(--size-medium); line-height: 1.3; font-weight: 700; color: var(--color-text); }
+    .popular-overlay-content p { font-family: var(--font-vollkorn); margin: 0; font-size: var(--size-base); color: var(--color-text-soft); line-height: 1.5; }
 
-    menuToggle.addEventListener('click', (e) => {
-        e.stopPropagation();
-        menuDropdown.classList.toggle('is-open');
-    });
+    .popular-author-meta { font-family: var(--font-ui); font-size: var(--size-small); color: var(--color-text-faint); margin-top: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .author-name { color: var(--color-text); font-weight: 700; }
 
-    document.addEventListener('click', (e) => {
-        if (!menuDropdown.contains(e.target)) {
-            menuDropdown.classList.remove('is-open');
-        }
-    });
+    /* 3. ПРАВАЯ КОЛОНКА */
+    .editors-column { display: flex; flex-direction: column; gap: 16px; height: 600px; }
+    .column-title { font-family: var(--font-ui); font-size: var(--size-medium); font-weight: 700; color: var(--color-text); margin: 0 0 5px 0; border-bottom: 1px solid var(--color-border); padding-bottom: 8px; }
 
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') menuDropdown.classList.remove('is-open');
-    });
-</script>
-</body>
-</html>
+    .editors-card { display: flex; gap: 16px; align-items: center; text-decoration: none; color: inherit; padding: 8px; border-radius: 12px; transition: 0.25s; }
+    .editors-card:hover { background: rgba(0, 0, 0, 0.03); transform: translateX(3px); }
+    .editors-card img { width: 85px; height: 115px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid #f0f0f0; }
+    .editors-card-content { display: flex; flex-direction: column; gap: 4px; }
+
+    .side-tag { font-family: var(--font-ui); font-size: var(--size-small); text-transform: uppercase; font-weight: 700; color: var(--color-text-muted); display: block; letter-spacing: 1px;}
+
+    .editors-card h4 { font-family: var(--font-vollkorn); margin: 0; font-size: var(--size-base); line-height: 1.3; font-weight: 700; color: var(--color-text); }
+    .editors-date { font-family: var(--font-ui); font-size: var(--size-small); color: var(--color-text-faint); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .quote-widget { margin-top: auto; padding: 20px 10px; position: relative; }
+    .quote-icon { font-family: var(--font-display); font-size: var(--size-mega); color: var(--color-border); position: absolute; top: -10px; left: 0; line-height: 1; z-index: 1; user-select: none; }
+    .quote-text { font-family: var(--font-display); font-style: italic; font-size: var(--size-medium); font-weight: 700; color: var(--color-text); line-height: 1.5; position: relative; z-index: 2; padding-left: 10px; }
+    .quote-author { font-family: var(--font-vollkorn); margin-top: 15px; padding-left: 10px; font-size: var(--size-base); color: var(--color-text-muted); }
+
+    /* --- НОВЫЕ СТАТЬИ --- */
+    .latest-section { margin-top: 150px; }
+
+    .section-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .section-header-flex h2 { font-family: var(--font-ui); font-size: var(--size-medium); font-weight: 700; margin: 0; color: var(--color-text); }
+    .view-all-link { font-family: var(--font-ui); display: flex; align-items: center; gap: 6px; color: #000; text-decoration: none; font-size: var(--size-base); font-weight: 600; transition: gap 0.2s; }
+    .view-all-link:hover { gap: 10px; }
+
+    .latest-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 80px; }
+    .latest-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 16px; overflow: hidden; text-decoration: none; color: inherit; transition: 0.3s; display: flex; flex-direction: column; }
+    .latest-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.04); border-color: #ddd; }
+
+    .latest-card > img { width: 100%; height: 200px; object-fit: cover; border-bottom: 1px solid var(--color-border); }
+
+    .latest-card-content { padding: 20px; display: flex; flex-direction: column; gap: 12px; flex-grow: 1; }
+    .latest-card h3 { font-family: var(--font-vollkorn); margin: 0; font-size: var(--size-medium); font-weight: 700; line-height: 1.3; color: var(--color-text); }
+    .latest-card p { font-family: var(--font-vollkorn); margin: 0; font-size: var(--size-base); color: var(--color-text-soft); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+    .latest-properties-footer { font-family: var(--font-ui); margin-top: auto; padding-top: 15px; border-top: 1px solid var(--color-border-soft); display: flex; justify-content: space-between; align-items: center; font-size: var(--size-small); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .properties-left { display: flex; align-items: center; }
+    .dot-separator { margin: 0 8px; color: #ccc; }
+    .read-time-block { display: flex; align-items: center; gap: 6px; }
+
+    .time-icon {
+        width: 14px !important;
+        height: 14px !important;
+        min-width: 14px !important;
+        flex-shrink: 0;
+        opacity: 0.7;
+        border: none !important;
+    }
+
+    .bookmark-icon-btn { background: none; border: none; padding: 4px; color: #aaa; cursor: pointer; transition: color 0.2s; display: flex; align-items: center; justify-content: center; }
+    .bookmark-icon-btn:hover { color: #000; }
+    .bookmark-icon-btn svg {
+        width: 18px !important;
+        height: 18px !important;
+        min-width: 18px !important;
+        flex-shrink: 0;
+    }
+
+    @media (max-width: 1400px) { .latest-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); } }
+    @media (max-width: 1100px) {
+        .top-section { grid-template-columns: 1fr 1fr; }
+        .editors-column { grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; height: auto; }
+        .quote-widget { grid-column: span 2; }
+        .popular-card { height: 500px; }
+    }
+    @media (max-width: 768px) {
+        .top-section { grid-template-columns: 1fr; gap: 40px; }
+        .editors-column { grid-column: span 1; grid-template-columns: 1fr; }
+        .quote-widget { grid-column: span 1; }
+        .intro-block { height: auto; }
+        .btn-primary, .btn-secondary { width: 100%; }
+        .popular-card { height: 450px; }
+    }
+</style>

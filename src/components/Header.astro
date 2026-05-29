@@ -1,0 +1,194 @@
+---
+import { Image } from 'astro:assets';
+import myLogo from '../assets/limonesska_logo.svg';
+import Icon from './Icon.astro';
+---
+
+<header class="site-header">
+    <a href="/" class="logo-link">
+        <Image src={myLogo} alt="limonesska logo" class="logo-img" />
+    </a>
+    <div class="header-nav">
+    <a href="/" class="garden-link">Мой сад</a>
+    <div class="dropdown">
+        <button class="dropbtn" id="menu-toggle" aria-label="Меню">
+            <svg class="menu-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+            </svg>
+        </button>
+        <div class="dropdown-content">
+            <div class="menu-grid">
+
+                <a href="/diary" class="menu-item">
+                    <div class="menu-icon">
+                        <Icon name="Дневник" />
+                    </div>
+                    <div class="menu-text">
+                        <span class="menu-title">Дневник</span>
+                        <span class="menu-desc">Хроника в реальном времени: рутина, поездки, игры и всё, что просто происходит</span>
+                    </div>
+                </a>
+
+                <a href="/projects" class="menu-item">
+                    <div class="menu-icon projects-icon">
+                        <div class="icon-default">
+                            <Icon name="код_1" />
+                        </div>
+                        <div class="icon-hover">
+                            <div class="icon-brackets">
+                                <Icon name="код_левая" width={14} height={28} class="bracket-left" />
+                                <Icon name="код_правая" width={14} height={28} class="bracket-right" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="menu-text">
+                        <span class="menu-title">Проекты</span>
+                        <span class="menu-desc">Что-то построенное. Что-то строится. А что-то даже не знает, чем закончится</span>
+                    </div>
+                </a>
+
+                <a href="/blog" class="menu-item">
+                    <div class="menu-icon">
+                        <Icon name="star_max" />
+                    </div>
+                    <div class="menu-text">
+                        <span class="menu-title">Блог</span>
+                        <span class="menu-desc">Тексты, которые пишутся дольше всего. Психология, эзотерика, планы и финансы — да, всё в одном блоге</span>
+                    </div>
+                </a>
+
+                <a href="/library" class="menu-item">
+                    <div class="menu-icon">
+                        <Icon name="Библиотека" />
+                    </div>
+                    <div class="menu-text">
+                        <span class="menu-title">Библиотека</span>
+                        <span class="menu-desc">Прочитанное с инсайтами и очередь из книг, которая меня переживёт</span>
+                    </div>
+                </a>
+
+                <a href="/notes" class="menu-item">
+                    <div class="menu-icon">
+                        <Icon name="star_base" />
+                    </div>
+                    <div class="menu-text">
+                        <span class="menu-title">Заметки</span>
+                        <span class="menu-desc">Мой хаос того, что ещё не до конца понимаю</span>
+                    </div>
+                </a>
+
+            </div>
+        </div>
+    </div>
+    </div>
+</header>
+
+<style is:global>
+    /* --- ШАПКА --- */
+    .site-header {
+        position: fixed; top: 14px; left: 24px; right: 24px; z-index: 100;
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 18px 36px; background: rgba(250,250,250,0.75);
+        backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+        border-radius: 14px;
+        box-shadow: 0 6px 28px rgba(0,0,0,0.08);
+        font-family: var(--font-ui); font-size: var(--size-base);
+    }
+    .logo-link { display: flex; align-items: center; text-decoration: none; }
+    .logo-img { height: 40px; width: auto; }
+
+    .dropdown { position: relative; display: inline-block; }
+    .header-nav { display: flex; align-items: center; gap: 20px; }
+
+    .garden-link {
+        font-family: var(--font-ui); font-size: var(--size-base); font-weight: 600;
+        text-decoration: none; color: var(--color-text); position: relative; padding-bottom: 2px;
+        background-image: linear-gradient(var(--color-accent), var(--color-accent)), linear-gradient(var(--color-accent), var(--color-accent));
+        background-position: left bottom, right bottom;
+        background-size: 0% 1.5px, 0% 1.5px;
+        background-repeat: no-repeat;
+        transition: color 0.35s ease, background-size 0.4s ease;
+    }
+    .garden-link:hover {
+        color: var(--color-accent);
+        background-size: 50% 1.5px, 50% 1.5px;
+    }
+
+    .dropbtn {
+        background: none; border: none; cursor: pointer; padding: 8px;
+        color: var(--color-text); transition: color 0.35s ease;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 8px; perspective: 400px;
+    }
+    .dropbtn:hover { color: var(--color-accent); }
+    .menu-chevron { transition: transform 0.65s ease; display: block; }
+    .dropbtn:hover .menu-chevron { transform: rotateY(180deg); }
+    .dropdown-content {
+        display: none; position: absolute; right: 0; background-color: var(--color-surface);
+        width: min(560px, calc(100vw - 48px));
+        box-shadow: 0px 12px 40px rgba(0,0,0,0.08); border-radius: 16px; z-index: 10;
+        border: 1px solid var(--color-border); padding: 8px;
+    }
+    .dropdown.is-open .dropdown-content { display: block; }
+
+    .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+    .menu-item {
+        display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px;
+        border-radius: 10px; text-decoration: none; color: inherit;
+        transition: transform 0.4s ease, background 0.4s ease;
+    }
+    .menu-item:hover { background: rgba(0,0,0,0.03); transform: translateY(-1px); }
+    .menu-item:hover .menu-title { color: var(--color-accent); }
+    .menu-icon {
+        width: 32px; height: 32px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center; position: relative;
+        transition: transform 0.4s ease;
+    }
+    .menu-item:hover .menu-icon { transform: scale(1.08); }
+    .menu-text { display: flex; flex-direction: column; }
+    .menu-title {
+        font-family: var(--font-ui); font-weight: 600; font-size: var(--size-base);
+        color: var(--color-text); transition: color 0.4s ease; display: block; margin-bottom: 4px;
+    }
+    .menu-desc {
+        font-family: var(--font-vollkorn); font-size: var(--size-small); color: var(--color-text-muted);
+        line-height: 1.45; display: block;
+    }
+    .projects-icon .icon-default,
+    .projects-icon .icon-hover {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        display: flex; align-items: center; justify-content: center; transition: opacity 0.4s ease;
+    }
+    .projects-icon .icon-hover { opacity: 0; }
+    .menu-item:hover .projects-icon .icon-default { opacity: 0; }
+    .menu-item:hover .projects-icon .icon-hover { opacity: 1; }
+    .icon-brackets { display: flex; align-items: center; gap: 3px; }
+    .bracket-left { transition: transform 0.4s ease; transform: translateX(8px); }
+    .bracket-right { transition: transform 0.4s ease; transform: translateX(-8px); }
+    .menu-item:hover .bracket-left { transform: translateX(0); }
+    .menu-item:hover .bracket-right { transform: translateX(0); }
+
+    @media (max-width: 560px) {
+        .menu-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<script>
+    const menuToggle = document.getElementById('menu-toggle');
+    const menuDropdown = menuToggle.closest('.dropdown');
+
+    menuToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        menuDropdown.classList.toggle('is-open');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!menuDropdown.contains(e.target)) {
+            menuDropdown.classList.remove('is-open');
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') menuDropdown.classList.remove('is-open');
+    });
+</script>

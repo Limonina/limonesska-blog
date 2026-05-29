@@ -1,0 +1,75 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const notes = (await getCollection('notes')).sort(
+  (a, b) => +b.data.pubDate - +a.data.pubDate
+);
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+
+<BaseLayout title="Заметки | limonesska">
+    <div class="entry-index">
+        <h1 class="entry-index-title">Заметки</h1>
+        <p class="entry-index-subtitle">Мой хаос того, что ещё не до конца понимаю.</p>
+
+        <div class="entry-list">
+            {notes.map((note) => (
+                <a href={`/notes/${note.id}`} class="entry-list-item">
+                    <div class="entry-list-meta">
+                        <span>{formatDate(note.data.pubDate)}</span>
+                        {note.data.tags.length > 0 && (
+                            <>
+                                <span class="entry-list-dot">•</span>
+                                <span>{note.data.tags.map((t) => `#${t}`).join('  ')}</span>
+                            </>
+                        )}
+                    </div>
+                    <h2 class="entry-list-heading">{note.data.title}</h2>
+                    {note.data.description && (
+                        <p class="entry-list-desc">{note.data.description}</p>
+                    )}
+                </a>
+            ))}
+        </div>
+    </div>
+</BaseLayout>
+
+<style is:global>
+    .entry-index { max-width: 760px; margin: 0 auto; }
+    .entry-index-title {
+        font-family: var(--font-display); font-size: var(--size-mega); font-weight: 700;
+        line-height: 1.1; letter-spacing: -1px; margin: 0 0 10px; color: var(--color-text);
+    }
+    .entry-index-subtitle {
+        font-family: var(--font-vollkorn); font-size: var(--size-base);
+        color: var(--color-text-soft); margin: 0 0 50px;
+    }
+
+    .entry-list { display: flex; flex-direction: column; }
+    .entry-list-item {
+        display: block; text-decoration: none; color: inherit;
+        padding: 28px 0; border-top: 1px solid var(--color-border); transition: 0.2s;
+    }
+    .entry-list-item:last-child { border-bottom: 1px solid var(--color-border); }
+    .entry-list-item:hover { padding-left: 8px; }
+    .entry-list-item:hover .entry-list-heading { color: var(--color-accent); }
+
+    .entry-list-meta {
+        font-family: var(--font-ui); font-size: var(--size-small); color: var(--color-text-faint);
+        text-transform: uppercase; letter-spacing: 0.5px;
+        display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+    }
+    .entry-list-dot { color: #ccc; }
+
+    .entry-list-heading {
+        font-family: var(--font-vollkorn); font-size: var(--size-h3); font-weight: 700;
+        line-height: 1.3; margin: 0; color: var(--color-text); transition: color 0.2s;
+    }
+    .entry-list-desc {
+        font-family: var(--font-vollkorn); font-size: var(--size-base);
+        color: var(--color-text-soft); line-height: 1.5; margin: 8px 0 0;
+    }
+</style>
