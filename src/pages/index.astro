@@ -51,14 +51,75 @@ import timeIcon from '../assets/icons/time.svg';
         .logo-img { height: 40px; width: auto; }
         
         .dropdown { position: relative; display: inline-block; }
-        .dropbtn { background: none; border: none; font-size: var(--size-base); font-weight: 600; cursor: pointer; padding: 10px 0; color: #1a1a1a; font-family: inherit;}
-        .dropdown-content {
-            display: none; position: absolute; right: 0; background-color: #fff; min-width: 180px;
-            box-shadow: 0px 10px 30px rgba(0,0,0,0.05); border-radius: 12px; z-index: 10; border: 1px solid #eaeaea; overflow: hidden;
+        .header-nav { display: flex; align-items: center; gap: 20px; }
+
+        .garden-link {
+            font-family: var(--font-ui); font-size: var(--size-base); font-weight: 600;
+            text-decoration: none; color: #1a1a1a; position: relative; padding-bottom: 2px;
+            background-image: linear-gradient(#FF5C00, #FF5C00), linear-gradient(#FF5C00, #FF5C00);
+            background-position: left bottom, right bottom;
+            background-size: 0% 1.5px, 0% 1.5px;
+            background-repeat: no-repeat;
+            transition: color 0.35s ease, background-size 0.4s ease;
         }
-        .dropdown-content a { color: #444; padding: 14px 20px; text-decoration: none; display: block; font-size: var(--size-base); transition: 0.2s; font-weight: 500; font-family: inherit;}
-        .dropdown-content a:hover { background-color: #f5f5f5; color: #000; }
-        .dropdown:hover .dropdown-content { display: block; }
+        .garden-link:hover {
+            color: #FF5C00;
+            background-size: 50% 1.5px, 50% 1.5px;
+        }
+
+        .dropbtn {
+            background: none; border: none; cursor: pointer; padding: 8px;
+            color: #1a1a1a; transition: color 0.35s ease;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 8px; perspective: 400px;
+        }
+        .dropbtn:hover { color: #FF5C00; }
+        .menu-chevron { transition: transform 0.65s ease; display: block; }
+        .dropbtn:hover .menu-chevron { transform: rotateY(180deg); }
+        .dropdown-content {
+            display: none; position: absolute; right: 0; background-color: #fff;
+            min-width: 560px;
+            box-shadow: 0px 12px 40px rgba(0,0,0,0.08); border-radius: 16px; z-index: 10;
+            border: 1px solid #eaeaea; padding: 8px;
+        }
+        .dropdown.is-open .dropdown-content { display: block; }
+
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+        .menu-item {
+            display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px;
+            border-radius: 10px; text-decoration: none; color: inherit;
+            transition: transform 0.4s ease, background 0.4s ease;
+        }
+        .menu-item:hover { background: rgba(0,0,0,0.03); transform: translateY(-1px); }
+        .menu-item:hover .menu-title { color: #FF5C00; }
+        .menu-icon {
+            width: 32px; height: 32px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; position: relative;
+            transition: transform 0.4s ease;
+        }
+        .menu-item:hover .menu-icon { transform: scale(1.08); }
+        .menu-text { display: flex; flex-direction: column; }
+        .menu-title {
+            font-family: var(--font-ui); font-weight: 600; font-size: var(--size-base);
+            color: #1a1a1a; transition: color 0.4s ease; display: block; margin-bottom: 4px;
+        }
+        .menu-desc {
+            font-family: var(--font-vollkorn); font-size: 0.875rem; color: #888;
+            line-height: 1.45; display: block;
+        }
+        .projects-icon .icon-default,
+        .projects-icon .icon-hover {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center; transition: opacity 0.4s ease;
+        }
+        .projects-icon .icon-hover { opacity: 0; }
+        .menu-item:hover .projects-icon .icon-default { opacity: 0; }
+        .menu-item:hover .projects-icon .icon-hover { opacity: 1; }
+        .icon-brackets { display: flex; align-items: center; gap: 3px; }
+        .bracket-left { transition: transform 0.4s ease; transform: translateX(8px); }
+        .bracket-right { transition: transform 0.4s ease; transform: translateX(-8px); }
+        .menu-item:hover .bracket-left { transform: translateX(0); }
+        .menu-item:hover .bracket-right { transform: translateX(0); }
 
         .main-content {
             max-width: 1600px; margin: 0 auto; width: 100%; padding: 60px 40px;
@@ -214,14 +275,125 @@ import timeIcon from '../assets/icons/time.svg';
         <a href="/" class="logo-link">
             <Image src={myLogo} alt="limonesska logo" class="logo-img" />
         </a>
+        <div class="header-nav">
+        <a href="/" class="garden-link">Мой сад</a>
         <div class="dropdown">
-            <button class="dropbtn">Меню ▾</button>
+            <button class="dropbtn" id="menu-toggle" aria-label="Меню">
+                <svg class="menu-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"/>
+                </svg>
+            </button>
             <div class="dropdown-content">
-                <a href="/">Главная</a>
-                <a href="/blog">Блог</a>
-                <a href="/diary">Дневник</a>
-                <a href="/projects">Проекты</a>
+                <div class="menu-grid">
+
+                    <a href="/diary" class="menu-item">
+                        <div class="menu-icon">
+                            <svg width="28" height="28" viewBox="0 0 67 67" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" clip-rule="evenodd" d="M24.0541 14.0719L24.1498 17.1657L26.4462 15.6714L32.0482 19.7927V46.7236L32.0131 51.1826L12.9003 40.2243V43.1128L27.9076 52.5007V59L8 46.3625V17.1657L12.2974 19.6432L12.2878 7L24.0541 14.0719Z" fill="#7D5C3F"/>
+                                <path fill-rule="evenodd" clip-rule="evenodd" d="M54.7026 19.6432L59 17.1657V46.3625L39.0924 59V52.5007L54.0997 43.1128V40.2243L34.9167 51.1826L34.9518 46.7236V19.7927L40.5538 15.6714L42.8502 17.1657L42.9459 14.0719L54.7122 7L54.7026 19.6432Z" fill="#7D5C3F"/>
+                            </svg>
+                        </div>
+                        <div class="menu-text">
+                            <span class="menu-title">Дневник</span>
+                            <span class="menu-desc">Хроника в реальном времени: рутина, поездки, игры и всё, что просто происходит</span>
+                        </div>
+                    </a>
+
+                    <a href="/projects" class="menu-item">
+                        <div class="menu-icon projects-icon">
+                            <div class="icon-default">
+                                <svg width="28" height="28" viewBox="0 0 67 67" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <g clip-path="url(#clip-menu-code)">
+                                        <path d="M45.0751 46.6061L42.7293 36.9609L33.4966 41.5072L24.2717 36.9647L21.9297 46.6023L33.5043 57.0008L45.0751 46.6061Z" fill="#7D5C3F"/>
+                                        <path d="M9 33.0013L19.6162 44.3386L29.4595 42.0408L24.818 33.0013L29.4595 23.9618L19.6162 21.6641L9 33.0013Z" fill="#7D5C3F"/>
+                                        <path d="M37.5469 23.9618L42.1883 33.0013L37.5469 42.0408L47.3863 44.3348L58.0025 33.0013L47.3863 21.6641L37.5469 23.9618Z" fill="#7D5C3F"/>
+                                        <path d="M45.079 19.3985L33.5043 9L21.9297 19.3985L24.2717 29.0399L33.5043 24.4898V24.4936L42.7293 29.0399L45.079 19.3985Z" fill="#7D5C3F"/>
+                                    </g>
+                                    <defs><clipPath id="clip-menu-code"><rect width="49" height="48" fill="white" transform="translate(9 9)"/></clipPath></defs>
+                                </svg>
+                            </div>
+                            <div class="icon-hover">
+                                <div class="icon-brackets">
+                                    <svg class="bracket-left" width="14" height="28" viewBox="0 0 34 67" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M24.2358 41.504L15.1124 36.9609L12.7891 46.6011L24.2435 56.9979L24.2358 41.504Z" fill="#7D5C3F"/>
+                                        <path d="M0 33.0008L10.5012 44.3374L20.2383 42.0411L15.6496 33.0008L20.2383 23.9604L10.5012 21.6641L0 33.0008Z" fill="#7D5C3F"/>
+                                        <path d="M24.2435 9L12.7891 19.3967L15.1124 29.0369L24.2435 24.4939V9Z" fill="#7D5C3F"/>
+                                    </svg>
+                                    <svg class="bracket-right" width="14" height="28" viewBox="0 0 34 67" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M9.76418 41.504L18.8876 36.9609L21.2109 46.6011L9.75646 56.9979L9.76418 41.504Z" fill="#7D5C3F"/>
+                                        <path d="M34 33.0008L23.4988 44.3374L13.7617 42.0411L18.3504 33.0008L13.7617 23.9604L23.4988 21.6641L34 33.0008Z" fill="#7D5C3F"/>
+                                        <path d="M9.75646 9L21.2109 19.3967L18.8876 29.0369L9.75646 24.4939V9Z" fill="#7D5C3F"/>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="menu-text">
+                            <span class="menu-title">Проекты</span>
+                            <span class="menu-desc">Что-то построенное. Что-то строится. А что-то даже не знает, чем закончится</span>
+                        </div>
+                    </a>
+
+                    <a href="/blog" class="menu-item">
+                        <div class="menu-icon">
+                            <svg width="28" height="28" viewBox="0 0 67 67" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <g clip-path="url(#clip-menu-star-max)">
+                                    <path d="M39.5459 54.8692L33.4717 66.9551L27.3936 54.8702L33.4697 51.8028L39.5459 54.8692Z" fill="#7D5C3F"/>
+                                    <path d="M21.6162 45.337L23.6475 53.0948L12.083 54.8692L13.8574 43.3057L21.6162 45.337Z" fill="#7D5C3F"/>
+                                    <path d="M54.8594 54.8702L43.292 53.0967L45.3242 45.337L53.082 43.3048L54.8594 54.8702Z" fill="#7D5C3F"/>
+                                    <path d="M42.0518 44.3497L40.3125 51.6505L33.4707 48.212L33.4697 48.2091L26.626 51.6495L24.8877 44.3507L33.4707 36.4825L42.0518 44.3497Z" fill="#7D5C3F"/>
+                                    <path d="M30.4707 33.4825L22.6016 42.0645L15.3037 40.3262L18.7432 33.4825L15.3037 26.6387L22.6016 24.9005L30.4707 33.4825Z" fill="#7D5C3F"/>
+                                    <path d="M51.6367 26.6387L48.1963 33.4825L51.6367 40.3262L44.3369 42.0635L36.4707 33.4825L44.3379 24.9014L51.6367 26.6387Z" fill="#7D5C3F"/>
+                                    <path d="M15.3037 33.4825L12.082 39.5587L0 33.4825L12.082 27.4063L15.3037 33.4825Z" fill="#7D5C3F"/>
+                                    <path d="M66.9443 33.4825L54.8584 39.5587L51.79 33.4825L54.8584 27.4063L66.9443 33.4825Z" fill="#7D5C3F"/>
+                                    <path d="M42.0527 22.6143L33.4697 30.4766L24.8877 22.6143L26.626 15.3155L33.4648 18.753L40.3125 15.3145L42.0527 22.6143Z" fill="#7D5C3F"/>
+                                    <path d="M53.082 23.6602L45.3242 21.628L43.292 13.8682L54.8594 12.0948L53.082 23.6602Z" fill="#7D5C3F"/>
+                                    <path d="M23.6475 13.8702L21.6162 21.628L13.8574 23.6592L12.0859 12.0958L23.6475 13.8702Z" fill="#7D5C3F"/>
+                                    <path d="M39.5459 12.0958L33.4697 15.1622L27.3936 12.0948L33.4717 0L39.5459 12.0958Z" fill="#7D5C3F"/>
+                                </g>
+                                <defs><clipPath id="clip-menu-star-max"><rect width="67" height="67" fill="white"/></clipPath></defs>
+                            </svg>
+                        </div>
+                        <div class="menu-text">
+                            <span class="menu-title">Блог</span>
+                            <span class="menu-desc">Тексты, которые пишутся дольше всего. Психология, эзотерика, планы и финансы — да, всё в одном блоге</span>
+                        </div>
+                    </a>
+
+                    <a href="/library" class="menu-item">
+                        <div class="menu-icon">
+                            <svg width="28" height="28" viewBox="0 0 67 67" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M31.5337 51.9043L29.0022 54.1598L31.5337 56.4677V61L11 49.1956V40.1014L31.5337 51.9043Z" fill="#7D5C3F"/>
+                                <path d="M55 49.1956L34.4663 61V56.4677L36.9978 54.1598L34.4663 51.9043L55 40.1014V49.1956Z" fill="#7D5C3F"/>
+                                <path d="M13.3498 20.7739V29.3814L31.5383 39.836L29.0067 42.0915L31.5383 44.3995V48.9317L11.0038 37.1266L11 18.8272L13.3498 20.7739Z" fill="#7D5C3F"/>
+                                <path d="M54.9962 37.1266L34.4617 48.9317V44.3995L36.9933 42.0915L34.4617 39.836L52.6502 29.3814V20.7739L55 18.8272L54.9962 37.1266Z" fill="#7D5C3F"/>
+                                <path d="M31.5177 15.3231V23.4994L28.9861 25.7549L31.5177 28.0628V37.3859L15.301 28.0628V6L31.5177 15.3231Z" fill="#7D5C3F"/>
+                                <path d="M50.699 28.0628L34.4823 37.3859V28.0628L37.0139 25.7549L34.4823 23.4994V15.3231L50.699 6V28.0628Z" fill="#7D5C3F"/>
+                            </svg>
+                        </div>
+                        <div class="menu-text">
+                            <span class="menu-title">Библиотека</span>
+                            <span class="menu-desc">Прочитанное с инсайтами и очередь из книг, которая меня переживёт</span>
+                        </div>
+                    </a>
+
+                    <a href="/notes" class="menu-item">
+                        <div class="menu-icon">
+                            <svg width="28" height="28" viewBox="0 0 67 67" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M42.0527 44.3516L40.3135 51.6523L33.4717 48.2139L33.4707 48.2109L26.627 51.6514L24.8887 44.3525L33.4717 36.4844L42.0527 44.3516Z" fill="#7D5C3F"/>
+                                <path d="M30.4717 33.4844L22.6025 42.0664L15.3047 40.3281L18.7441 33.4844L15.3047 26.6406L22.6025 24.9023L30.4717 33.4844Z" fill="#7D5C3F"/>
+                                <path d="M51.6377 26.6406L48.1973 33.4844L51.6377 40.3281L44.3379 42.0654L36.4717 33.4844L44.3389 24.9033L51.6377 26.6406Z" fill="#7D5C3F"/>
+                                <path d="M42.0537 22.6162L33.4707 30.4785L24.8887 22.6162L26.627 15.3174L33.4658 18.7549L40.3135 15.3164L42.0537 22.6162Z" fill="#7D5C3F"/>
+                            </svg>
+                        </div>
+                        <div class="menu-text">
+                            <span class="menu-title">Заметки</span>
+                            <span class="menu-desc">Мой хаос того, что ещё не до конца понимаю</span>
+                        </div>
+                    </a>
+
+                </div>
             </div>
+        </div>
         </div>
     </header>
 
@@ -398,5 +570,25 @@ import timeIcon from '../assets/icons/time.svg';
         </footer>
         
     </main>
+
+<script>
+    const menuToggle = document.getElementById('menu-toggle');
+    const menuDropdown = menuToggle.closest('.dropdown');
+
+    menuToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        menuDropdown.classList.toggle('is-open');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!menuDropdown.contains(e.target)) {
+            menuDropdown.classList.remove('is-open');
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') menuDropdown.classList.remove('is-open');
+    });
+</script>
 </body>
 </html>
