@@ -159,7 +159,7 @@ const slug = Astro.url.pathname;
     .post-subrubric { color: var(--color-text); }
     .post-rubric:hover, .post-subrubric:hover { background-size: 50% 1.5px, 50% 1.5px; }
     .post-subrubric:hover { color: var(--color-accent); }
-    .post-stage { display: block; }
+    .post-stage { display: block; color: var(--color-accent-2); }
 
     .post-title {
         font-family: var(--font-display); font-size: var(--size-mega);
@@ -188,11 +188,11 @@ const slug = Astro.url.pathname;
         color: var(--color-text-muted); text-align: right; line-height: 1.6;
     }
 
-    /* ---- Аудитория: выпуклый неоморфизм ---- */
+    /* ---- Аудитория: карточка с обводкой; фон утоплен (тёплый беж в светлой) ---- */
     .post-audience {
         display: flex; gap: 20px; align-items: baseline;
-        background: var(--color-bg); border-radius: 16px; padding: 20px 24px; margin-bottom: 44px;
-        box-shadow: 6px 6px 16px rgba(0,0,0,0.08), -6px -6px 16px rgba(255,255,255,0.95);
+        background: var(--audience-bg); border: 1px solid var(--line); border-radius: 16px;
+        padding: 20px 24px; margin-bottom: 44px;
     }
     .post-audience-label {
         font-family: var(--font-ui); font-size: var(--size-small); font-weight: 700;
@@ -251,7 +251,9 @@ const slug = Astro.url.pathname;
     .prose ul li { position: relative; margin-bottom: 0.6em; }
     .prose ul li::before {
         content: ''; position: absolute; left: -1.6em; top: 0.32em; width: 13px; height: 16px;
-        background: url('/icons/item.svg') no-repeat center / contain;
+        background-color: var(--color-accent-2);
+        -webkit-mask: url('/icons/item.svg') no-repeat center / contain;
+        mask: url('/icons/item.svg') no-repeat center / contain;
     }
     .prose ol { padding-left: 1.5em; margin: 0 0 1.4em; }
     .prose ol li { margin-bottom: 0.6em; }
@@ -287,6 +289,8 @@ const slug = Astro.url.pathname;
     .prose a[data-link-type="internal"] { color: var(--color-link); border-bottom: none; padding-bottom: 0; }
     /* Цитата: как обычная (акцент + линия) */
     .prose a[data-link-type="quote"] { /* наследует базовый стиль */ }
+    /* Цитата на свой пост (внутренняя ссылка) — зелёная, без подчёркивания (как ссылки на свои посты) */
+    .prose a[data-link-type="quote"][href^="/"] { color: var(--color-link); border-bottom: none; padding-bottom: 0; }
 
     /* ---- Всплывающая карточка ---- */
     .link-pop {
@@ -294,7 +298,7 @@ const slug = Astro.url.pathname;
         margin-bottom: 12px; width: max-content; max-width: 340px;
         background: var(--color-surface); color: var(--color-text-soft);
         border: 1px solid var(--color-border); border-radius: 12px; padding: 14px 16px;
-        box-shadow: 0 14px 44px rgba(0,0,0,0.14);
+        box-shadow: 0 14px 44px var(--shadow);
         font-family: var(--font-vollkorn); font-size: 0.92rem; line-height: 1.5; font-style: normal; white-space: normal;
         opacity: 0; visibility: hidden; pointer-events: none;
         transition: opacity 0.45s ease, transform 0.45s ease; transition-delay: 0.08s; z-index: 40;
@@ -353,7 +357,7 @@ const slug = Astro.url.pathname;
     .post-backlinks-title { font-family: var(--font-display); font-size: var(--size-h3); font-weight: 700; color: var(--color-text); margin: 0 0 22px; }
     .post-backlinks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
     .backlink-card { display: flex; gap: 12px; text-decoration: none; color: inherit; border: none; padding: 0; }
-    .backlink-icon { flex-shrink: 0; width: 16px; height: 20px; margin-top: 3px; background: url('/icons/item.svg') no-repeat center / contain; }
+    .backlink-icon { flex-shrink: 0; width: 16px; height: 20px; margin-top: 3px; background-color: var(--color-accent-2); -webkit-mask: url('/icons/item.svg') no-repeat center / contain; mask: url('/icons/item.svg') no-repeat center / contain; }
     .backlink-text { display: flex; flex-direction: column; gap: 4px; }
     .backlink-card-title { font-family: var(--font-display); font-size: var(--size-base); font-weight: 700; line-height: 1.25; color: var(--color-text); transition: color 0.2s; }
     .backlink-card:hover .backlink-card-title { color: var(--color-accent); }

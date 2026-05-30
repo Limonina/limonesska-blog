@@ -13,6 +13,16 @@ const { title = 'limonesska | Цифровой сад' } = Astro.props;
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Тема до отрисовки (анти-FOUC). Светлая по умолчанию, системную не слушаем. -->
+    <script is:inline>
+        (function () {
+            try {
+                if (localStorage.getItem('theme') === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/limonesska_logo_circle.svg" />
     <link rel="icon" href="/limonesska_logo_circle.ico" />
     <meta name="generator" content={Astro.generator} />
@@ -37,18 +47,54 @@ const { title = 'limonesska | Цифровой сад' } = Astro.props;
             --size-base: 1rem;                         /* основной текст */
             --size-small: 0.75rem;                     /* мета, теги */
 
-            /* ПАЛИТРА ЦВЕТА */
-            --color-bg: #fafafa;
-            --color-surface: #fff;
-            --color-text: #1a1a1a;
-            --color-text-soft: #555;
-            --color-text-muted: #888;
-            --color-text-faint: #999;
-            --color-accent: #FF5C00;
-            --color-accent-2: #7D5C3F; /* коричневый — иконки, hover внешних ссылок */
-            --color-link: #2f6fed; /* синий — ссылки на свои посты и номера сносок */
-            --color-border: #eaeaea;
-            --color-border-soft: #f5f5f5;
+            /* ====== КАНОНИЧЕСКИЕ ТОКЕНЫ ТЕМЫ (светлая по умолчанию) ====== */
+            --bg: #FAF8F5;                    /* фон страницы */
+            --text: #2B2420;                  /* основной текст */
+            --text-muted: #6B5F54;            /* приглушённый текст (даты, подписи) */
+            --accent: #FF5C00;                /* акцент 1 (рыжий) — ссылки, действия */
+            --accent-2: #2E7D6B;              /* акцент 2 (русский зелёный) — иконки, ховеры */
+            --line: rgba(43,36,32,0.12);      /* линии, разделители, обводки */
+            --card-bg: #FFFFFF;               /* фон карточек/блоков */
+            --shadow: rgba(43,36,32,0.10);    /* цвет теней */
+
+            /* Производные оттенки (нет в наборе из 8) — для иерархии серого/поверхностей */
+            --header-bg: rgba(250,248,245,0.78);
+            --footer-bg: #F1EDE8;
+            --audience-bg: var(--footer-bg);   /* как у подвала (#F1EDE8) */
+
+            /* ====== АЛИАСЫ старых имён → канонические (чтобы не править весь код) ====== */
+            --color-bg: var(--bg);
+            --color-surface: var(--card-bg);
+            --color-text: var(--text);
+            --color-text-soft: #4A4039;
+            --color-text-muted: var(--text-muted);
+            --color-text-faint: #8A7E72;
+            --color-accent: var(--accent);
+            --color-accent-2: var(--accent-2);
+            --color-link: var(--accent-2); /* синий убран → внутр. ссылки/сноски зелёные */
+            --color-border: var(--line);
+            --color-border-soft: rgba(43,36,32,0.06);
+        }
+
+        /* ====== ТЁМНАЯ ТЕМА ====== */
+        html[data-theme="dark"] {
+            --bg: #14181C;
+            --text: #C4BBB0;            /* мягкий приятный тон вместо резкого белого — общий для всего текста */
+            --text-muted: #9A9088;
+            --accent: #C74A3B;            /* красноватый акцент для тёмной */
+            --accent-2: #6A9675;          /* зелёный акцент для тёмной */
+            --line: rgba(234,228,220,0.14);
+            --card-bg: #1C2127;
+            --shadow: rgba(0,0,0,0.5);
+
+            --header-bg: rgba(20,24,28,0.78);
+            --footer-bg: #11151A;
+            --audience-bg: var(--card-bg); /* в тёмной — карточный фон, как было */
+
+            /* производные оттенки */
+            --color-text-soft: #AEA59A;  /* описания/лиды чуть тише основного текста (#C4BBB0) */
+            --color-text-faint: #766E66;
+            --color-border-soft: rgba(234,228,220,0.07);
         }
 
         body, html {
@@ -60,6 +106,21 @@ const { title = 'limonesska | Цифровой сад' } = Astro.props;
             font-variant-numeric: lining-nums;
         }
         *, *:before, *:after { box-sizing: border-box; }
+
+        /* Плавная смена темы — класс .theme-anim вешается JS-ом ПОСЛЕ первой отрисовки,
+           поэтому на загрузке перехода нет. Список кураторский (без элементов с hover-transform,
+           чтобы не ломать их анимации). */
+        html.theme-anim body,
+        html.theme-anim .site-header,
+        html.theme-anim .dropdown-content,
+        html.theme-anim .site-footer,
+        html.theme-anim .footer-legal,
+        html.theme-anim .post-audience,
+        html.theme-anim .post-backlinks,
+        html.theme-anim .prose,
+        html.theme-anim .prose pre {
+            transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+        }
 
         .main-content {
             max-width: 1600px; margin: 0 auto; width: 100%; padding: 150px 40px 60px;

@@ -1,6 +1,5 @@
 ---
-import { Image } from 'astro:assets';
-import timeIcon from '../assets/icons/time.svg';
+import Icon from './Icon.astro';
 import type { CollectionEntry } from 'astro:content';
 
 interface Props {
@@ -31,7 +30,7 @@ const readingTime = Math.max(1, Math.round(words / 150));
                 <span>{formattedDate}</span>
                 <span class="dot-separator">•</span>
                 <span class="read-time-block">
-                    <Image src={timeIcon} alt="Время" width="14" height="14" class="time-icon" /> {readingTime} мин чтения
+                    <Icon name="time" width={14} height={14} class="time-icon" /> {readingTime} мин чтения
                 </span>
             </div>
             <span class="bookmark-icon-btn" title="Сохранить в закладки">

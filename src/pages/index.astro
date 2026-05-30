@@ -113,10 +113,10 @@ const formatDate = (date) =>
     }
 
     .button-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 40px; margin-bottom: 50px; font-family: var(--font-ui); }
-    .btn-primary { background: #000; color: var(--color-surface); border: 1px solid #000; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-size: var(--size-medium); font-weight: 600; transition: 0.2s; text-align: center; }
-    .btn-primary:hover { background: #333; border-color: #333; }
-    .btn-secondary { background: var(--color-surface); color: #000; border: 1px solid #ddd; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-size: var(--size-medium); font-weight: 600; transition: 0.2s; text-align: center; }
-    .btn-secondary:hover { border-color: #aaa; background: #f9f9f9; }
+    .btn-primary { background: var(--text); color: var(--color-surface); border: 1px solid var(--text); padding: 14px 28px; border-radius: 8px; text-decoration: none; font-size: var(--size-medium); font-weight: 600; transition: 0.2s; text-align: center; }
+    .btn-primary:hover { background: var(--text-muted); border-color: var(--text-muted); }
+    .btn-secondary { background: var(--color-surface); color: var(--text); border: 1px solid var(--line); padding: 14px 28px; border-radius: 8px; text-decoration: none; font-size: var(--size-medium); font-weight: 600; transition: 0.2s; text-align: center; }
+    .btn-secondary:hover { border-color: var(--text-muted); background: var(--bg); }
 
     .tags-block { margin-top: auto; padding-bottom: 25px; font-family: var(--font-ui); }
     .tags-header { font-size: var(--size-medium); font-weight: 700; color: var(--color-text); margin-bottom: 16px; }
@@ -126,7 +126,7 @@ const formatDate = (date) =>
         background: var(--color-surface); border: 1px solid var(--color-border); padding: 8px 16px; border-radius: 20px;
         font-size: var(--size-small); font-weight: 500; text-decoration: none; color: var(--color-text-soft); transition: 0.2s;
     }
-    .tag-pill:hover { background: #000; color: var(--color-surface); border-color: #000; }
+    .tag-pill:hover { background: var(--text); color: var(--color-surface); border-color: var(--text); }
 
     /* 2. ЦЕНТРАЛЬНАЯ КАРТОЧКА */
     .popular-card {
@@ -139,7 +139,7 @@ const formatDate = (date) =>
     .popular-overlay-content {
         position: absolute; bottom: 60px; left: 30px; width: calc(100% - 48px); max-width: 310px;
         background: var(--color-surface); padding: 24px; border-radius: 12px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.08); z-index: 3;
+        box-shadow: 0 10px 25px var(--shadow); z-index: 3;
         display: flex; flex-direction: column; gap: 8px;
     }
 
@@ -159,7 +159,8 @@ const formatDate = (date) =>
 
     .editors-card { display: flex; gap: 16px; align-items: center; text-decoration: none; color: inherit; padding: 8px; border-radius: 12px; transition: 0.25s; }
     .editors-card:hover { background: rgba(0, 0, 0, 0.03); transform: translateX(3px); }
-    .editors-card img { width: 85px; height: 115px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid #f0f0f0; }
+    html[data-theme="dark"] .editors-card:hover { background: rgba(255, 255, 255, 0.08); }
+    .editors-card img { width: 85px; height: 115px; border-radius: 8px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--line); }
     .editors-card-content { display: flex; flex-direction: column; gap: 4px; }
 
     .side-tag { font-family: var(--font-ui); font-size: var(--size-small); text-transform: uppercase; font-weight: 700; color: var(--color-text-muted); display: block; letter-spacing: 1px;}
@@ -177,12 +178,12 @@ const formatDate = (date) =>
 
     .section-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
     .section-header-flex h2 { font-family: var(--font-ui); font-size: var(--size-medium); font-weight: 700; margin: 0; color: var(--color-text); }
-    .view-all-link { font-family: var(--font-ui); display: flex; align-items: center; gap: 6px; color: #000; text-decoration: none; font-size: var(--size-base); font-weight: 600; transition: gap 0.2s; }
+    .view-all-link { font-family: var(--font-ui); display: flex; align-items: center; gap: 6px; color: var(--text); text-decoration: none; font-size: var(--size-base); font-weight: 600; transition: gap 0.2s; }
     .view-all-link:hover { gap: 10px; }
 
     .latest-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 80px; }
     .latest-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 16px; overflow: hidden; text-decoration: none; color: inherit; transition: 0.3s; display: flex; flex-direction: column; }
-    .latest-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.04); border-color: #ddd; }
+    .latest-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px var(--shadow); border-color: var(--line); }
 
     .latest-card > img { width: 100%; height: 200px; object-fit: cover; border-bottom: 1px solid var(--color-border); }
 
@@ -193,7 +194,7 @@ const formatDate = (date) =>
     .latest-properties-footer { font-family: var(--font-ui); margin-top: auto; padding-top: 15px; border-top: 1px solid var(--color-border-soft); display: flex; justify-content: space-between; align-items: center; font-size: var(--size-small); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
 
     .properties-left { display: flex; align-items: center; }
-    .dot-separator { margin: 0 8px; color: #ccc; }
+    .dot-separator { margin: 0 8px; color: var(--color-text-faint); }
     .read-time-block { display: flex; align-items: center; gap: 6px; }
 
     .time-icon {
@@ -201,12 +202,12 @@ const formatDate = (date) =>
         height: 14px !important;
         min-width: 14px !important;
         flex-shrink: 0;
-        opacity: 0.7;
+        color: var(--color-text-muted);
         border: none !important;
     }
 
-    .bookmark-icon-btn { background: none; border: none; padding: 4px; color: #aaa; cursor: pointer; transition: color 0.2s; display: flex; align-items: center; justify-content: center; }
-    .bookmark-icon-btn:hover { color: #000; }
+    .bookmark-icon-btn { background: none; border: none; padding: 4px; color: var(--text-muted); cursor: pointer; transition: color 0.2s; display: flex; align-items: center; justify-content: center; }
+    .bookmark-icon-btn:hover { color: var(--accent); }
     .bookmark-icon-btn svg {
         width: 18px !important;
         height: 18px !important;
