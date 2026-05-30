@@ -425,10 +425,10 @@ const slug = Astro.url.pathname;
                 tocToggle.setAttribute('aria-expanded', String(open));
             });
 
-            // TOC начинается на уровне блока «Аудитория» (берём его ЖИВУЮ позицию в окне),
+            // TOC начинается на уровне начала текста статьи (берём ЖИВУЮ позицию .prose в окне),
             // затем прилипает к шапке и сворачивается
             const STICK_TOP = 170;
-            const anchorEl = document.querySelector('.post-audience') || document.querySelector('.post-divider') || prose;
+            const anchorEl = prose;
             const setOpen = (open) => {
                 tocEl.classList.toggle('is-open', open);
                 tocToggle.setAttribute('aria-expanded', String(open));
