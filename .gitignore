@@ -22,3 +22,9 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# вспомогательные материалы для агента (контент-план, структура, визуальные референсы)
+для-агента/
+
+# playwright mcp артефакты
+.playwright-mcp/
