@@ -28,3 +28,6 @@ pnpm-debug.log*
 
 # playwright mcp артефакты
 .playwright-mcp/
+
+# личный бортовой журнал (дата/запрос/recap)
+CHANGELOG.md
