@@ -1,46 +1,73 @@
-# Astro Starter Kit: Basics
+# limonesska.ru
 
-```sh
-npm create astro@latest -- --template basics
-```
+Личный блог / цифровой сад — **limonesska.ru**. Astro 6, деплой на Vercel, контент на русском.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## 🧞 Команды
 
-## 🚀 Project Structure
+Все команды запускаются из корня проекта:
 
-Inside of your Astro project, you'll see the following folders and files:
+| Команда | Действие |
+| :--- | :--- |
+| `npm install` | Установить зависимости |
+| `npm run dev` | Локальный dev-сервер на `localhost:4321` |
+| `npm run build` | Прод-сборка в `./dist/` |
+| `npm run preview` | Предпросмотр прод-сборки локально |
+
+Тестов и линтера нет.
+
+## 🗂 Структура
 
 ```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
+src/
+├── layouts/
+│   ├── BaseLayout.astro    # <head>, дизайн-токены :root (+ тёмная тема), Header + main + Footer
+│   └── PostLayout.astro    # шаблон поста/заметки (.prose, TOC, сноски, ссылки, бэклинки)
+├── components/
+│   ├── Header.astro        # шапка, меню-дропдаун, переключатель темы
+│   ├── Footer.astro        # подвал
+│   ├── Icon.astro          # инлайн SVG-иконок (currentColor)
+│   ├── PostCard.astro      # карточка статьи (главная, /blog)
+│   └── EntryList.astro     # общий список для страниц-фильтров
+├── content/
+│   ├── blog/               # статьи (.mdx)
+│   └── notes/              # заметки (.mdx)
+├── content.config.ts       # коллекции blog/notes, общая схема
+└── pages/                  # index, blog, notes, category, subcategory, tags, ...
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+Все страницы оборачиваются в `BaseLayout`. Шапку/подвал в страницах не дублировать.
 
-## 🧞 Commands
+## 📝 Контент
 
-All commands are run from the root of the project, from a terminal:
+Посты — MDX в `src/content/blog/`, заметки — в `src/content/notes/`. Имя файла — kebab-case slug.
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+Frontmatter (обязательные `title`, `pubDate`, `tags`; остальное опционально):
 
-## 👀 Want to learn more?
+```mdx
+---
+title: "Заголовок"
+pubDate: 2026-05-28
+tags: ["тег1", "тег2"]
+description: "Короткое описание для списка"
+category: "Рубрика"
+subcategory: "Подрубрика"
+stage: "base" | "advanced" | "max"   # иконка звезды-стадии
+audience: "Для кого этот текст"        # блок «Предполагаемая аудитория»
+cover: "https://..."                   # картинка для карточки
+---
+```
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+Оба раздела рендерятся через `PostLayout`. Спецэлементы (ссылки разных типов, сноски, TOC, буквица) пишутся прямо в теле как HTML — навешиваются автоматически. Демо со всеми элементами: `src/content/blog/ritualy-cifrovogo-sada.mdx`. Подробности — в `CLAUDE.md`.
+
+Страницы-фильтры агрегируют посты + заметки: `/tags/<тег>`, `/category/<рубрика>`, `/subcategory/<подрубрика>`.
+
+## 🎨 Стили и темы
+
+- Весь CSS — инлайново в `.astro` через `<style is:global>`. Без Tailwind, CSS-модулей и отдельных файлов.
+- Дизайн-токены (цвета, шрифты, размеры) — в `:root` в `BaseLayout.astro`. Всегда использовать токены, не сырые hex/px.
+- **Светлая/тёмная тема:** 8 канонических цветовых токенов (`--bg`, `--text`, `--text-muted`, `--accent`, `--accent-2`, `--line`, `--card-bg`, `--shadow`); старые `--color-*` — алиасы на них. Тёмная — `html[data-theme="dark"]`. Переключатель (солнце/луна) в шапке, выбор в `localStorage`, применяется до отрисовки (без вспышки). Светлая по умолчанию.
+- **Шрифты (3):** Playfair Display (`--font-display`), Vollkorn (`--font-vollkorn`), Manrope (`--font-ui`).
+
+## 🚀 Деплой
+
+Vercel, автодеплой при пуше в `main`. CI нет.
