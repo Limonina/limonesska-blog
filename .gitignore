@@ -36,5 +36,8 @@ INBOX.md
 .claude/hooks/
 README-changelog.md
 
+# контекст агента (CLAUDE.md) — личное, не в пуше
+CLAUDE.md
+
 # личная папка (планы, финансы, Китай/паспорта) — отдельный независимый git, НЕ пушить
 My way/
