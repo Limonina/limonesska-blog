@@ -17,6 +17,8 @@ const entrySchema = z.object({
   audience: z.string().optional(), // блок «Предполагаемая аудитория»
   // Для заметок: slug родительского поста (блок «Заметки к этому посту»)
   post: z.string().optional(),
+  // Черновик: виден в dev, но не попадает в продакшен-сборку (на сайт)
+  draft: z.boolean().optional(),
 });
 
 const blog = defineCollection({

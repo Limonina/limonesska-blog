@@ -1,12 +1,12 @@
 ---
-import { getCollection } from 'astro:content';
+import { getEntries } from '../utils/content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PostCard from '../components/PostCard.astro';
 
 const sortByDate = (a, b) => +b.data.pubDate - +a.data.pubDate;
 
-const blogPosts = (await getCollection('blog')).sort(sortByDate);
-const notes = (await getCollection('notes')).sort(sortByDate);
+const blogPosts = (await getEntries('blog')).sort(sortByDate);
+const notes = (await getEntries('notes')).sort(sortByDate);
 
 const latestPosts = blogPosts.slice(0, 4);
 const freshNotes = notes.slice(0, 3);

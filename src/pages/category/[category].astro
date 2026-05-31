@@ -1,11 +1,11 @@
 ---
-import { getCollection } from 'astro:content';
+import { getEntries } from '../../utils/content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import EntryList from '../../components/EntryList.astro';
 
 export async function getStaticPaths() {
-  const blog = await getCollection('blog');
-  const notes = await getCollection('notes');
+  const blog = await getEntries('blog');
+  const notes = await getEntries('notes');
   const all = [
     ...blog.map((e) => ({ e, kind: 'Статья', base: '/blog' })),
     ...notes.map((e) => ({ e, kind: 'Заметка', base: '/notes' })),
