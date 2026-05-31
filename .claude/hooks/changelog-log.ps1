@@ -33,7 +33,8 @@ function Get-Prop($obj, [string]$name) {
 function Clean-Text([string]$t, [int]$max) {
     if ([string]::IsNullOrWhiteSpace($t)) { return '' }
     $t = $t.Trim() -replace '\s+', ' '
-    if ($t.Length -gt $max) { $t = $t.Substring(0, $max) + $hell }
+    # max <= 0 => bez obrezki (zapros pishem celikom)
+    if ($max -gt 0 -and $t.Length -gt $max) { $t = $t.Substring(0, $max) + $hell }
     return $t
 }
 
@@ -135,8 +136,8 @@ try {
     }
     if (-not $prompt) { exit 0 }
 
-    $p = ($prompt -split "\r?\n")[0]
-    $p = Clean-Text $p 200
+    # Zapros pishem celikom: vsyo soobshchenie (mnogostrochnoe skl=eivaetsya v odnu stroku), bez obrezki.
+    $p = Clean-Text $prompt 0
     if ([string]::IsNullOrWhiteSpace($p)) { exit 0 }
 
     $entryLines = @(
