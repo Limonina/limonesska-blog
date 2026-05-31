@@ -32,5 +32,9 @@ CHANGELOG.md
 # личный inbox задач/шпаргалка зоны
 INBOX.md
 
+# журнал/хук — личная инфраструктура, не в пуше (скрипт общий на C:\Users\user\.claude\hooks)
+.claude/hooks/
+README-changelog.md
+
 # личная папка (планы, финансы, Китай/паспорта) — отдельный независимый git, НЕ пушить
 My way/
