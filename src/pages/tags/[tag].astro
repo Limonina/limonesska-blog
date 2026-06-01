@@ -6,9 +6,11 @@ import EntryList from '../../components/EntryList.astro';
 export async function getStaticPaths() {
   const blog = await getEntries('blog');
   const notes = await getEntries('notes');
+  const diary = await getEntries('diary');
   const all = [
     ...blog.map((e) => ({ e, kind: 'Статья', base: '/blog' })),
     ...notes.map((e) => ({ e, kind: 'Заметка', base: '/notes' })),
+    ...diary.map((e) => ({ e, kind: 'Дневник', base: '/diary' })),
   ];
 
   const tags = new Set<string>();

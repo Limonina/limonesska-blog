@@ -17,6 +17,8 @@ const entrySchema = z.object({
   audience: z.string().optional(), // блок «Предполагаемая аудитория»
   // Для заметок: slug родительского поста (блок «Заметки к этому посту»)
   post: z.string().optional(),
+  // Для дневника: фото дня (первое — главное в календарной ячейке)
+  photos: z.array(z.string()).optional(),
   // Черновик: виден в dev, но не попадает в продакшен-сборку (на сайт)
   draft: z.boolean().optional(),
 });
@@ -31,4 +33,11 @@ const notes = defineCollection({
   schema: entrySchema,
 });
 
-export const collections = { blog, notes };
+// Дневник — личные записи по дням (memory). Тот же шаблон, что у постов (PostLayout),
+// но отдельная коллекция: в календарь /diary тянутся ТОЛЬКО дневниковые записи.
+const diary = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/diary' }),
+  schema: entrySchema,
+});
+
+export const collections = { blog, notes, diary };

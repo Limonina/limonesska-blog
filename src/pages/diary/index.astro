@@ -1,0 +1,577 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getEntries } from '../../utils/content';
+
+// ── Дневник тянет ТОЛЬКО свою коллекцию (личные записи по дням) ──
+const entries = await getEntries('diary');
+
+const entriesData = entries.map((e) => {
+  const d = e.data.pubDate;
+  return {
+    y: d.getFullYear(),
+    m: d.getMonth(),
+    d: d.getDate(),
+    photos: e.data.photos ?? [],
+    title: e.data.title,
+    description: e.data.description ?? '',
+    href: `/diary/${e.id}`,
+  };
+});
+
+// Месяц, на котором открывается календарь
+const initYear = 2026;
+const initMonth = 4; // май (0 = январь)
+---
+
+<BaseLayout title="Дневник — хроника в реальном времени | limonesska">
+    <section class="diary">
+        <header class="diary-head">
+            <h1 class="diary-title">Дневник</h1>
+            <p class="diary-lead">
+                Хроника в реальном времени: рутина, поездки, игры и всё, что просто происходит.
+                Один день — один кадр и пара мыслей. Личное «memory» по дням.
+            </p>
+        </header>
+
+        <div class="cal-stage">
+            <aside class="cal-aside cal-aside--left" id="cal-left" aria-label="Фото дня"></aside>
+
+            <div class="cal-main">
+                <div class="cal-bar">
+                    <button class="cal-nav" data-step="year-prev" aria-label="Предыдущий год">«</button>
+                    <button class="cal-nav" data-step="month-prev" aria-label="Предыдущий месяц">‹</button>
+                    <span class="cal-label" id="cal-label"></span>
+                    <button class="cal-nav" data-step="month-next" aria-label="Следующий месяц">›</button>
+                    <button class="cal-nav" data-step="year-next" aria-label="Следующий год">»</button>
+                </div>
+
+                <div class="cal-weekdays">
+                    <span class="cal-wd">Пн</span><span class="cal-wd">Вт</span><span class="cal-wd">Ср</span>
+                    <span class="cal-wd">Чт</span><span class="cal-wd">Пт</span><span class="cal-wd">Сб</span>
+                    <span class="cal-wd">Вс</span>
+                </div>
+
+                <div class="cal-grid" id="cal-grid"></div>
+            </div>
+
+            <aside class="cal-aside cal-aside--right" id="cal-right" aria-label="Запись дня"></aside>
+        </div>
+
+        <div class="cal-lightbox" id="cal-lightbox" hidden>
+            <button class="cal-lb-btn cal-lb-close" aria-label="Закрыть">×</button>
+            <button class="cal-lb-btn cal-lb-prev" aria-label="Назад">‹</button>
+            <img class="cal-lb-img" alt="" />
+            <button class="cal-lb-btn cal-lb-next" aria-label="Вперёд">›</button>
+            <div class="cal-lb-meta" id="cal-lb-meta"></div>
+        </div>
+    </section>
+
+    <script is:inline define:vars={{ entriesData, initYear, initMonth }}>
+        (function () {
+            const monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+            const monthGen = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+            const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+            let year = initYear, month = initMonth;
+            const gridEl = document.getElementById('cal-grid');
+            const labelEl = document.getElementById('cal-label');
+            const leftEl = document.getElementById('cal-left');
+            const rightEl = document.getElementById('cal-right');
+
+            const entriesForDay = (d) => entriesData.filter((x) => x.y === year && x.m === month && x.d === d);
+            const photosForDay = (d) => entriesForDay(d).flatMap((e) => e.photos);
+            const daysWithPhotos = () => {
+                const s = new Set();
+                for (const e of entriesData) if (e.y === year && e.m === month && e.photos.length) s.add(e.d);
+                return [...s].sort((a, b) => a - b);
+            };
+
+            // переигрывает анимацию выезда (сброс класса + reflow + повторный показ)
+            const reveal = (el) => { el.classList.remove('is-visible'); void el.offsetWidth; el.classList.add('is-visible'); };
+
+            // ── Правая панель: запись(и) дня (по клику) ──
+            function showRight(day) {
+                const es = entriesForDay(day);
+                if (!es.length) return;
+                let html = '<div class="cal-aside-head">Запись · ' + day + ' ' + monthGen[month] + '</div>';
+                for (const e of es) {
+                    html += '<a class="cal-pcard" href="' + esc(e.href) + '">'
+                        + '<span class="cal-pcard-title">' + esc(e.title) + '</span>'
+                        + (e.description ? '<span class="cal-pcard-desc">' + esc(e.description) + '</span>' : '')
+                        + '<span class="cal-pcard-more">Читать запись →</span>'
+                        + '</a>';
+                }
+                rightEl.innerHTML = html;
+                reveal(rightEl);
+            }
+
+            // ── Левая панель: все фото дня (главное — первым сверху) ──
+            function showLeft(day) {
+                const photos = photosForDay(day);
+                if (!photos.length) { leftEl.classList.remove('is-visible'); return; }
+                let html = '<button class="cal-aside-close" aria-label="Закрыть">×</button>';
+                html += '<div class="cal-aside-head">Фото · ' + day + ' ' + monthGen[month] + '</div>';
+                for (let i = 0; i < photos.length; i++) {
+                    html += '<img class="cal-gphoto" data-day="' + day + '" data-idx="' + i + '" src="' + esc(photos[i]) + '" alt="" loading="lazy">';
+                }
+                leftEl.innerHTML = html;
+                reveal(leftEl);
+                leftEl.querySelector('.cal-aside-close').addEventListener('click', () => leftEl.classList.remove('is-visible'));
+                leftEl.querySelectorAll('.cal-gphoto').forEach((img) => {
+                    img.addEventListener('click', () => openLb(+img.dataset.day, +img.dataset.idx));
+                });
+            }
+
+            // ── Лайтбокс: фото на весь экран, листание, перескок на след. день ──
+            const lb = document.getElementById('cal-lightbox');
+            const lbImg = lb.querySelector('.cal-lb-img');
+            const lbMeta = document.getElementById('cal-lb-meta');
+            let lbDay = null, lbIdx = 0;
+
+            function renderLb() {
+                const photos = photosForDay(lbDay);
+                if (!photos.length) return;
+                lbImg.src = photos[lbIdx];
+                lbMeta.textContent = lbDay + ' ' + monthGen[month] + ' · ' + (lbIdx + 1) + '/' + photos.length;
+            }
+            function openLb(day, idx) {
+                lbDay = day; lbIdx = idx;
+                lb.hidden = false;
+                document.body.style.overflow = 'hidden';
+                renderLb();
+            }
+            function closeLb() {
+                lb.hidden = true;
+                document.body.style.overflow = '';
+            }
+            function lbStep(dir) {
+                const photos = photosForDay(lbDay);
+                const next = lbIdx + dir;
+                if (next >= 0 && next < photos.length) { lbIdx = next; }
+                else {
+                    const days = daysWithPhotos();
+                    if (!days.length) return;
+                    const i = days.indexOf(lbDay);
+                    const nd = days[(i + dir + days.length) % days.length]; // перескок на след./пред. день
+                    lbDay = nd;
+                    lbIdx = dir > 0 ? 0 : photosForDay(nd).length - 1;
+                }
+                renderLb();
+            }
+            lb.querySelector('.cal-lb-next').addEventListener('click', (e) => { e.stopPropagation(); lbStep(1); });
+            lb.querySelector('.cal-lb-prev').addEventListener('click', (e) => { e.stopPropagation(); lbStep(-1); });
+            lb.querySelector('.cal-lb-close').addEventListener('click', closeLb);
+            lb.addEventListener('click', (e) => { if (e.target === lb) closeLb(); });
+            document.addEventListener('keydown', (e) => {
+                if (lb.hidden) return;
+                if (e.key === 'Escape') closeLb();
+                else if (e.key === 'ArrowRight') lbStep(1);
+                else if (e.key === 'ArrowLeft') lbStep(-1);
+            });
+
+            function render() {
+                labelEl.textContent = monthNames[month] + ' ' + year;
+                leftEl.classList.remove('is-visible');
+                rightEl.classList.remove('is-visible');
+
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const firstW = (new Date(year, month, 1).getDay() + 6) % 7; // Пн = 0
+                let html = '';
+                for (let i = 0; i < firstW; i++) html += '<div class="cal-cell cal-cell--empty"></div>';
+
+                for (let dnum = 1; dnum <= daysInMonth; dnum++) {
+                    const es = entriesForDay(dnum);
+                    const photos = photosForDay(dnum);
+                    const hasEntry = es.length > 0;
+                    const main = photos[0];
+                    const cap = hasEntry ? es[0].title : '';
+
+                    let inner = '';
+                    if (main) inner += '<img class="cal-photo" src="' + esc(main) + '" alt="" loading="lazy">';
+                    inner += '<span class="cal-day">' + dnum + '</span>';
+                    if (cap) inner += '<span class="cal-caption">' + esc(cap) + '</span>';
+                    if (photos.length > 1) inner += '<span class="cal-badge">+' + (photos.length - 1) + '</span>';
+                    if (hasEntry && !main) inner += '<span class="cal-dot" aria-hidden="true"></span>';
+
+                    const cls = 'cal-cell'
+                        + (main ? ' cal-cell--photo' : '')
+                        + (hasEntry ? ' cal-cell--entry' : '');
+                    html += '<div class="' + cls + '" data-day="' + dnum + '"><div class="cal-cell-inner">' + inner + '</div></div>';
+                }
+                gridEl.innerHTML = html;
+
+                gridEl.querySelectorAll('.cal-cell[data-day]').forEach((cell) => {
+                    const day = +cell.dataset.day;
+                    const hasEntry = entriesForDay(day).length > 0;
+                    // клик по дню: запись + фото выезжают вместе
+                    cell.addEventListener('click', () => {
+                        if (hasEntry) {
+                            showRight(day);
+                            showLeft(day);
+                        } else {
+                            rightEl.classList.remove('is-visible');
+                            leftEl.classList.remove('is-visible');
+                        }
+                    });
+                });
+            }
+
+            document.querySelectorAll('.cal-nav').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const step = btn.dataset.step;
+                    if (step === 'month-prev') { month--; if (month < 0) { month = 11; year--; } }
+                    else if (step === 'month-next') { month++; if (month > 11) { month = 0; year++; } }
+                    else if (step === 'year-prev') year--;
+                    else if (step === 'year-next') year++;
+                    render();
+                });
+            });
+
+            render();
+        })();
+    </script>
+
+    <style is:global>
+        .diary {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .diary-head { margin-bottom: 40px; }
+        .diary-title {
+            font-family: var(--font-display);
+            font-size: var(--size-mega);
+            color: var(--text);
+            margin: 0 0 18px;
+        }
+        .diary-lead {
+            font-family: var(--font-vollkorn);
+            font-size: var(--size-medium);
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin: 0;
+            max-width: 40em;
+        }
+
+        /* ── Сцена: [фото слева] [календарь] [запись справа] ── */
+        .cal-stage {
+            display: grid;
+            grid-template-columns: 220px minmax(0, 1fr) 260px;
+            gap: 28px;
+            align-items: start;
+        }
+        .cal-main { min-width: 0; }
+
+        /* боковые панели: плавный выезд как у карточек-ссылок в постах
+           (через анимацию — чтобы переигрывалось при клике на другой день) */
+        .cal-aside {
+            position: sticky;
+            top: 120px;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .cal-aside.is-visible {
+            opacity: 1;
+            pointer-events: auto;
+            animation: cal-reveal 0.45s ease 0.08s both;
+        }
+        @keyframes cal-reveal {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: none; }
+        }
+        .cal-aside-head {
+            font-family: var(--font-ui);
+            font-size: var(--size-small);
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--accent-2);
+            margin-bottom: 12px;
+        }
+        .cal-aside-close {
+            float: right;
+            font-family: var(--font-ui);
+            font-size: 1.2rem;
+            line-height: 1;
+            color: var(--text-muted);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0 0 6px 6px;
+        }
+        .cal-aside-close:hover { color: var(--accent); }
+
+        /* левая панель: галерея фото дня */
+        .cal-gphoto {
+            display: block;
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: opacity 0.15s ease;
+        }
+        .cal-gphoto:hover { opacity: 0.9; }
+
+        /* ── Лайтбокс: фото на весь экран + листание ── */
+        .cal-lightbox {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.86);
+            padding: 40px;
+        }
+        .cal-lightbox[hidden] { display: none; }
+        .cal-lb-img {
+            max-width: min(1100px, 92vw);
+            max-height: 84vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        .cal-lb-btn {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s ease;
+        }
+        .cal-lb-btn:hover { background: rgba(255, 255, 255, 0.25); }
+        .cal-lb-prev, .cal-lb-next {
+            top: 50%;
+            transform: translateY(-50%);
+            width: 56px;
+            height: 56px;
+            font-size: 2rem;
+            line-height: 1;
+        }
+        .cal-lb-prev { left: 24px; }
+        .cal-lb-next { right: 24px; }
+        .cal-lb-close {
+            top: 24px;
+            right: 24px;
+            width: 44px;
+            height: 44px;
+            font-size: 1.6rem;
+            line-height: 1;
+        }
+        .cal-lb-meta {
+            position: absolute;
+            bottom: 24px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-family: var(--font-ui);
+            font-size: var(--size-small);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.75);
+        }
+        @media (max-width: 640px) {
+            .cal-lb-prev { left: 8px; }
+            .cal-lb-next { right: 8px; }
+            .cal-lb-btn { width: 44px; height: 44px; }
+        }
+
+        /* правая панель: карточка записи (кликабельная) */
+        .cal-pcard {
+            display: block;
+            text-decoration: none;
+            padding: 12px 14px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--card-bg);
+            box-shadow: 0 8px 24px var(--shadow);
+            margin-bottom: 12px;
+            transition: border-color 0.2s ease;
+        }
+        .cal-pcard:hover { border-color: var(--accent-2); }
+        .cal-pcard-title {
+            display: block;
+            font-family: var(--font-display);
+            font-size: 1rem;
+            line-height: 1.25;
+            color: var(--text);
+        }
+        .cal-pcard:hover .cal-pcard-title { color: var(--accent); }
+        .cal-pcard-desc {
+            display: block;
+            margin-top: 4px;
+            font-family: var(--font-vollkorn);
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: var(--text-muted);
+        }
+        .cal-pcard-more {
+            display: block;
+            margin-top: 8px;
+            font-family: var(--font-ui);
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            color: var(--accent-2);
+        }
+
+        /* ── Панель навигации ── */
+        .cal-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 22px;
+        }
+        .cal-label {
+            font-family: var(--font-display);
+            font-size: var(--size-h2);
+            color: var(--text);
+            min-width: 8.5em;
+            text-align: center;
+        }
+        .cal-nav {
+            font-family: var(--font-ui);
+            font-size: 1.25rem;
+            line-height: 1;
+            color: var(--text-muted);
+            background: var(--card-bg);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            width: 38px;
+            height: 38px;
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+        }
+        .cal-nav:hover { color: var(--accent-2); border-color: var(--accent-2); }
+
+        .cal-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .cal-wd {
+            font-family: var(--font-ui);
+            font-size: var(--size-small);
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--color-text-faint);
+            text-align: center;
+        }
+
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+
+        .cal-cell {
+            position: relative;
+            aspect-ratio: 1;
+        }
+        .cal-cell--entry { cursor: pointer; }
+        .cal-cell-inner {
+            position: absolute;
+            inset: 0;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--card-bg);
+            overflow: hidden;
+        }
+        .cal-cell--empty .cal-cell-inner { display: none; }
+
+        .cal-photo {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .cal-cell--photo .cal-cell-inner::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.28) 0%, transparent 34%, transparent 64%, rgba(0,0,0,0.42) 100%);
+            pointer-events: none;
+        }
+
+        .cal-day {
+            position: absolute;
+            top: 6px;
+            left: 8px;
+            z-index: 1;
+            font-family: var(--font-ui);
+            font-size: var(--size-small);
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        .cal-cell--photo .cal-day { color: #fff; }
+
+        .cal-caption {
+            position: absolute;
+            left: 8px;
+            right: 8px;
+            bottom: 6px;
+            z-index: 1;
+            font-family: var(--font-ui);
+            font-size: 0.66rem;
+            line-height: 1.2;
+            color: #fff;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* бейдж «+N фото» — правый верхний угол */
+        .cal-badge {
+            position: absolute;
+            right: 6px;
+            top: 6px;
+            z-index: 2;
+            font-family: var(--font-ui);
+            font-size: 0.62rem;
+            font-weight: 700;
+            color: #fff;
+            background: rgba(0,0,0,0.45);
+            border-radius: 999px;
+            padding: 2px 7px;
+        }
+        /* точка-индикатор «есть запись» (без фото) */
+        .cal-dot {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 2;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-2);
+            box-shadow: 0 0 0 2px var(--card-bg);
+        }
+
+        @media (max-width: 1024px) {
+            .cal-stage { grid-template-columns: 1fr; }
+            .cal-main { order: 0; }
+            .cal-aside { position: relative; top: 0; }
+            .cal-aside--right { order: 1; }
+            .cal-aside--left { order: 2; }
+            .cal-aside:not(.is-visible) { display: none; }
+        }
+        @media (max-width: 640px) {
+            .cal-weekdays, .cal-grid { gap: 6px; }
+            .cal-cell-inner { border-radius: 9px; }
+            .cal-day { font-size: 0.7rem; top: 4px; left: 5px; }
+            .cal-caption { display: none; }
+            .cal-label { font-size: var(--size-h3); min-width: 7em; }
+        }
+    </style>
+</BaseLayout>
