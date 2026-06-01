@@ -9,10 +9,14 @@
     "dev": "astro dev --host",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "upload-photos": "node --env-file-if-exists=.env scripts/upload-photos.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^6.0.1",
     "astro": "^6.3.3"
+  },
+  "devDependencies": {
+    "cloudinary": "^2.10.0"
   }
 }
