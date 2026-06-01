@@ -21,8 +21,9 @@ const entriesData = entries.map((e) => {
       thumb: cl(u, 'f_auto,q_auto,w_600'),
       full: cl(u, 'f_auto,q_auto,w_1600'),
     })),
-    title: e.data.title,
+    title: e.data.title ?? '',
     description: e.data.description ?? '',
+    hasText: !!(e.body && e.body.trim()), // есть ли текст-запись (для «Читать запись»)
     href: `/diary/${e.id}`,
   };
 });
@@ -98,16 +99,18 @@ const initMonth = 4; // май (0 = январь)
             // переигрывает анимацию выезда (сброс класса + reflow + повторный показ)
             const reveal = (el) => { el.classList.remove('is-visible'); void el.offsetWidth; el.classList.add('is-visible'); };
 
-            // ── Правая панель: запись(и) дня (по клику) ──
+            // ── Правая панель: запись(и) дня (по клику). Только содержательные —
+            //    «фото-только» дни (без заголовка/текста/описания) панель не показывают.
             function showRight(day) {
-                const es = entriesForDay(day);
-                if (!es.length) return;
+                const es = entriesForDay(day).filter((e) => e.title || e.description || e.hasText);
+                if (!es.length) { rightEl.classList.remove('is-visible'); return; }
                 let html = '<div class="cal-aside-head">Запись · ' + day + ' ' + monthGen[month] + '</div>';
                 for (const e of es) {
+                    const heading = e.title || (day + ' ' + monthGen[month]);
                     html += '<a class="cal-pcard" href="' + esc(e.href) + '">'
-                        + '<span class="cal-pcard-title">' + esc(e.title) + '</span>'
+                        + '<span class="cal-pcard-title">' + esc(heading) + '</span>'
                         + (e.description ? '<span class="cal-pcard-desc">' + esc(e.description) + '</span>' : '')
-                        + '<span class="cal-pcard-more">Читать запись →</span>'
+                        + (e.hasText ? '<span class="cal-pcard-more">Читать запись →</span>' : '')
                         + '</a>';
                 }
                 rightEl.innerHTML = html;

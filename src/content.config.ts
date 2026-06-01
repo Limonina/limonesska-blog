@@ -35,9 +35,10 @@ const notes = defineCollection({
 
 // Дневник — личные записи по дням (memory). Тот же шаблон, что у постов (PostLayout),
 // но отдельная коллекция: в календарь /diary тянутся ТОЛЬКО дневниковые записи.
+// title необязателен: бывают «фото-только» дни (одно фото, без текста-записи).
 const diary = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/diary' }),
-  schema: entrySchema,
+  schema: entrySchema.extend({ title: z.string().optional() }),
 });
 
 export const collections = { blog, notes, diary };
