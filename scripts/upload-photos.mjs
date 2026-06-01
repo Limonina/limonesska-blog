@@ -42,6 +42,7 @@ console.log(`Заливаю ${files.length} фото в Cloudinary (папка "
 
 const urls = [];
 const uploaded = []; // имена успешно залитых файлов — их потом удаляем
+const failed = [];   // {file, reason} — не залились (тяжёлые/битые), остаются в папке
 for (const f of files) {
   try {
     const res = await cloudinary.uploader.upload(path.join(DIR, f), {
@@ -50,13 +51,15 @@ for (const f of files) {
       unique_filename: true,
       overwrite: false,
     });
-    // f_auto,q_auto — Cloudinary сам отдаст оптимальный формат/качество
-    const url = res.secure_url.replace('/upload/', '/upload/f_auto,q_auto/');
+    // Чистый URL — оптимизацию (f_auto,q_auto + размер) навешивает сайт при отрисовке
+    const url = res.secure_url;
     urls.push(url);
     uploaded.push(f);
     console.log(`  ✓ ${f}`);
   } catch (e) {
-    console.error(`  ✖ ${f}: ${e.message}`);
+    const reason = e?.message || e?.error?.message || String(e);
+    failed.push({ file: f, reason });
+    console.error(`  ✖ ${f}: ${reason}`);
   }
 }
 
@@ -66,10 +69,18 @@ if (urls.length) {
   for (const u of urls) console.log(`  - "${u}"`);
 }
 
-// Чистим папку от успешно залитых файлов (если не --keep)
+// Чистим папку ТОЛЬКО от успешно залитых (если не --keep). Незалитые остаются.
 if (uploaded.length && !KEEP) {
   await Promise.all(uploaded.map((f) => unlink(path.join(DIR, f)).catch(() => {})));
-  console.log(`\n🧹 Очистил ${DIR}/ — удалил ${uploaded.length} залит. файл(ов). Папка готова к следующей заливке.`);
+  console.log(`\n🧹 Очистил ${DIR}/ — удалил ${uploaded.length} залит. файл(ов).`);
 } else if (uploaded.length && KEEP) {
   console.log(`\n⚠️  Файлы оставлены (--keep). Не забудь очистить ${DIR}/, иначе зальются повторно.`);
+}
+
+// Итог по незалитым — остаются в папке, чтобы можно было сжать и повторить
+if (failed.length) {
+  console.log(`\n⚠️  Не залилось: ${failed.length} (остались в ${DIR}/):`);
+  for (const { file, reason } of failed) console.log(`  • ${file} — ${reason}`);
+  console.log('Частые причины: файл > 10 МБ или изображение > 25 МП (free-план).');
+  console.log('Сожми/уменьши и запусти снова.');
 }

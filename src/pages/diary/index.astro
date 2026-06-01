@@ -5,13 +5,22 @@ import { getEntries } from '../../utils/content';
 // ── Дневник тянет ТОЛЬКО свою коллекцию (личные записи по дням) ──
 const entries = await getEntries('diary');
 
+// В photos: хранится ЧИСТЫЙ URL. Оптимизацию (формат/качество/размер) навешиваем
+// здесь: для Cloudinary вставляем трансформацию в путь, для прочих — отдаём как есть.
+// thumb — лёгкая версия для ячейки/галереи, full — крупная для лайтбокса.
+const cl = (url, t) =>
+  url.includes('res.cloudinary.com/') ? url.replace('/upload/', `/upload/${t}/`) : url;
+
 const entriesData = entries.map((e) => {
   const d = e.data.pubDate;
   return {
     y: d.getFullYear(),
     m: d.getMonth(),
     d: d.getDate(),
-    photos: e.data.photos ?? [],
+    photos: (e.data.photos ?? []).map((u) => ({
+      thumb: cl(u, 'f_auto,q_auto,w_600'),
+      full: cl(u, 'f_auto,q_auto,w_1600'),
+    })),
     title: e.data.title,
     description: e.data.description ?? '',
     href: `/diary/${e.id}`,
@@ -112,7 +121,7 @@ const initMonth = 4; // май (0 = январь)
                 let html = '<button class="cal-aside-close" aria-label="Закрыть">×</button>';
                 html += '<div class="cal-aside-head">Фото · ' + day + ' ' + monthGen[month] + '</div>';
                 for (let i = 0; i < photos.length; i++) {
-                    html += '<img class="cal-gphoto" data-day="' + day + '" data-idx="' + i + '" src="' + esc(photos[i]) + '" alt="" loading="lazy">';
+                    html += '<img class="cal-gphoto" data-day="' + day + '" data-idx="' + i + '" src="' + esc(photos[i].thumb) + '" alt="" loading="lazy">';
                 }
                 leftEl.innerHTML = html;
                 reveal(leftEl);
@@ -131,7 +140,7 @@ const initMonth = 4; // май (0 = январь)
             function renderLb() {
                 const photos = photosForDay(lbDay);
                 if (!photos.length) return;
-                lbImg.src = photos[lbIdx];
+                lbImg.src = photos[lbIdx].full;
                 lbMeta.textContent = lbDay + ' ' + monthGen[month] + ' · ' + (lbIdx + 1) + '/' + photos.length;
             }
             function openLb(day, idx) {
@@ -187,7 +196,7 @@ const initMonth = 4; // май (0 = январь)
                     const cap = hasEntry ? es[0].title : '';
 
                     let inner = '';
-                    if (main) inner += '<img class="cal-photo" src="' + esc(main) + '" alt="" loading="lazy">';
+                    if (main) inner += '<img class="cal-photo" src="' + esc(main.thumb) + '" alt="" loading="lazy">';
                     inner += '<span class="cal-day">' + dnum + '</span>';
                     if (cap) inner += '<span class="cal-caption">' + esc(cap) + '</span>';
                     if (photos.length > 1) inner += '<span class="cal-badge">+' + (photos.length - 1) + '</span>';
