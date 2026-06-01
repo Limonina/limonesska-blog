@@ -1,50 +1,11 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import bg from '../assets/background.svg?raw';
 ---
 
 <BaseLayout title="404 — эта чешуйка ещё куётся | limonesska">
     <section class="notfound">
-        <svg class="nf-bg" viewBox="0 0 800 560" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-            <!-- созвездия только вокруг «404» (верхняя зона, ниже заголовка — пусто) -->
-            <polyline class="nf-bg-line" points="56,58 116,106 176,78 146,148 86,138 56,58" />
-            <polyline class="nf-bg-line" points="360,40 422,76 486,48 456,114" />
-            <polyline class="nf-bg-line" points="636,70 700,114 760,86 722,156" />
-            <polyline class="nf-bg-line" points="36,150 96,196 150,170" />
-            <polyline class="nf-bg-line" points="654,196 716,226 770,190" />
-            <polyline class="nf-bg-line" points="200,118 250,170" />
-            <polyline class="nf-bg-line" points="560,150 600,205" />
-            <!-- звёзды -->
-            <circle class="nf-bg-star" cx="56" cy="58" r="3.2" />
-            <circle class="nf-bg-star" cx="116" cy="106" r="2.2" />
-            <circle class="nf-bg-star" cx="176" cy="78" r="2.8" />
-            <circle class="nf-bg-star" cx="146" cy="148" r="2" />
-            <circle class="nf-bg-star" cx="86" cy="138" r="2.4" />
-            <circle class="nf-bg-star" cx="360" cy="40" r="2.4" />
-            <circle class="nf-bg-star" cx="422" cy="76" r="3" />
-            <circle class="nf-bg-star" cx="486" cy="48" r="2.2" />
-            <circle class="nf-bg-star" cx="456" cy="114" r="2.4" />
-            <circle class="nf-bg-star" cx="636" cy="70" r="2.6" />
-            <circle class="nf-bg-star" cx="700" cy="114" r="3" />
-            <circle class="nf-bg-star" cx="760" cy="86" r="2.2" />
-            <circle class="nf-bg-star" cx="722" cy="156" r="2.6" />
-            <circle class="nf-bg-star" cx="36" cy="150" r="2.4" />
-            <circle class="nf-bg-star" cx="96" cy="196" r="2.8" />
-            <circle class="nf-bg-star" cx="150" cy="170" r="2.2" />
-            <circle class="nf-bg-star" cx="654" cy="196" r="2.4" />
-            <circle class="nf-bg-star" cx="716" cy="226" r="2.6" />
-            <circle class="nf-bg-star" cx="770" cy="190" r="2.2" />
-            <circle class="nf-bg-star" cx="200" cy="118" r="2.4" />
-            <circle class="nf-bg-star" cx="250" cy="170" r="2.2" />
-            <circle class="nf-bg-star" cx="560" cy="150" r="2.4" />
-            <circle class="nf-bg-star" cx="600" cy="205" r="2.6" />
-            <circle class="nf-bg-star" cx="250" cy="52" r="2" />
-            <circle class="nf-bg-star" cx="612" cy="150" r="2.2" />
-            <circle class="nf-bg-star" cx="300" cy="210" r="2.2" />
-            <circle class="nf-bg-star" cx="470" cy="100" r="2.4" />
-            <circle class="nf-bg-star" cx="740" cy="150" r="2.2" />
-            <circle class="nf-bg-star" cx="180" cy="222" r="2" />
-        </svg>
-
+        <div class="nf-bgimg" aria-hidden="true" set:html={bg}></div>
         <div class="nf-inner">
         <div class="nf-code" aria-hidden="true">404</div>
 
@@ -67,43 +28,36 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <style is:global>
         .notfound {
             position: relative;
-            overflow: hidden;
             max-width: 640px;
             margin: 0 auto;
             padding: clamp(48px, 10vh, 120px) 20px;
             text-align: center;
         }
-
-        /* фон: созвездия + россыпь чешуек */
-        .nf-bg {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 0;
-        }
         .nf-inner { position: relative; z-index: 1; }
 
-        .nf-bg-line {
-            fill: none;
-            stroke: var(--accent-2);
-            stroke-width: 1;
-            opacity: 0.3;
+        /* фоновая иллюстрация: во всю ширину, низом встык к подвалу */
+        .nf-bgimg {
+            position: absolute;
+            left: 50%;
+            bottom: -60px;            /* съедаем нижний padding main-content → встык к подвалу */
+            transform: translateX(-50%);
+            width: 100vw;
+            pointer-events: none;
+            user-select: none;
+            z-index: 0;
         }
-        .nf-bg-star {
-            fill: var(--accent-2);
-            opacity: 0.55;
-            animation: nf-twinkle 4.5s ease-in-out infinite;
+        .nf-bgimg svg {
+            display: block;
+            width: 100%;
+            height: auto;
         }
-        .nf-bg-star:nth-of-type(2n) { animation-delay: -1.6s; animation-duration: 6s; }
-        .nf-bg-star:nth-of-type(3n) { animation-delay: -3.1s; animation-duration: 5.2s; }
-        @keyframes nf-twinkle {
-            0%, 100% { opacity: 0.25; }
-            50%      { opacity: 0.85; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            .nf-bg-star { animation: none; }
+        /* перекраска под тему: всё зелёным (--accent-2 разный в светлой/тёмной) */
+        .nf-bgimg svg [fill="#7D5C3F"]   { fill: var(--accent-2); }
+        .nf-bgimg svg [stroke="#7D5C3F"] { stroke: var(--accent-2); }
+        .nf-bgimg svg [stroke="black"]   { stroke: var(--accent-2); }
+
+        @media (max-width: 768px) {
+            .nf-bgimg { bottom: -40px; }
         }
 
         .nf-code {
