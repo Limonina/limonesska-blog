@@ -1,0 +1,161 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// Когда страница последний раз актуализировалась
+const updated = new Date('2026-06-01');
+
+// ⤵️ Лиона редактирует этот массив. Каждая запись — точка на таймлайне.
+//   period — подпись слева (период/«Сейчас»), title — фокус, text — описание (опц.)
+//   current: true — выделить как актуальное (верхняя запись).
+const timeline = [
+  {
+    period: 'Сейчас',
+    title: 'Кую «Мою броню»',
+    text: 'Собираю блог как живой дневник тех-экспериментов: вайб-коддинг, автоматизация, заметки на полях. Пишу вживую, не дожидаясь идеала.',
+    current: true,
+  },
+  {
+    period: 'Весна 2026',
+    title: 'Переезд на Astro',
+    text: 'Ушла с тяжёлых CMS к лёгким текстовым файлам — сайт стал быстрым и моим.',
+  },
+  {
+    period: 'Зима 2026',
+    title: 'Первые наброски «Моей брони»',
+    text: 'Замысел сайта, визуальный язык чешуи и звёзд, первые идеи постов.',
+  },
+];
+
+const formatDate = (date) =>
+  date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+
+<BaseLayout title="Now — чем я живу сейчас | limonesska">
+    <section class="now">
+        <header class="now-head">
+            <h1 class="now-title">Сейчас</h1>
+            <p class="now-lead">
+                Это страница <strong>Now</strong> — моментальный срез того, на чём я сосредоточена
+                прямо сейчас, и таймлайн значимых вех. Не резюме и не архив — живой ориентир,
+                который я время от времени переписываю.
+            </p>
+            <p class="now-updated">Обновлено {formatDate(updated)}</p>
+        </header>
+
+        <ol class="timeline">
+            {timeline.map((item) => (
+                <li class:list={["tl-item", { "tl-item--current": item.current }]}>
+                    <span class="tl-node" aria-hidden="true"></span>
+                    <div class="tl-body">
+                        <span class="tl-period">{item.period}</span>
+                        <h2 class="tl-heading">{item.title}</h2>
+                        {item.text && <p class="tl-text">{item.text}</p>}
+                    </div>
+                </li>
+            ))}
+        </ol>
+    </section>
+
+    <style is:global>
+        .now {
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .now-head { margin-bottom: 56px; }
+
+        .now-title {
+            font-family: var(--font-display);
+            font-size: var(--size-mega);
+            color: var(--text);
+            margin: 0 0 20px;
+        }
+
+        .now-lead {
+            font-family: var(--font-vollkorn);
+            font-size: var(--size-medium);
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin: 0 0 14px;
+            max-width: 36em;
+        }
+        .now-lead strong { color: var(--text); }
+
+        .now-updated {
+            font-family: var(--font-ui);
+            font-size: var(--size-small);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--color-text-faint);
+            margin: 0;
+        }
+
+        /* ====== Таймлайн ====== */
+        .timeline {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            position: relative;
+        }
+        /* вертикальная линия */
+        .timeline::before {
+            content: "";
+            position: absolute;
+            top: 6px;
+            bottom: 6px;
+            left: 7px;
+            width: 2px;
+            background: var(--line);
+        }
+
+        .tl-item {
+            position: relative;
+            padding: 0 0 40px 40px;
+        }
+        .tl-item:last-child { padding-bottom: 0; }
+
+        /* узел */
+        .tl-node {
+            position: absolute;
+            left: 0;
+            top: 4px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 2px solid var(--accent-2);
+            box-sizing: border-box;
+        }
+        .tl-item--current .tl-node {
+            background: var(--accent-2);
+            box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-2) 22%, transparent);
+        }
+
+        .tl-period {
+            display: inline-block;
+            font-family: var(--font-ui);
+            font-size: var(--size-small);
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--accent-2);
+            margin-bottom: 6px;
+        }
+
+        .tl-heading {
+            font-family: var(--font-display);
+            font-size: var(--size-h3);
+            color: var(--text);
+            margin: 0 0 8px;
+        }
+
+        .tl-text {
+            font-family: var(--font-vollkorn);
+            font-size: var(--size-base);
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin: 0;
+            max-width: 40em;
+        }
+    </style>
+</BaseLayout>
