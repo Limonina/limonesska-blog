@@ -22,6 +22,8 @@ interface Props {
   backHref?: string;
   backLabel?: string;
   relatedNotes?: RelatedNote[];
+  // Заметки: подрубрика слева от звезды-стадии, рубрика в шапке не показывается
+  noteMeta?: boolean;
 }
 
 const {
@@ -38,6 +40,7 @@ const {
   backHref = '/blog',
   backLabel = 'Все статьи',
   relatedNotes = [],
+  noteMeta = false,
 } = Astro.props;
 
 const fmt = (d: Date) =>
@@ -60,12 +63,21 @@ const slug = Astro.url.pathname;
     <article class="post">
         <a href={backHref} class="post-back"><span class="post-back-arrow">←</span><span>{backLabel}</span></a>
 
-        {(category || stage || subcategory) && (
-            <div class="post-metainfo">
-                {category && <a class="post-rubric" href={`/category/${enc(category)}`}>{category}</a>}
-                {stage && <Icon name={`star_${stage}`} width={14} height={14} class="post-stage" />}
-                {subcategory && <a class="post-subrubric" href={`/subcategory/${enc(subcategory)}`}>{subcategory}</a>}
-            </div>
+        {noteMeta ? (
+            (subcategory || stage) && (
+                <div class="post-metainfo">
+                    {subcategory && <a class="post-subrubric" href={`/subcategory/${enc(subcategory)}`}>{subcategory}</a>}
+                    {stage && <Icon name={`star_${stage}`} width={20} height={20} class="post-stage" />}
+                </div>
+            )
+        ) : (
+            (category || stage || subcategory) && (
+                <div class="post-metainfo">
+                    {category && <a class="post-rubric" href={`/category/${enc(category)}`}>{category}</a>}
+                    {stage && <Icon name={`star_${stage}`} width={20} height={20} class="post-stage" />}
+                    {subcategory && <a class="post-subrubric" href={`/subcategory/${enc(subcategory)}`}>{subcategory}</a>}
+                </div>
+            )
         )}
 
         <h1 class="post-title">{title}</h1>
@@ -159,7 +171,7 @@ const slug = Astro.url.pathname;
     .post-subrubric { color: var(--color-text); }
     .post-rubric:hover, .post-subrubric:hover { background-size: 50% 1.5px, 50% 1.5px; }
     .post-subrubric:hover { color: var(--color-accent); }
-    .post-stage { display: block; color: var(--color-accent-2); }
+    .post-stage { display: block; color: var(--color-accent-2); margin-bottom: 3px; }
 
     .post-title {
         font-family: var(--font-display); font-size: var(--size-mega);
