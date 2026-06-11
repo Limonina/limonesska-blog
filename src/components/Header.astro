@@ -142,10 +142,10 @@ import Icon from './Icon.astro';
         border-radius: 8px; transition: color 0.35s ease;
     }
     .theme-toggle:hover { color: var(--color-accent); }
-    .theme-icon-sun { display: block; }
-    .theme-icon-moon { display: none; }
-    html[data-theme="dark"] .theme-icon-sun { display: none; }
-    html[data-theme="dark"] .theme-icon-moon { display: block; }
+    .theme-icon-sun { display: none; }
+    .theme-icon-moon { display: block; }
+    html[data-theme="dark"] .theme-icon-sun { display: block; }
+    html[data-theme="dark"] .theme-icon-moon { display: none; }
     .menu-chevron { transition: transform 0.65s ease; display: block; }
     .dropbtn:hover .menu-chevron { transform: rotateY(180deg); }
     .dropdown-content {
