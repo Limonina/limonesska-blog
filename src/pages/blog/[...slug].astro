@@ -2,6 +2,7 @@
 import { render } from 'astro:content';
 import { getEntries } from '../../utils/content';
 import PostLayout from '../../layouts/PostLayout.astro';
+import ComingSoon from '../../components/ComingSoon.astro';
 
 export async function getStaticPaths() {
   const posts = await getEntries('blog');
@@ -23,24 +24,36 @@ export async function getStaticPaths() {
 }
 
 const { post, relatedNotes } = Astro.props;
-const { Content } = await render(post);
 
 const words = post.body ? post.body.trim().split(/\s+/).length : 0;
 const readingTime = Math.max(1, Math.round(words / 150));
+
+const { Content } = post.data.coming ? { Content: null } : await render(post);
 ---
 
-<PostLayout
-    title={post.data.title}
-    description={post.data.description}
-    pubDate={post.data.pubDate}
-    updatedDate={post.data.updatedDate}
-    tags={post.data.tags}
-    category={post.data.category}
-    subcategory={post.data.subcategory}
-    stage={post.data.stage}
-    audience={post.data.audience}
-    readingTime={readingTime}
-    relatedNotes={relatedNotes}
->
-    <Content />
-</PostLayout>
+{post.data.coming ? (
+    <ComingSoon
+        title={post.data.title}
+        description={post.data.description}
+        pubDate={post.data.pubDate}
+        backHref="/blog"
+        backLabel="Все статьи"
+    />
+) : (
+    <PostLayout
+        title={post.data.title}
+        description={post.data.description}
+        pubDate={post.data.pubDate}
+        updatedDate={post.data.updatedDate}
+        tags={post.data.tags}
+        category={post.data.category}
+        subcategory={post.data.subcategory}
+        stage={post.data.stage}
+        audience={post.data.audience}
+        verified={post.data.verified}
+        readingTime={readingTime}
+        relatedNotes={relatedNotes}
+    >
+        <Content />
+    </PostLayout>
+)}

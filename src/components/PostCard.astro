@@ -7,7 +7,7 @@ interface Props {
 }
 
 const { post } = Astro.props;
-const { title, description, cover, tags, pubDate } = post.data;
+const { title, description, cover, tags, pubDate, coming, verified } = post.data;
 
 const category = tags[0] ?? 'Статья';
 const formattedDate = pubDate.toLocaleDateString('ru-RU', {
@@ -22,7 +22,23 @@ const readingTime = Math.max(1, Math.round(words / 150));
 <a href={`/blog/${post.id}`} class="latest-card">
     {cover && <img src={cover} alt={title} />}
     <div class="latest-card-content">
-        <span class="post-tag">{category}</span>
+        <div class="card-top-row">
+            {coming ? (
+                <span class="post-tag post-tag--soon"><span class="card-soon-dot"></span>Скоро</span>
+            ) : (
+                <span class="post-tag">{category}</span>
+            )}
+            {verified !== undefined && (
+                <span class={verified ? 'card-verified is-verified' : 'card-verified is-unverified'} title={verified ? 'Проверено лично' : 'Не проверено лично'}>
+                    {verified ? (
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    ) : (
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16.5" x2="12" y2="16.5"/></svg>
+                    )}
+                    {verified ? 'Проверено' : 'Не проверено'}
+                </span>
+            )}
+        </div>
         <h3>{title}</h3>
         {description && <p>{description}</p>}
         <div class="latest-properties-footer">
@@ -39,3 +55,28 @@ const readingTime = Math.max(1, Math.round(words / 150));
         </div>
     </div>
 </a>
+
+<style>
+    .card-top-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+    /* «Скоро» с мигающей точкой — как на странице-заглушке */
+    .post-tag--soon { display: inline-flex; align-items: center; gap: 7px; color: var(--accent); }
+    .card-soon-dot {
+        width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+        animation: card-soon-pulse 2s infinite;
+    }
+    @keyframes card-soon-pulse {
+        0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 50%, transparent); }
+        70% { box-shadow: 0 0 0 9px transparent; }
+        100% { box-shadow: 0 0 0 0 transparent; }
+    }
+    .card-verified {
+        display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;
+        font-family: var(--font-ui); font-size: 0.65rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.5px;
+        padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line);
+    }
+    .card-verified svg { flex-shrink: 0; }
+    .card-verified.is-verified { color: var(--color-accent-2); border-color: color-mix(in srgb, var(--color-accent-2) 40%, transparent); }
+    .card-verified.is-unverified { color: var(--color-text-muted); }
+</style>

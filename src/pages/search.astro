@@ -1,0 +1,227 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Поиск | limonesska">
+    <div class="search-page">
+        <h1 class="search-title">Поиск</h1>
+        <p class="search-subtitle">По статьям, заметкам и дневнику. Снимите обе галочки — ищем по всему тексту записей.</p>
+
+        <div class="search-box">
+            <svg class="search-box-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input
+                type="search"
+                id="search-input"
+                class="search-input"
+                placeholder="Что ищем?"
+                autocomplete="off"
+                autofocus
+            />
+        </div>
+
+        <div class="search-scopes">
+            <span class="search-scopes-label">Искать в:</span>
+            <label class="search-scope"><input type="checkbox" id="scope-title" checked /> заголовках</label>
+            <label class="search-scope"><input type="checkbox" id="scope-desc" checked /> описаниях</label>
+            <label class="search-scope search-scope--diary"><input type="checkbox" id="scope-diary" /> дневник</label>
+        </div>
+
+        <p class="search-status" id="search-status">Введите запрос, чтобы начать.</p>
+        <div class="search-results" id="search-results"></div>
+    </div>
+</BaseLayout>
+
+<style is:global>
+    .search-page { max-width: 760px; margin: 0 auto; }
+    .search-title {
+        font-family: var(--font-display); font-size: var(--size-mega); font-weight: 700;
+        line-height: 1.1; letter-spacing: -1px; margin: 0 0 10px; color: var(--color-text);
+    }
+    .search-subtitle {
+        font-family: var(--font-vollkorn); font-size: var(--size-base);
+        color: var(--color-text-soft); margin: 0 0 32px;
+    }
+
+    .search-box {
+        display: flex; align-items: center; gap: 12px;
+        background: var(--color-surface); border: 1px solid var(--color-border);
+        border-radius: 14px; padding: 4px 18px; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-box:focus-within { border-color: var(--color-accent); box-shadow: 0 6px 24px var(--shadow); }
+    .search-box-icon { color: var(--color-text-muted); flex-shrink: 0; }
+    .search-input {
+        flex: 1; border: none; outline: none; background: none;
+        font-family: var(--font-vollkorn); font-size: var(--size-medium); color: var(--color-text);
+        padding: 16px 0;
+    }
+    .search-input::placeholder { color: var(--color-text-faint); }
+
+    .search-scopes {
+        display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+        margin: 16px 2px 8px; font-family: var(--font-ui); font-size: var(--size-small);
+    }
+    .search-scopes-label { color: var(--color-text-faint); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+    .search-scope { display: inline-flex; align-items: center; gap: 7px; color: var(--color-text-muted); cursor: pointer; }
+    .search-scope input { accent-color: var(--color-accent); cursor: pointer; }
+
+    .search-status {
+        font-family: var(--font-vollkorn); font-size: var(--size-base);
+        color: var(--color-text-muted); margin: 24px 0 0;
+    }
+
+    .search-results { display: flex; flex-direction: column; margin-top: 8px; }
+    .search-result {
+        display: block; text-decoration: none; color: inherit;
+        padding: 24px 0; border-top: 1px solid var(--color-border); transition: 0.2s;
+    }
+    .search-result:last-child { border-bottom: 1px solid var(--color-border); }
+    .search-result:hover { padding-left: 8px; }
+    .search-result:hover .search-result-title { color: var(--color-accent); }
+    .search-result-meta {
+        font-family: var(--font-ui); font-size: var(--size-small); color: var(--color-text-faint);
+        text-transform: uppercase; letter-spacing: 0.5px;
+        display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+    }
+    .search-result-dot { color: var(--color-text-faint); }
+    .search-result-soon { color: var(--color-accent); font-weight: 700; }
+    .search-result-title {
+        font-family: var(--font-vollkorn); font-size: var(--size-h3); font-weight: 700;
+        line-height: 1.3; margin: 0; color: var(--color-text); transition: color 0.2s;
+    }
+    .search-result-desc {
+        font-family: var(--font-vollkorn); font-size: var(--size-base);
+        color: var(--color-text-soft); line-height: 1.5; margin: 8px 0 0;
+    }
+    .search-result mark { background: color-mix(in srgb, var(--color-accent) 25%, transparent); color: inherit; border-radius: 3px; padding: 0 1px; }
+</style>
+
+<script>
+    type Item = {
+        title: string; description: string; tags: string[];
+        url: string; kind: string; date: string; coming: boolean; text: string;
+    };
+
+    function initSearch() {
+        const input = document.getElementById('search-input') as HTMLInputElement | null;
+        const results = document.getElementById('search-results');
+        const status = document.getElementById('search-status');
+        const scopeTitle = document.getElementById('scope-title') as HTMLInputElement | null;
+        const scopeDesc = document.getElementById('scope-desc') as HTMLInputElement | null;
+        const scopeDiary = document.getElementById('scope-diary') as HTMLInputElement | null;
+        if (!input || !results || !status || !scopeTitle || !scopeDesc || !scopeDiary) return;
+
+        let data: Item[] = [];
+        let loaded = false;
+
+        const load = async () => {
+            if (loaded) return;
+            loaded = true;
+            try {
+                data = await (await fetch('/search.json')).json();
+            } catch (e) {
+                status.textContent = 'Не удалось загрузить индекс поиска.';
+            }
+        };
+
+        const esc = (s: string) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!));
+        const norm = (s: string) => s.toLowerCase().replace(/ё/g, 'е');
+        // Лёгкий стемминг: у запроса ≥5 букв срезаем хвостовые гласные, чтобы
+        // окончания не мешали («система» → «систем» ⊂ «системы»). Без морфологии.
+        const stem = (s: string) => {
+            if (s.length < 5) return s;
+            const m = s.match(/^(.*?[бвгджзйклмнпрстфхцчшщ])[аеиоуыэюя]{1,2}$/);
+            return m ? m[1] : s;
+        };
+
+        const highlight = (text: string, q: string) => {
+            const i = norm(text).indexOf(q);
+            if (i < 0) return esc(text);
+            return esc(text.slice(0, i)) + '<mark>' + esc(text.slice(i, i + q.length)) + '</mark>' + esc(text.slice(i + q.length));
+        };
+
+        // Сниппет из полного текста вокруг найденного места
+        const snippet = (text: string, q: string) => {
+            const i = norm(text).indexOf(q);
+            if (i < 0) return '';
+            const from = Math.max(0, i - 60);
+            const to = Math.min(text.length, i + q.length + 80);
+            return (from > 0 ? '…' : '') + text.slice(from, i) + '|MARK|' + text.slice(i, i + q.length) + '|/MARK|' + text.slice(i + q.length, to) + (to < text.length ? '…' : '');
+        };
+        const renderSnippet = (raw: string) =>
+            esc(raw).replace('|MARK|', '<mark>').replace('|/MARK|', '</mark>');
+
+        const run = () => {
+            const raw = input.value.trim();
+            const q = stem(norm(raw));
+            results.innerHTML = '';
+            if (!q) { status.textContent = 'Введите запрос, чтобы начать.'; return; }
+
+            const inTitle = scopeTitle.checked;
+            const inDesc = scopeDesc.checked;
+            const inDiary = scopeDiary.checked;
+            const fullText = !inTitle && !inDesc; // обе сняты → ищем по всему тексту
+
+            const hits = data.filter((it) => {
+                if (it.kind === 'Дневник') {
+                    // дневник — только если включена его галочка; ищем по всему
+                    if (!inDiary) return false;
+                    return norm(it.title + ' ' + it.tags.join(' ') + ' ' + it.description + ' ' + it.text).includes(q);
+                }
+                if (fullText) {
+                    return norm(it.title + ' ' + it.tags.join(' ') + ' ' + it.description + ' ' + it.text).includes(q);
+                }
+                let hay = '';
+                if (inTitle) hay += ' ' + it.title + ' ' + it.tags.join(' ');
+                if (inDesc) hay += ' ' + it.description;
+                return norm(hay).includes(q);
+            });
+
+            const word = (n: number) => {
+                const m10 = n % 10, m100 = n % 100;
+                if (m10 === 1 && m100 !== 11) return 'результат';
+                if (m10 >= 2 && m10 <= 4 && !(m100 >= 12 && m100 <= 14)) return 'результата';
+                return 'результатов';
+            };
+            status.textContent = hits.length ? `${hits.length} ${word(hits.length)}` : 'Ничего не нашлось.';
+
+            results.innerHTML = hits.map((it) => {
+                const titleHit = norm(it.title + ' ' + it.tags.join(' ')).includes(q);
+                const descHit = it.description && norm(it.description).includes(q);
+                // что показать вторым: описание (если совпало или есть) или сниппет из текста
+                let sub = '';
+                if (descHit || (it.description && (inDesc || (inTitle && !fullText)))) {
+                    sub = `<p class="search-result-desc">${descHit ? highlight(it.description, q) : esc(it.description)}</p>`;
+                } else {
+                    const snip = snippet(it.text, q);
+                    if (snip) sub = `<p class="search-result-desc">${renderSnippet(snip)}</p>`;
+                    else if (it.description) sub = `<p class="search-result-desc">${esc(it.description)}</p>`;
+                }
+                return `
+                <a href="${it.url}" class="search-result">
+                    <div class="search-result-meta">
+                        <span>${it.kind}</span>
+                        ${it.coming ? '<span class="search-result-dot">•</span><span class="search-result-soon">Скоро</span>' : ''}
+                        <span class="search-result-dot">•</span>
+                        <span>${it.date}</span>
+                    </div>
+                    <h2 class="search-result-title">${titleHit ? highlight(it.title, q) : esc(it.title)}</h2>
+                    ${sub}
+                </a>`;
+            }).join('');
+        };
+
+        input.addEventListener('focus', load, { once: true });
+        input.addEventListener('input', () => { load().then(run); });
+        scopeTitle.addEventListener('change', run);
+        scopeDesc.addEventListener('change', run);
+        scopeDiary.addEventListener('change', run);
+
+        // Поддержка ?q= в URL
+        const params = new URLSearchParams(location.search);
+        const initial = params.get('q');
+        if (initial) { input.value = initial; load().then(run); }
+    }
+
+    if (document.readyState !== 'loading') initSearch();
+    else document.addEventListener('DOMContentLoaded', initSearch);
+</script>

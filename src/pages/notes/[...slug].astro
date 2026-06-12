@@ -2,6 +2,7 @@
 import { render } from 'astro:content';
 import { getEntries } from '../../utils/content';
 import PostLayout from '../../layouts/PostLayout.astro';
+import ComingSoon from '../../components/ComingSoon.astro';
 
 export async function getStaticPaths() {
   const notes = await getEntries('notes');
@@ -12,26 +13,38 @@ export async function getStaticPaths() {
 }
 
 const { note } = Astro.props;
-const { Content } = await render(note);
 
 const words = note.body ? note.body.trim().split(/\s+/).length : 0;
 const readingTime = Math.max(1, Math.round(words / 150));
+
+const { Content } = note.data.coming ? { Content: null } : await render(note);
 ---
 
-<PostLayout
-    title={note.data.title}
-    description={note.data.description}
-    pubDate={note.data.pubDate}
-    updatedDate={note.data.updatedDate}
-    tags={note.data.tags}
-    category={note.data.category}
-    subcategory={note.data.subcategory}
-    stage={note.data.stage}
-    audience={note.data.audience}
-    readingTime={readingTime}
-    backHref="/notes"
-    backLabel="Все заметки"
-    noteMeta
->
-    <Content />
-</PostLayout>
+{note.data.coming ? (
+    <ComingSoon
+        title={note.data.title}
+        description={note.data.description}
+        pubDate={note.data.pubDate}
+        backHref="/notes"
+        backLabel="Все заметки"
+    />
+) : (
+    <PostLayout
+        title={note.data.title}
+        description={note.data.description}
+        pubDate={note.data.pubDate}
+        updatedDate={note.data.updatedDate}
+        tags={note.data.tags}
+        category={note.data.category}
+        subcategory={note.data.subcategory}
+        stage={note.data.stage}
+        audience={note.data.audience}
+        verified={note.data.verified}
+        readingTime={readingTime}
+        backHref="/notes"
+        backLabel="Все заметки"
+        noteMeta
+    >
+        <Content />
+    </PostLayout>
+)}

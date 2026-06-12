@@ -1,0 +1,72 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const updated = '12 июня 2026';
+---
+
+<BaseLayout title="Cookie | limonesska">
+    <article class="legal">
+        <a href="/" class="legal-back"><span class="legal-back-arrow">←</span><span>На главную</span></a>
+        <h1 class="legal-title">Файлы cookie</h1>
+        <p class="legal-updated">Обновлено: {updated}</p>
+
+        <div class="legal-body">
+            <p>
+                Коротко: сайт не использует рекламные и трекинговые cookie. Я не строю на вас профиль
+                и не передаю данные рекламным сетям.
+            </p>
+
+            <h2>Что хранится в браузере</h2>
+            <p>
+                Вместо cookie сайт использует <code>localStorage</code> — небольшое хранилище в вашем браузере,
+                которое остаётся только на вашем устройстве:
+            </p>
+            <ul>
+                <li><strong>Тема оформления</strong> — чтобы запомнить выбор светлой или тёмной темы.</li>
+                <li><strong>Отметки «нравится»</strong> — какие посты вы отметили сердечком.</li>
+            </ul>
+            <p>
+                Эти данные никуда не отправляются и нужны только для удобства. Их можно в любой момент
+                удалить, очистив данные сайта в настройках браузера.
+            </p>
+
+            <h2>Внешние сервисы</h2>
+            <p>
+                Технические cookie могут устанавливаться сторонними сервисами, которые отдают контент
+                (например, веб-шрифты и хостинг). Подробнее — в <a href="/privacy">политике конфиденциальности</a>.
+            </p>
+        </div>
+    </article>
+</BaseLayout>
+
+<style is:global>
+    .legal { max-width: 720px; margin: 0 auto; }
+    .legal-back {
+        font-family: var(--font-ui); font-size: var(--size-small); color: var(--color-text-muted);
+        text-decoration: none; text-transform: uppercase; letter-spacing: 0.5px;
+        display: inline-flex; align-items: center; gap: 7px; margin-bottom: 24px;
+        transition: color 0.2s, gap 0.25s ease;
+    }
+    .legal-back:hover { color: var(--color-accent); gap: 14px; }
+    .legal-back-arrow { font-size: 1.25em; transform: translateY(-0.06em); }
+
+    .legal-title {
+        font-family: var(--font-display); font-size: var(--size-mega); font-weight: 700;
+        line-height: 1.1; letter-spacing: -1px; margin: 0 0 8px; color: var(--color-text);
+    }
+    .legal-updated {
+        font-family: var(--font-ui); font-size: var(--size-small); color: var(--color-text-faint);
+        text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 40px;
+    }
+    .legal-body { font-family: var(--font-vollkorn); color: var(--color-text); line-height: 1.7; font-size: 1.0625rem; }
+    .legal-body h2 {
+        font-family: var(--font-display); font-size: var(--size-h3); font-weight: 700;
+        margin: 1.8em 0 0.5em; color: var(--color-text);
+    }
+    .legal-body p { margin: 0 0 1.2em; color: var(--color-text-soft); }
+    .legal-body ul { padding-left: 1.4em; margin: 0 0 1.2em; }
+    .legal-body li { margin-bottom: 0.5em; color: var(--color-text-soft); }
+    .legal-body a { color: var(--color-accent); text-decoration: none; border-bottom: 1px solid var(--color-border); transition: border-color 0.2s; }
+    .legal-body a:hover { border-bottom-color: var(--color-accent); }
+    .legal-body code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--color-border-soft); padding: 0.1em 0.4em; border-radius: 5px; font-size: 0.9em; }
+</style>

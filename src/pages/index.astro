@@ -11,6 +11,16 @@ const notes = (await getEntries('notes')).sort(sortByDate);
 const latestPosts = blogPosts.slice(0, 4);
 const freshNotes = notes.slice(0, 3);
 
+// Популярные темы — самые частые теги по статьям + заметкам
+const tagCounts = new Map<string, number>();
+[...blogPosts, ...notes].forEach((e) =>
+  e.data.tags.forEach((t) => tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1))
+);
+const topTags = [...tagCounts.entries()]
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 4)
+  .map(([t]) => t);
+
 const formatDate = (date) =>
   date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
 ---
@@ -23,7 +33,7 @@ const formatDate = (date) =>
             <h1 class="hero-title">Строю системы там, где другие видят хаос.</h1>
             <p class="hero-subtitle">
                 Управление данными, дизайн смыслов и непрерывное обучение.
-                Добро пожаловать в мою броню — здесь мысли-чешуйки собираются в систему, которая защищает.
+                Чешуйка за чешуйкой мысли нарастают в броню — систему, которая защищает.
             </p>
             <div class="button-group">
                 <a href="/blog" class="btn-primary">Читать блог</a>
@@ -33,10 +43,9 @@ const formatDate = (date) =>
             <div class="tags-block">
                 <div class="tags-header">Популярные темы</div>
                 <div class="tags-list">
-                    <a href="#" class="tag-pill">#систематизация</a>
-                    <a href="#" class="tag-pill">#дизайн-смыслов</a>
-                    <a href="#" class="tag-pill">#инди-хакер</a>
-                    <a href="#" class="tag-pill">#astro-build</a>
+                    {topTags.map((t) => (
+                        <a href={`/tags/${encodeURIComponent(t)}`} class="tag-pill">#{t}</a>
+                    ))}
                 </div>
             </div>
         </div>
@@ -191,11 +200,13 @@ const formatDate = (date) =>
     .latest-card h3 { font-family: var(--font-vollkorn); margin: 0; font-size: var(--size-medium); font-weight: 700; line-height: 1.3; color: var(--color-text); }
     .latest-card p { font-family: var(--font-vollkorn); margin: 0; font-size: var(--size-base); color: var(--color-text-soft); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
-    .latest-properties-footer { font-family: var(--font-ui); margin-top: auto; padding-top: 15px; border-top: 1px solid var(--color-border-soft); display: flex; justify-content: space-between; align-items: center; font-size: var(--size-small); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .latest-properties-footer { font-family: var(--font-ui); margin-top: auto; padding-top: 15px; border-top: 1px solid var(--color-border-soft); display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; font-size: var(--size-small); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
 
-    .properties-left { display: flex; align-items: center; }
+    /* дата и «N мин чтения» переносятся целыми блоками, если карточка узкая
+       (≈1024px, 3 колонки) — без разрыва текста; закладка остаётся сверху-справа */
+    .properties-left { display: flex; flex-wrap: wrap; align-items: center; row-gap: 2px; min-width: 0; }
     .dot-separator { margin: 0 8px; color: var(--color-text-faint); }
-    .read-time-block { display: flex; align-items: center; gap: 6px; }
+    .read-time-block { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
 
     .time-icon {
         width: 14px !important;
@@ -218,14 +229,26 @@ const formatDate = (date) =>
     @media (max-width: 1400px) { .latest-grid { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); } }
     @media (max-width: 1100px) {
         .top-section { grid-template-columns: 1fr 1fr; }
-        .editors-column { grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; height: auto; }
-        .quote-widget { grid-column: span 2; }
+        /* «Свежие заметки» во всю ширину: заголовок-шапка сверху, заметки авто-сеткой,
+           цитата снизу на всю ширину — чтобы ничего не вставало сбоку от заголовка */
+        .editors-column {
+            grid-column: span 2;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 16px 28px;
+            height: auto;
+            align-content: start;
+        }
+        .editors-column .column-title { grid-column: 1 / -1; margin-bottom: 0; }
+        .editors-card { padding: 0; }
+        .quote-widget { grid-column: 1 / -1; margin-top: 8px; }
         .popular-card { height: 500px; }
     }
     @media (max-width: 768px) {
         .top-section { grid-template-columns: 1fr; gap: 40px; }
-        .editors-column { grid-column: span 1; grid-template-columns: 1fr; }
-        .quote-widget { grid-column: span 1; }
+        /* editors-column остаётся авто-сеткой (из правила 1100px), просто на всю
+           ширину одной колонки top-section — заметки сами уложатся в 1–3 столбца */
+        .editors-column { grid-column: span 1; }
         .intro-block { height: auto; }
         .btn-primary, .btn-secondary { width: 100%; }
         .popular-card { height: 450px; }

@@ -1,0 +1,75 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const updated = '12 июня 2026';
+---
+
+<BaseLayout title="Политика конфиденциальности | limonesska">
+    <article class="legal">
+        <a href="/" class="legal-back"><span class="legal-back-arrow">←</span><span>На главную</span></a>
+        <h1 class="legal-title">Политика конфиденциальности</h1>
+        <p class="legal-updated">Обновлено: {updated}</p>
+
+        <div class="legal-body">
+            <p>
+                Этот сайт — личный блог и цифровой сад limonesska. Я бережно отношусь к данным
+                и стараюсь собирать как можно меньше. Здесь — коротко и по-человечески о том, что и зачем.
+            </p>
+
+            <h2>Какие данные собираются</h2>
+            <p>
+                Сайт не просит регистрацию и не содержит форм, которые отправляют ваши данные на сервер.
+                Я не собираю имена, e-mail или телефоны через сайт.
+            </p>
+            <ul>
+                <li><strong>Локальные настройки.</strong> Выбор темы (светлая/тёмная) и отметки «нравится» хранятся только в вашем браузере (<code>localStorage</code>) и никуда не отправляются.</li>
+                <li><strong>Технические логи.</strong> Хостинг (Vercel) может автоматически фиксировать обезличенные технические данные запросов (IP, тип браузера) для работы и безопасности сайта.</li>
+            </ul>
+
+            <h2>Аналитика и третьи стороны</h2>
+            <p>
+                Сейчас на сайте нет рекламных трекеров. Внешние сервисы используются только для отображения
+                контента — например, веб-шрифты Google Fonts и изображения с Cloudinary; при их загрузке
+                ваш браузер обращается к этим сервисам напрямую.
+            </p>
+
+            <h2>Ваши права и контакт</h2>
+            <p>
+                Если у вас есть вопрос о данных — напишите мне в <a href="https://t.me/limonesska" target="_blank" rel="noopener noreferrer">Telegram</a>.
+                Эта политика может обновляться по мере развития сайта.
+            </p>
+        </div>
+    </article>
+</BaseLayout>
+
+<style is:global>
+    .legal { max-width: 720px; margin: 0 auto; }
+    .legal-back {
+        font-family: var(--font-ui); font-size: var(--size-small); color: var(--color-text-muted);
+        text-decoration: none; text-transform: uppercase; letter-spacing: 0.5px;
+        display: inline-flex; align-items: center; gap: 7px; margin-bottom: 24px;
+        transition: color 0.2s, gap 0.25s ease;
+    }
+    .legal-back:hover { color: var(--color-accent); gap: 14px; }
+    .legal-back-arrow { font-size: 1.25em; transform: translateY(-0.06em); }
+
+    .legal-title {
+        font-family: var(--font-display); font-size: var(--size-mega); font-weight: 700;
+        line-height: 1.1; letter-spacing: -1px; margin: 0 0 8px; color: var(--color-text);
+    }
+    .legal-updated {
+        font-family: var(--font-ui); font-size: var(--size-small); color: var(--color-text-faint);
+        text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 40px;
+    }
+    .legal-body { font-family: var(--font-vollkorn); color: var(--color-text); line-height: 1.7; font-size: 1.0625rem; }
+    .legal-body h2 {
+        font-family: var(--font-display); font-size: var(--size-h3); font-weight: 700;
+        margin: 1.8em 0 0.5em; color: var(--color-text);
+    }
+    .legal-body p { margin: 0 0 1.2em; color: var(--color-text-soft); }
+    .legal-body ul { padding-left: 1.4em; margin: 0 0 1.2em; }
+    .legal-body li { margin-bottom: 0.5em; color: var(--color-text-soft); }
+    .legal-body a { color: var(--color-accent); text-decoration: none; border-bottom: 1px solid var(--color-border); transition: border-color 0.2s; }
+    .legal-body a:hover { border-bottom-color: var(--color-accent); }
+    .legal-body code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--color-border-soft); padding: 0.1em 0.4em; border-radius: 5px; font-size: 0.9em; }
+</style>

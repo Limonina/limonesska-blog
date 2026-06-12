@@ -127,6 +127,15 @@ const { title = 'limonesska | Моя броня' } = Astro.props;
             max-width: 1600px; margin: 0 auto; width: 100%; padding: 150px 40px 60px;
         }
 
+        /* На планшете/телефоне декоративные элементы (всплывашки ссылок, широкий
+           код) не должны давать горизонтальный скролл. overflow-x: clip обрезает
+           только по горизонтали, не делая контейнер вертикально-скроллящимся.
+           Порог 1024px — ниже уровня, где показываются сноски на полях (≥1260px),
+           так что их не задеваем. */
+        @media (max-width: 1024px) {
+            .main-content { overflow-x: clip; }
+        }
+
         @media (max-width: 768px) {
             .main-content { padding: 110px 20px 40px; }
         }

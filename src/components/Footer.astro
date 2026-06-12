@@ -1,15 +1,32 @@
 ---
+import { getEntries } from '../utils/content';
+
 const year = new Date().getFullYear();
+
+// Счётчик опубликованного (анонсы-тизеры не считаем)
+const published = (arr: { data: { coming?: boolean } }[]) =>
+  arr.filter((e) => !e.data.coming).length;
+const postCount = published(await getEntries('blog'));
+const noteCount = published(await getEntries('notes'));
+
+const plural = (n: number, one: string, few: string, many: string) => {
+  const m10 = n % 10, m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return one;
+  if (m10 >= 2 && m10 <= 4 && !(m100 >= 12 && m100 <= 14)) return few;
+  return many;
+};
+
+const stats = [
+  `${postCount} ${plural(postCount, 'статья', 'статьи', 'статей')}`,
+  `${noteCount} ${plural(noteCount, 'заметка', 'заметки', 'заметок')}`,
+];
 ---
 
 <footer class="site-footer">
     <div class="site-footer-inner">
         <div class="footer-brand">
             <h2 class="footer-heading">Хочешь следить за новыми чешуйками?</h2>
-            <a class="footer-sub" href="/rss.xml">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M4 11a9 9 0 0 1 9 9h2.5A11.5 11.5 0 0 0 4 8.5V11Zm0 5a3 3 0 1 0 0 6 3 3 0 0 0 0-6Zm0-9a16 16 0 0 1 16 16h2.5A18.5 18.5 0 0 0 4 4.5V7Z"/></svg>
-                Подписаться через RSS
-            </a>
+            <p class="footer-lead">Заглядывай в соцсети — там анонсы новых постов и заметок.</p>
 
             <div class="footer-social">
                 <a href="https://t.me/limonesska_ru" target="_blank" rel="noopener noreferrer" aria-label="Telegram" title="Telegram">
@@ -21,6 +38,15 @@ const year = new Date().getFullYear();
                 <a href="https://vk.com/limonesska" target="_blank" rel="noopener noreferrer" aria-label="ВКонтакте" title="ВКонтакте">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M21.579 6.855c.14-.465 0-.806-.666-.806h-2.2c-.56 0-.817.295-.956.62 0 0-1.116 2.717-2.692 4.483-.51.51-.743.673-1.02.673-.139 0-.347-.163-.347-.628V6.855c0-.56-.157-.806-.621-.806H9.642c-.348 0-.558.257-.558.5 0 .53.79.652.872 2.138v3.228c0 .71-.128.84-.407.84-.742 0-2.546-2.729-3.617-5.853-.215-.609-.43-.855-.994-.855h-2.2c-.626 0-.752.295-.752.62 0 .582.742 3.462 3.461 7.271 1.812 2.601 4.364 4.011 6.687 4.011 1.393 0 1.565-.313 1.565-.853v-1.966c0-.626.133-.752.574-.752.324 0 .882.164 2.183 1.417 1.486 1.486 1.732 2.153 2.567 2.153h2.2c.626 0 .939-.313.759-.932-.197-.616-.907-1.51-1.848-2.57-.512-.604-1.279-1.255-1.512-1.58-.325-.419-.231-.604 0-.976 0 0 2.677-3.77 2.956-5.05z"/></svg>
                 </a>
+            </div>
+
+            <div class="footer-stats">
+                {stats.map((s, i) => (
+                    <>
+                        {i > 0 && <span class="footer-stats-dot">·</span>}
+                        <span>{s}</span>
+                    </>
+                ))}
             </div>
 
             <div class="footer-copy">© {year} limonesska · Моя броня</div>
@@ -63,18 +89,20 @@ const year = new Date().getFullYear();
         font-family: var(--font-display); font-size: clamp(1.8rem, 3vw, 2.4rem); font-weight: 700;
         color: var(--color-text); line-height: 1.1; margin: 0 0 22px; max-width: 420px;
     }
-    .footer-sub {
-        display: inline-flex; align-items: center; gap: 9px;
-        font-family: var(--font-ui); font-size: var(--size-base); font-weight: 600;
-        color: var(--color-text); text-decoration: none;
-        border: 1px solid var(--color-text); border-radius: 999px; padding: 12px 22px;
-        transition: background 0.2s, color 0.2s;
+    .footer-lead {
+        font-family: var(--font-vollkorn); font-size: var(--size-base);
+        color: var(--color-text-soft); line-height: 1.5; margin: 0; max-width: 420px;
     }
-    .footer-sub:hover { background: var(--color-text); color: var(--color-bg); }
 
-    .footer-social { display: flex; gap: 16px; margin: 30px 0 18px; }
+    .footer-social { display: flex; gap: 16px; margin: 26px 0 18px; }
     .footer-social a { color: var(--color-text-muted); transition: color 0.2s, transform 0.2s; display: flex; }
     .footer-social a:hover { color: var(--color-accent); transform: translateY(-2px); }
+    .footer-stats {
+        display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+        font-size: var(--size-small); color: var(--color-text-muted);
+        margin-bottom: 10px; font-variant-numeric: lining-nums;
+    }
+    .footer-stats-dot { color: var(--color-text-faint); }
     .footer-copy { font-size: var(--size-small); color: var(--color-text-faint); }
 
     .footer-nav { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }

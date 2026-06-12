@@ -8,6 +8,18 @@ const posts = (await getEntries('blog')).sort(
 
 const formatDate = (date: Date) =>
   date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+
+// Рубрики и их подрубрики для фильтра (только реально встречающиеся)
+const categories = [...new Set(posts.map((p) => p.data.category).filter(Boolean))] as string[];
+const subByCat: Record<string, string[]> = {};
+for (const c of categories) {
+  subByCat[c] = [
+    ...new Set(
+      posts.filter((p) => p.data.category === c).map((p) => p.data.subcategory).filter(Boolean)
+    ),
+  ] as string[];
+}
+const hasFilters = categories.length > 0;
 ---
 
 <BaseLayout title="Блог | limonesska">
@@ -15,11 +27,40 @@ const formatDate = (date: Date) =>
         <h1 class="blog-index-title">Блог</h1>
         <p class="blog-index-subtitle">Тексты, которые пишутся дольше всего.</p>
 
-        <div class="post-list">
+        {hasFilters && (
+            <div class="blog-filters" id="blog-filters">
+                <div class="filter-row">
+                    <button class="filter-chip is-active" data-cat="">Все</button>
+                    {categories.map((c) => (
+                        <button class="filter-chip" data-cat={c}>{c}</button>
+                    ))}
+                </div>
+                <div class="filter-subs" id="filter-subs" hidden>
+                    {categories.map((c) =>
+                        subByCat[c].length > 0 ? (
+                            <div class="sub-group" data-parent={c} hidden>
+                                <button class="filter-chip filter-chip--sub is-active" data-sub="">все</button>
+                                {subByCat[c].map((s) => (
+                                    <button class="filter-chip filter-chip--sub" data-sub={s}>{s}</button>
+                                ))}
+                            </div>
+                        ) : null
+                    )}
+                </div>
+            </div>
+        )}
+
+        <div class="post-list" id="post-list">
             {posts.map((post) => (
-                <a href={`/blog/${post.id}`} class="post-list-item">
+                <a
+                    href={`/blog/${post.id}`}
+                    class="post-list-item"
+                    data-category={post.data.category ?? ''}
+                    data-subcategory={post.data.subcategory ?? ''}
+                >
                     <div class="post-list-meta">
                         <span>{formatDate(post.data.pubDate)}</span>
+                        {post.data.coming && <span class="post-soon">Скоро</span>}
                         {post.data.tags.length > 0 && (
                             <>
                                 <span class="post-list-dot">•</span>
@@ -34,6 +75,8 @@ const formatDate = (date: Date) =>
                 </a>
             ))}
         </div>
+
+        <p class="post-list-empty" id="post-list-empty" hidden>По этому фильтру пока ничего нет.</p>
     </div>
 </BaseLayout>
 
@@ -45,7 +88,30 @@ const formatDate = (date: Date) =>
     }
     .blog-index-subtitle {
         font-family: var(--font-vollkorn); font-size: var(--size-base);
-        color: var(--color-text-soft); margin: 0 0 50px;
+        color: var(--color-text-soft); margin: 0 0 36px;
+    }
+
+    /* ---- Фильтры ---- */
+    .blog-filters { margin-bottom: 40px; }
+    .filter-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-chip {
+        font-family: var(--font-ui); font-size: var(--size-small); font-weight: 600;
+        color: var(--color-text-soft); background: var(--color-surface);
+        border: 1px solid var(--color-border); border-radius: 999px; padding: 7px 14px;
+        cursor: pointer; transition: 0.2s;
+    }
+    .filter-chip:hover { border-color: var(--color-text-muted); }
+    .filter-chip.is-active {
+        background: var(--text); color: var(--color-surface); border-color: var(--text);
+    }
+    /* Подрубрики — выезжают под выбранной рубрикой, мельче и приглушённее */
+    .filter-subs { margin-top: 10px; padding-left: 14px; border-left: 2px solid var(--color-border); }
+    .filter-subs[hidden] { display: none; }
+    .sub-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .sub-group[hidden] { display: none; }
+    .filter-chip--sub { font-weight: 500; padding: 5px 12px; }
+    .filter-chip--sub.is-active {
+        background: var(--color-accent); color: var(--color-surface); border-color: var(--color-accent);
     }
 
     .post-list { display: flex; flex-direction: column; }
@@ -53,7 +119,8 @@ const formatDate = (date: Date) =>
         display: block; text-decoration: none; color: inherit;
         padding: 28px 0; border-top: 1px solid var(--color-border); transition: 0.2s;
     }
-    .post-list-item:last-child { border-bottom: 1px solid var(--color-border); }
+    .post-list-item:last-of-type { border-bottom: 1px solid var(--color-border); }
+    .post-list-item[hidden] { display: none; }
     .post-list-item:hover { padding-left: 8px; }
     .post-list-item:hover .post-list-heading { color: var(--color-accent); }
 
@@ -63,6 +130,10 @@ const formatDate = (date: Date) =>
         display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
     }
     .post-list-dot { color: var(--color-text-faint); }
+    .post-soon {
+        color: var(--color-accent); font-weight: 700; border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
+        border-radius: 999px; padding: 1px 8px; letter-spacing: 1px;
+    }
 
     .post-list-heading {
         font-family: var(--font-vollkorn); font-size: var(--size-h3); font-weight: 700;
@@ -72,4 +143,89 @@ const formatDate = (date: Date) =>
         font-family: var(--font-vollkorn); font-size: var(--size-base);
         color: var(--color-text-soft); line-height: 1.5; margin: 8px 0 0;
     }
+    .post-list-empty {
+        font-family: var(--font-vollkorn); font-size: var(--size-base);
+        color: var(--color-text-muted); padding: 32px 0; text-align: center;
+    }
+
+    /* Телефон: без «прыжка» вправо при тапе/наведении + мельче строка даты/тегов */
+    @media (max-width: 600px) {
+        .post-list-item:hover { padding-left: 0; }
+        .post-list-meta { font-size: 0.66rem; gap: 4px 8px; flex-wrap: wrap; }
+        .post-list-meta > span:first-child { white-space: nowrap; }
+    }
+
 </style>
+
+<script>
+    function initBlogFilters() {
+        const root = document.getElementById('blog-filters');
+        const list = document.getElementById('post-list');
+        const empty = document.getElementById('post-list-empty');
+        const subsWrap = document.getElementById('filter-subs');
+        if (!root || !list) return;
+
+        let activeCat = '';
+        let activeSub = '';
+        const items = Array.from(list.querySelectorAll<HTMLElement>('.post-list-item'));
+        const subGroups = subsWrap ? Array.from(subsWrap.querySelectorAll<HTMLElement>('.sub-group')) : [];
+
+        const apply = () => {
+            let shown = 0;
+            items.forEach((it) => {
+                const okCat = !activeCat || it.dataset.category === activeCat;
+                const okSub = !activeSub || it.dataset.subcategory === activeSub;
+                const visible = okCat && okSub;
+                it.hidden = !visible;
+                if (visible) shown++;
+            });
+            if (empty) empty.hidden = shown !== 0;
+        };
+
+        // Показать группу подрубрик для выбранной рубрики (если есть)
+        const showSubsFor = (cat: string) => {
+            let anyVisible = false;
+            subGroups.forEach((g) => {
+                const match = !!cat && g.dataset.parent === cat;
+                g.hidden = !match;
+                if (match) anyVisible = true;
+            });
+            if (subsWrap) subsWrap.hidden = !anyVisible;
+        };
+
+        // Рубрики
+        root.querySelectorAll<HTMLButtonElement>('.filter-row > .filter-chip').forEach((chip) => {
+            chip.addEventListener('click', () => {
+                activeCat = chip.dataset.cat || '';
+                activeSub = '';
+                root.querySelectorAll('.filter-row > .filter-chip').forEach((c) =>
+                    c.classList.toggle('is-active', c === chip)
+                );
+                showSubsFor(activeCat);
+                // сбросить активную подрубрику в показанной группе на «все»
+                subGroups.forEach((g) =>
+                    g.querySelectorAll('.filter-chip--sub').forEach((c, i) =>
+                        c.classList.toggle('is-active', i === 0)
+                    )
+                );
+                apply();
+            });
+        });
+
+        // Подрубрики
+        subGroups.forEach((g) => {
+            g.querySelectorAll<HTMLButtonElement>('.filter-chip--sub').forEach((chip) => {
+                chip.addEventListener('click', () => {
+                    activeSub = chip.dataset.sub || '';
+                    g.querySelectorAll('.filter-chip--sub').forEach((c) =>
+                        c.classList.toggle('is-active', c === chip)
+                    );
+                    apply();
+                });
+            });
+        });
+    }
+
+    if (document.readyState !== 'loading') initBlogFilters();
+    else document.addEventListener('DOMContentLoaded', initBlogFilters);
+</script>

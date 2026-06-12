@@ -6,6 +6,7 @@ tags: ["системы", "эзотерика", "ритуалы"]
 category: "Мышление"
 subcategory: "Эзотерика"
 stage: max
+verified: true
 description: "Демо-пост для проверки шаблона: буквица, содержание, сноски на полях, аннотированные и внешние ссылки, бэклинки."
 audience: "Те, кто собирает свою жизнь по кусочкам и подозревает, что из хаоса можно вырастить систему — медленно, как сад."
 cover: "https://images.unsplash.com/photo-1499002238440-d264edd596ec?q=80&w=800&auto=format&fit=crop"
@@ -58,3 +59,15 @@ cover: "https://images.unsplash.com/photo-1499002238440-d264edd596ec?q=80&w=800&
 ## Что в итоге
 
 Чешуйки не обязаны быть красивыми по отдельности. Важно, чтобы их было много и чтобы они лежали внахлёст. Тогда в один день ты замечаешь, что у тебя уже есть броня — и непонятно, когда успела нарасти.<sup data-note="Третья сноска для ровного счёта: проверяем, что список снизу собирает все три.">+</sup>
+
+## Метка достоверности (проверено / не проверено)
+
+Поле `verified` в frontmatter рисует бейдж в шапке поста — у этой статьи стоит `verified: true`, поэтому **вверху горит зелёное «Проверено лично»**. Вот как выглядят оба состояния:
+
+<span class="post-verified is-verified"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Проверено лично</span> <span class="post-verified is-unverified"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16.5" x2="12" y2="16.5"/></svg>Не проверено лично</span>
+
+А так — компактные бейджи на **карточке поста** (главная, «Новые статьи»):
+
+<span class="card-verified is-verified" style="display:inline-flex;align-items:center;gap:4px;font-family:var(--font-ui);font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:3px 8px;border-radius:999px;border:1px solid color-mix(in srgb, var(--accent-2) 40%, transparent);color:var(--accent-2)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Проверено</span> <span class="card-verified is-unverified" style="display:inline-flex;align-items:center;gap:4px;font-family:var(--font-ui);font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--text-muted)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16.5" x2="12" y2="16.5"/></svg>Не проверено</span>
+
+Если поля `verified` нет вовсе — никакой метки не показывается (нейтрально). А поле `coming: true` превращает страницу в заглушку «выйдет такого-то» — см. демонстрационный анонс в блоге.

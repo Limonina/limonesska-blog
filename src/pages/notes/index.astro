@@ -20,6 +20,7 @@ const formatDate = (date: Date) =>
                 <a href={`/notes/${note.id}`} class="entry-list-item">
                     <div class="entry-list-meta">
                         <span>{formatDate(note.data.pubDate)}</span>
+                        {note.data.coming && <span class="entry-soon">Скоро</span>}
                         {note.data.tags.length > 0 && (
                             <>
                                 <span class="entry-list-dot">•</span>
@@ -63,6 +64,10 @@ const formatDate = (date: Date) =>
         display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
     }
     .entry-list-dot { color: var(--color-text-faint); }
+    .entry-soon {
+        color: var(--color-accent); font-weight: 700; border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
+        border-radius: 999px; padding: 1px 8px; letter-spacing: 1px;
+    }
 
     .entry-list-heading {
         font-family: var(--font-vollkorn); font-size: var(--size-h3); font-weight: 700;
@@ -71,5 +76,12 @@ const formatDate = (date: Date) =>
     .entry-list-desc {
         font-family: var(--font-vollkorn); font-size: var(--size-base);
         color: var(--color-text-soft); line-height: 1.5; margin: 8px 0 0;
+    }
+
+    /* Телефон: без «прыжка» вправо при тапе/наведении + мельче строка даты/тегов */
+    @media (max-width: 600px) {
+        .entry-list-item:hover { padding-left: 0; }
+        .entry-list-meta { font-size: 0.66rem; gap: 4px 8px; flex-wrap: wrap; }
+        .entry-list-meta > span:first-child { white-space: nowrap; }
     }
 </style>

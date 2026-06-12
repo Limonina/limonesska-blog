@@ -63,4 +63,10 @@ const { heading, subtitle, items } = Astro.props;
         line-height: 1.3; margin: 0; color: var(--color-text); transition: color 0.2s;
     }
     .entry-list-desc { font-family: var(--font-vollkorn); font-size: var(--size-base); color: var(--color-text-soft); line-height: 1.5; margin: 8px 0 0; }
+
+    /* Телефон: без «прыжка» вправо при тапе/наведении + мельче строка меты */
+    @media (max-width: 600px) {
+        .entry-list-item:hover { padding-left: 0; }
+        .entry-list-meta { font-size: 0.66rem; gap: 4px 8px; flex-wrap: wrap; }
+    }
 </style>

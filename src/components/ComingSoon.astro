@@ -1,0 +1,129 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  pubDate: Date;
+  backHref?: string;
+  backLabel?: string;
+}
+
+const {
+  title,
+  description,
+  pubDate,
+  backHref = '/blog',
+  backLabel = 'Все статьи',
+} = Astro.props;
+
+const fmt = (d: Date) =>
+  d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+
+// Сколько дней осталось (по календарным дням)
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+const start = new Date(pubDate);
+start.setHours(0, 0, 0, 0);
+const daysLeft = Math.round((+start - +today) / 86400000);
+
+const plural = (n: number, one: string, few: string, many: string) => {
+  const m10 = n % 10, m100 = n % 100;
+  if (m10 === 1 && m100 !== 11) return one;
+  if (m10 >= 2 && m10 <= 4 && !(m100 >= 12 && m100 <= 14)) return few;
+  return many;
+};
+
+const countdown =
+  daysLeft > 1 ? `через ${daysLeft} ${plural(daysLeft, 'день', 'дня', 'дней')}`
+  : daysLeft === 1 ? 'уже завтра'
+  : daysLeft === 0 ? 'сегодня'
+  : 'совсем скоро';
+---
+
+<BaseLayout title={`${title} — скоро | limonesska`}>
+    <div class="coming">
+        <a href={backHref} class="coming-back"><span class="coming-back-arrow">←</span><span>{backLabel}</span></a>
+
+        <div class="coming-badge">
+            <span class="coming-dot"></span>
+            Скоро · {countdown}
+        </div>
+
+        <h1 class="coming-title">{title}</h1>
+        {description && <p class="coming-desc">{description}</p>}
+
+        <div class="coming-card">
+            <span class="coming-card-label">Дата выхода</span>
+            <span class="coming-card-date">{fmt(pubDate)}</span>
+            <p class="coming-card-note">
+                Этот материал ещё пишется. Возвращайся в день выхода — или загляни
+                в <a href="/blog">блог</a> и <a href="/notes">заметки</a>, там уже есть что почитать.
+            </p>
+        </div>
+    </div>
+</BaseLayout>
+
+<style is:global>
+    .coming { max-width: 680px; margin: 0 auto; text-align: center; }
+
+    .coming-back {
+        font-family: var(--font-ui); font-size: var(--size-small); color: var(--color-text-muted);
+        text-decoration: none; text-transform: uppercase; letter-spacing: 0.5px;
+        display: flex; justify-content: center; align-items: center; gap: 7px; margin-bottom: 28px;
+        transition: color 0.2s, gap 0.25s ease;
+    }
+    .coming-back:hover { color: var(--color-accent); gap: 14px; }
+    .coming-back-arrow { font-size: 1.25em; transform: translateY(-0.06em); }
+
+    .coming-badge {
+        display: inline-flex; align-items: center; gap: 8px;
+        font-family: var(--font-ui); font-size: var(--size-small); font-weight: 700;
+        text-transform: uppercase; letter-spacing: 1px; color: var(--color-accent);
+        margin-bottom: 22px;
+    }
+    .coming-dot {
+        width: 8px; height: 8px; border-radius: 50%; background: var(--color-accent);
+        box-shadow: 0 0 0 0 var(--color-accent); animation: coming-pulse 2s infinite;
+    }
+    @keyframes coming-pulse {
+        0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 50%, transparent); }
+        70% { box-shadow: 0 0 0 10px transparent; }
+        100% { box-shadow: 0 0 0 0 transparent; }
+    }
+
+    .coming-title {
+        font-family: var(--font-display); font-size: var(--size-mega);
+        font-weight: 700; line-height: 1.1; letter-spacing: -1px; margin: 0 0 18px; color: var(--color-text);
+    }
+    .coming-desc {
+        font-family: var(--font-vollkorn); font-size: var(--size-medium);
+        color: var(--color-text-soft); line-height: 1.5; margin: 0 0 44px;
+    }
+
+    .coming-card {
+        background: var(--audience-bg); border: 1px solid var(--line); border-radius: 18px;
+        padding: 36px 32px; display: flex; flex-direction: column; align-items: center; gap: 10px;
+    }
+    .coming-card-label {
+        font-family: var(--font-ui); font-size: var(--size-small); font-weight: 700;
+        text-transform: uppercase; letter-spacing: 1px; color: var(--color-link);
+    }
+    .coming-card-date {
+        font-family: var(--font-display); font-size: var(--size-h2); font-weight: 700;
+        color: var(--color-text); line-height: 1.1;
+    }
+    .coming-card-note {
+        font-family: var(--font-vollkorn); font-size: var(--size-base);
+        color: var(--color-text-muted); line-height: 1.6; margin: 12px 0 0; max-width: 440px;
+    }
+    .coming-card-note a {
+        color: var(--color-accent); text-decoration: none;
+        border-bottom: 1px solid var(--color-border); transition: border-color 0.2s;
+    }
+    .coming-card-note a:hover { border-bottom-color: var(--color-accent); }
+
+    @media (max-width: 600px) {
+        .coming-card { padding: 28px 20px; }
+    }
+</style>

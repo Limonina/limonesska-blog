@@ -29,8 +29,8 @@ import bg from '../assets/background.svg?raw';
         .notfound {
             position: relative;
             max-width: 640px;
-            margin: 0 auto;
-            padding: clamp(48px, 10vh, 120px) 20px;
+            margin: -60px auto 0;     /* подъём в счёт верхнего padding main-content (под шапку) */
+            padding: 8px 20px clamp(48px, 10vh, 120px);
             text-align: center;
         }
         .nf-inner { position: relative; z-index: 1; }
@@ -58,6 +58,12 @@ import bg from '../assets/background.svg?raw';
 
         @media (max-width: 768px) {
             .nf-bgimg { bottom: -40px; }
+        }
+
+        /* Телефон: фон-созвездие убираем совсем, контент 404 чуть опускаем */
+        @media (max-width: 600px) {
+            .nf-bgimg { display: none; }
+            .notfound { margin-top: 0; padding-top: 32px; }
         }
 
         .nf-code {
