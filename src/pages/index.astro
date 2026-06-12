@@ -11,13 +11,22 @@ const notes = (await getEntries('notes')).sort(sortByDate);
 const latestPosts = blogPosts.slice(0, 4);
 const freshNotes = notes.slice(0, 3);
 
-// Популярные темы — самые частые теги по статьям + заметкам
-const tagCounts = new Map<string, number>();
-[...blogPosts, ...notes].forEach((e) =>
-  e.data.tags.forEach((t) => tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1))
+// Популярные темы. SSR-версия — самые частые теги (фолбэк, пока не загрузились
+// лайки); на клиенте список переранжируется по сумме лайков (см. скрипт ниже).
+// tagInfo: тег → { count, keys } где keys — like-ключи записей (= их URL-путь).
+const entryKeys = [
+  ...blogPosts.map((e) => ({ key: `/blog/${e.id}`, tags: e.data.tags })),
+  ...notes.map((e) => ({ key: `/notes/${e.id}`, tags: e.data.tags })),
+];
+const tagInfo: Record<string, { count: number; keys: string[] }> = {};
+entryKeys.forEach((e) =>
+  e.tags.forEach((t) => {
+    (tagInfo[t] ??= { count: 0, keys: [] }).count++;
+    tagInfo[t].keys.push(e.key);
+  })
 );
-const topTags = [...tagCounts.entries()]
-  .sort((a, b) => b[1] - a[1])
+const topTags = Object.entries(tagInfo)
+  .sort((a, b) => b[1].count - a[1].count)
   .slice(0, 4)
   .map(([t]) => t);
 
@@ -254,3 +263,29 @@ const formatDate = (date) =>
         .popular-card { height: 450px; }
     }
 </style>
+
+<script define:vars={{ tagInfo }}>
+    // Переранжируем «Популярные темы» по сумме лайков записей с этим тегом.
+    // SSR отрисовал топ по частоте — если лайки есть, заменяем на топ по лайкам.
+    (async () => {
+        const list = document.querySelector('.tags-list');
+        if (!list) return;
+        try {
+            const likes = await (await fetch('/api/likes')).json();
+            const scored = Object.entries(tagInfo)
+                .map(([tag, info]) => ({
+                    tag,
+                    likeSum: info.keys.reduce((s, k) => s + (likes[k] || 0), 0),
+                    count: info.count,
+                }))
+                .sort((a, b) => b.likeSum - a.likeSum || b.count - a.count);
+            const top = scored.slice(0, 4);
+            if (top.every((t) => t.likeSum === 0)) return; // лайков нет — оставляем по частоте
+            list.innerHTML = top
+                .map((t) => `<a href="/tags/${encodeURIComponent(t.tag)}" class="tag-pill">#${t.tag}</a>`)
+                .join('');
+        } catch (e) {
+            /* бэкенд не отвечает — оставляем SSR-версию */
+        }
+    })();
+</script>

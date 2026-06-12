@@ -547,22 +547,50 @@ const slug = Astro.url.pathname;
             });
         });
 
-        // ---- Лайк (локально, localStorage) ----
+        // ---- Лайк (глобальный счёт через /api/like + Supabase) ----
+        // localStorage хранит только ФАКТ «я лайкнул» (чтобы не накручивать с одного
+        // браузера), сам счётчик — общий, с сервера. Если бэкенд не настроен —
+        // деградирует до оптимистичного локального значения.
         const likeBtn = document.getElementById('like-btn');
         const countEl = document.getElementById('like-count');
         if (likeBtn && countEl) {
-            const key = 'like:' + likeBtn.dataset.slug;
-            const render = (on) => {
-                likeBtn.classList.toggle('is-liked', on);
-                likeBtn.setAttribute('aria-pressed', String(on));
-                countEl.textContent = on ? '1' : '0';
+            const slug = likeBtn.dataset.slug;
+            const key = 'like:' + slug;
+            let liked = localStorage.getItem(key) === '1';
+            let count = 0;
+            let busy = false;
+            const render = () => {
+                likeBtn.classList.toggle('is-liked', liked);
+                likeBtn.setAttribute('aria-pressed', String(liked));
+                countEl.textContent = String(count);
             };
-            render(localStorage.getItem(key) === '1');
-            likeBtn.addEventListener('click', () => {
-                const next = localStorage.getItem(key) !== '1';
+            render();
+            // подтянуть реальный счёт
+            fetch('/api/like?slug=' + encodeURIComponent(slug))
+                .then((r) => r.json())
+                .then((d) => { if (typeof d.count === 'number') { count = d.count; render(); } })
+                .catch(() => {});
+
+            likeBtn.addEventListener('click', async () => {
+                if (busy) return;
+                busy = true;
+                const next = !liked;
+                // оптимистично
+                liked = next;
+                count = Math.max(0, count + (next ? 1 : -1));
+                render();
                 if (next) localStorage.setItem(key, '1');
                 else localStorage.removeItem(key);
-                render(next);
+                try {
+                    const r = await fetch('/api/like', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ slug, delta: next ? 1 : -1 }),
+                    });
+                    const d = await r.json();
+                    if (typeof d.count === 'number') { count = d.count; render(); }
+                } catch (e) { /* оставляем оптимистичное значение */ }
+                busy = false;
             });
         }
 
