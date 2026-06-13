@@ -52,9 +52,13 @@ const fmt = (d: Date) =>
 const enc = (s: string) => encodeURIComponent(s);
 
 const slug = Astro.url.pathname;
+
+// OG-превью: для blog/notes есть сгенерированная картинка /og/<id>.png; иначе общая
+const seg = slug.split('/').filter(Boolean);
+const ogImage = (seg[0] === 'blog' || seg[0] === 'notes') ? `/og/${seg[seg.length - 1]}.png` : undefined;
 ---
 
-<BaseLayout title={`${title} | limonesska`}>
+<BaseLayout title={`${title} | limonesska`} description={description} ogImage={ogImage}>
     <aside class="post-toc" id="post-toc" hidden>
         <button class="post-toc-toggle" id="post-toc-toggle" aria-expanded="false">
             <svg class="post-toc-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>

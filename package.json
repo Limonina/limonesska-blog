@@ -15,8 +15,12 @@
   "dependencies": {
     "@astrojs/mdx": "^6.0.1",
     "@astrojs/vercel": "^10.0.8",
+    "@fontsource/manrope": "^5.2.8",
+    "@fontsource/playfair-display": "^5.2.8",
+    "@resvg/resvg-js": "^2.6.2",
     "astro": "^6.3.3",
-    "astronomy-engine": "^2.1.19"
+    "astronomy-engine": "^2.1.19",
+    "satori": "^0.26.0"
   },
   "devDependencies": {
     "cloudinary": "^2.10.0"

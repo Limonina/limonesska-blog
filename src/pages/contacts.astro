@@ -5,7 +5,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 const email = 'limonesska@gmail.com';
 const socials = [
   { label: 'Telegram', handle: '@limonesska_ru', href: 'https://t.me/limonesska_ru' },
-  { label: 'Instagram', handle: '@limonesska', href: 'https://www.instagram.com/limonesska/' },
+  { label: 'Instagram', handle: '@limonesska', href: 'https://www.instagram.com/limonesska/', star: true },
   { label: 'ВКонтакте', handle: 'vk.com/limonesska', href: 'https://vk.com/limonesska' },
 ];
 ---
@@ -27,15 +27,19 @@ const socials = [
             </li>
             {socials.map((s) => (
                 <li class="contact">
-                    <span class="contact-label">{s.label}</span>
+                    <span class="contact-label">{s.label}{s.star && <sup class="ext-star">*</sup>}</span>
                     <a class="contact-link" href={s.href} target="_blank" rel="noopener noreferrer">{s.handle}</a>
                 </li>
             ))}
         </ul>
+
+        <p class="contacts-ext-note">* Instagram принадлежит компании Meta, признанной в РФ экстремистской организацией и запрещённой.</p>
     </section>
 
     <style is:global>
         .contacts { max-width: 760px; margin: 0 auto; }
+        .ext-star { color: var(--color-text-faint); font-size: 0.85em; }
+        .contacts-ext-note { margin-top: 28px; font-family: var(--font-ui); font-size: var(--size-small); line-height: 1.5; color: var(--color-text-faint); }
 
         .contacts-head { margin-bottom: 48px; }
         .contacts-title {

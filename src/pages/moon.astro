@@ -37,7 +37,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
                 <span class="lg-bar" style="background:#5b9bd5"></span>♂
             </span>
         </div>
+
+        <div class="moon-toolbar">
+            <button class="moon-print-btn" id="moon-print-btn">🖨 Распечатать год</button>
+        </div>
     </section>
+
+    <div class="moon-overlay" id="moon-overlay" hidden>Готовлю календарь к печати…</div>
+    <div class="moon-print" id="moon-print" aria-hidden="true"></div>
 
     <style is:global>
         .moon { max-width: 1000px; margin: 0 auto; }
@@ -144,6 +151,44 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             .mc-moon { width: 20px; height: 20px; }
             .mc-phase, .mc-voc, .mc-ecl { display: none; }
             .moon-grid, .moon-weekdays { gap: 5px; }
+        }
+
+        /* ── Печать ── */
+        .moon-toolbar { display: flex; justify-content: center; margin-top: 24px; }
+        .moon-print-btn {
+            font-family: var(--font-ui); font-size: var(--size-small); font-weight: 600;
+            color: var(--text-muted); background: var(--card-bg);
+            border: 1px solid var(--line); border-radius: 999px; padding: 8px 18px; cursor: pointer;
+            transition: 0.2s;
+        }
+        .moon-print-btn:hover { color: var(--accent); border-color: var(--accent); }
+        .moon-overlay {
+            position: fixed; inset: 0; z-index: 2000;
+            display: flex; align-items: center; justify-content: center;
+            background: color-mix(in srgb, var(--bg) 80%, transparent);
+            font-family: var(--font-ui); font-size: var(--size-medium); color: var(--text);
+        }
+        .moon-overlay[hidden] { display: none; }
+        .moon-print { display: none; }
+
+        @media print {
+            @page { size: A4 portrait; margin: 12mm; }
+            /* печатаем точные цвета */
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            /* прячем всё, кроме контейнера печати */
+            .site-header, .site-footer, .moon-head, .moon-bar, .moon-toolbar,
+            .moon > .moon-weekdays, .moon > .moon-grid, .moon-legend, .moon-detail, .moon-overlay { display: none !important; }
+            .moon { max-width: none; margin: 0; }
+            .moon-print { display: block !important; }
+            .print-month { page-break-after: always; }
+            .print-month:last-child { page-break-after: auto; }
+            .pm-title {
+                font-family: var(--font-display); font-size: 1.6rem; font-weight: 700;
+                text-transform: capitalize; margin: 0 0 8px; color: #1a1a1a;
+            }
+            .pm-grid { min-height: 0; gap: 4px; }
+            .pm-grid .mc, .print-month .mc { aspect-ratio: auto; min-height: 92px; break-inside: avoid; }
+            .print-month .mc:hover { transform: none; box-shadow: none; }
         }
     </style>
 
@@ -287,42 +332,70 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         const today = new Date(); today.setHours(0, 0, 0, 0);
         let detailEl = null;
 
+        function cellHTML(d, info) {
+            return `
+                ${info.retros.length ? `<div class="mc-stripes">${info.retros.map(r => `<span class="mc-stripe" style="background:${RXCOLOR[r.name] || '#ddd'}"></span>`).join('')}</div>` : ''}
+                <div class="mc-top">
+                    <span class="mc-date">${d}</span>
+                    <span class="mc-moonwrap">
+                        <span class="mc-arrow">${info.waxing ? '↗' : '↘'}</span>
+                        <span class="mc-moon">${moonSVG(info.illum, info.waxing)}</span>
+                    </span>
+                </div>
+                <div class="mc-bottom">
+                    ${info.major ? `<div class="mc-phase">${info.major}</div>` : ''}
+                    ${info.ecl ? `<div class="mc-ecl">${info.ecl} затмение</div>` : ''}
+                    ${info.voc.length ? `<div class="mc-voc">🌙 ${info.voc.map(v => v.text).join('<br>')}</div>` : ''}
+                </div>
+            `;
+        }
+
+        function buildGrid(gridEl, y, m, data, interactive) {
+            gridEl.innerHTML = '';
+            const lead = (new Date(y, m, 1).getDay() + 6) % 7;
+            for (let i = 0; i < lead; i++) { const e = document.createElement('div'); e.className = 'mc empty'; gridEl.appendChild(e); }
+            for (let d = 1; d <= data.daysIn; d++) {
+                const info = data.days[d];
+                const cell = document.createElement('div');
+                cell.className = 'mc';
+                if (info.corridor) cell.classList.add('corridor');
+                if (interactive && +new Date(y, m, d) === +today) cell.classList.add('today');
+                cell.innerHTML = cellHTML(d, info);
+                if (interactive) cell.addEventListener('click', () => selectDay(cell, d, info));
+                gridEl.appendChild(cell);
+            }
+        }
+
         function render() {
             label.textContent = `${MONTHS[month]} ${year}`;
             grid.innerHTML = '<div class="moon-loading">Считаю фазы…</div>';
             if (detailEl) { detailEl.remove(); detailEl = null; }
-            // даём кадр отрисоваться, потом считаем (тяжёлый VoC)
             requestAnimationFrame(() => requestAnimationFrame(() => {
-                const data = computeMonth(year, month);
-                grid.innerHTML = '';
-                const first = new Date(year, month, 1);
-                const lead = (first.getDay() + 6) % 7;
-                for (let i = 0; i < lead; i++) { const e = document.createElement('div'); e.className = 'mc empty'; grid.appendChild(e); }
-                for (let d = 1; d <= data.daysIn; d++) {
-                    const info = data.days[d];
-                    const cell = document.createElement('div');
-                    cell.className = 'mc';
-                    if (info.corridor) cell.classList.add('corridor');
-                    if (+new Date(year, month, d) === +today) cell.classList.add('today');
-                    cell.innerHTML = `
-                        ${info.retros.length ? `<div class="mc-stripes">${info.retros.map(r => `<span class="mc-stripe" style="background:${RXCOLOR[r.name] || '#ddd'}"></span>`).join('')}</div>` : ''}
-                        <div class="mc-top">
-                            <span class="mc-date">${d}</span>
-                            <span class="mc-moonwrap">
-                                <span class="mc-arrow">${info.waxing ? '↗' : '↘'}</span>
-                                <span class="mc-moon">${moonSVG(info.illum, info.waxing)}</span>
-                            </span>
-                        </div>
-                        <div class="mc-bottom">
-                            ${info.major ? `<div class="mc-phase">${info.major}</div>` : ''}
-                            ${info.ecl ? `<div class="mc-ecl">${info.ecl} затмение</div>` : ''}
-                            ${info.voc.length ? `<div class="mc-voc">🌙 ${info.voc.map(v => v.text).join('<br>')}</div>` : ''}
-                        </div>
-                    `;
-                    cell.addEventListener('click', () => selectDay(cell, d, info));
-                    grid.appendChild(cell);
-                }
+                buildGrid(grid, year, month, computeMonth(year, month), true);
             }));
+        }
+
+        // ── Печать всего года (месяц на страницу) ──
+        const WD_SHORT = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+        async function printYear() {
+            const overlay = document.getElementById('moon-overlay');
+            const pc = document.getElementById('moon-print');
+            overlay.hidden = false;
+            pc.innerHTML = '';
+            for (let m = 0; m < 12; m++) {
+                const data = computeMonth(year, m);
+                const block = document.createElement('section');
+                block.className = 'print-month';
+                block.innerHTML = `
+                    <h2 class="pm-title">${MONTHS[m]} ${year}</h2>
+                    <div class="moon-weekdays pm-wd">${WD_SHORT.map(w => `<div>${w}</div>`).join('')}</div>
+                    <div class="moon-grid pm-grid"></div>`;
+                buildGrid(block.querySelector('.pm-grid'), year, m, data, false);
+                pc.appendChild(block);
+                await new Promise((r) => requestAnimationFrame(r)); // не морозим UI
+            }
+            overlay.hidden = true;
+            window.print();
         }
 
         function selectDay(cell, d, info) {
@@ -359,6 +432,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
                 render();
             });
         });
+
+        const printBtn = document.getElementById('moon-print-btn');
+        if (printBtn) printBtn.addEventListener('click', printYear);
 
         render();
     </script>
