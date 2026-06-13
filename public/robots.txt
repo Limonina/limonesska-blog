@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://limonesska.ru/sitemap-index.xml

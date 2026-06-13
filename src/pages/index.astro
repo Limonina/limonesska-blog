@@ -75,6 +75,11 @@ const formatDate = (date) =>
         <div class="editors-column">
             <h3 class="column-title">Свежие заметки</h3>
 
+            {freshNotes.length === 0 && (
+                <div class="empty-state">
+                    <p>Скоро здесь появятся заметки</p>
+                </div>
+            )}
             {freshNotes.map((note) => (
                 <a href={`/notes/${note.id}`} class="editors-card editors-card--note">
                     <div class="editors-card-content">
@@ -102,9 +107,15 @@ const formatDate = (date) =>
             </a>
         </div>
 
-        <div class="latest-grid">
-            {latestPosts.map((post) => <PostCard post={post} />)}
-        </div>
+        {latestPosts.length === 0 ? (
+            <div class="empty-state">
+                <p>Скоро здесь появятся первые статьи</p>
+            </div>
+        ) : (
+            <div class="latest-grid">
+                {latestPosts.map((post) => <PostCard post={post} />)}
+            </div>
+        )}
     </section>
 
 </BaseLayout>
@@ -192,6 +203,14 @@ const formatDate = (date) =>
     .quote-author { font-family: var(--font-vollkorn); margin-top: 15px; padding-left: 10px; font-size: var(--size-base); color: var(--color-text-muted); }
 
     /* --- НОВЫЕ СТАТЬИ --- */
+    .empty-state {
+        border: 1.5px dashed var(--color-border); border-radius: 16px;
+        padding: 44px 24px; text-align: center; margin: 4px 0;
+    }
+    .empty-state p {
+        font-family: var(--font-vollkorn); font-size: var(--size-base);
+        color: var(--color-text-muted); margin: 0;
+    }
     .latest-section { margin-top: 150px; }
 
     .section-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }

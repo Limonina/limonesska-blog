@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig, envField } from 'astro/config';
 import mdx from '@astrojs/mdx';
+import sitemap from '@astrojs/sitemap';
 import vercel from '@astrojs/vercel';
 
 // https://astro.build/config
@@ -10,7 +11,11 @@ import vercel from '@astrojs/vercel';
 export default defineConfig({
   site: 'https://limonesska.ru',
   adapter: vercel(),
-  integrations: [mdx()],
+  integrations: [
+    mdx(),
+    // sitemap: исключаем служебное (og-картинки, лендинг-заглушку, api)
+    sitemap({ filter: (page) => !page.includes('/og/') && !page.includes('/plug') && !page.includes('/api/') }),
+  ],
   // Секреты Supabase: читаются и в dev (из .env), и в рантайме на Vercel.
   // optional — чтобы сборка/дев работали до того, как ключи прописаны.
   env: {

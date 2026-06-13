@@ -50,6 +50,12 @@ const hasFilters = categories.length > 0;
             </div>
         )}
 
+        {posts.length === 0 && (
+            <div class="empty-state">
+                <p>Скоро здесь появятся первые статьи</p>
+            </div>
+        )}
+
         <div class="post-list" id="post-list">
             {posts.map((post) => (
                 <a
@@ -144,6 +150,14 @@ const hasFilters = categories.length > 0;
     .post-list-empty {
         font-family: var(--font-vollkorn); font-size: var(--size-base);
         color: var(--color-text-muted); padding: 32px 0; text-align: center;
+    }
+    .empty-state {
+        border: 1.5px dashed var(--color-border); border-radius: 16px;
+        padding: 60px 28px; text-align: center; margin: 8px 0;
+    }
+    .empty-state p {
+        font-family: var(--font-vollkorn); font-size: var(--size-medium);
+        color: var(--color-text-muted); margin: 0;
     }
 
     /* Телефон: без «прыжка» вправо при тапе/наведении + мельче строка даты/тегов */

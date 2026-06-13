@@ -15,6 +15,12 @@ const formatDate = (date: Date) =>
         <h1 class="entry-index-title">Заметки</h1>
         <p class="entry-index-subtitle">Мой хаос того, что ещё не до конца понимаю.</p>
 
+        {notes.length === 0 && (
+            <div class="empty-state">
+                <p>Скоро здесь появятся первые заметки</p>
+            </div>
+        )}
+
         <div class="entry-list">
             {notes.map((note) => (
                 <a href={`/notes/${note.id}`} class="entry-list-item">
@@ -40,6 +46,14 @@ const formatDate = (date: Date) =>
 
 <style is:global>
     .entry-index { max-width: 760px; margin: 0 auto; }
+    .empty-state {
+        border: 1.5px dashed var(--color-border); border-radius: 16px;
+        padding: 60px 28px; text-align: center; margin: 8px 0;
+    }
+    .empty-state p {
+        font-family: var(--font-vollkorn); font-size: var(--size-medium);
+        color: var(--color-text-muted); margin: 0;
+    }
     .entry-index-title {
         font-family: var(--font-display); font-size: var(--size-mega); font-weight: 700;
         line-height: 1.1; letter-spacing: -1px; margin: 0 0 10px; color: var(--color-text);

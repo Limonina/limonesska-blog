@@ -66,6 +66,12 @@ const fmt = (d: Date) =>
             </p>
         </header>
 
+        {items.length === 0 && (
+            <div class="empty-state">
+                <p>Скоро здесь начнёт расти броня — первые статьи и заметки</p>
+            </div>
+        )}
+
         <ul class="garden-grid">
             {items.map((it) => (
                 <li>
@@ -110,6 +116,15 @@ const fmt = (d: Date) =>
         }
 
         /* Колоночная раскладка — карточки разной высоты пакуются «вразнобой» */
+        .empty-state {
+            border: 1.5px dashed var(--line); border-radius: 16px;
+            padding: 60px 28px; text-align: center; margin: 8px 0;
+        }
+        .empty-state p {
+            font-family: var(--font-vollkorn); font-size: var(--size-medium);
+            color: var(--text-muted); margin: 0 auto; max-width: 30em;
+        }
+
         .garden-grid {
             list-style: none;
             margin: 0;
