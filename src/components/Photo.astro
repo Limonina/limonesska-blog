@@ -1,0 +1,77 @@
+---
+// Инлайн-фото для тела записи (дневник/посты). Использование в MDX:
+//   <Photo src={frontmatter.photos[0]} />                      — по умолчанию: средний, по центру
+//   <Photo src={frontmatter.photos[1]} size="l" align="wide" /> — крупное, шире текста
+//   <Photo src={frontmatter.photos[2]} size="s" align="right" caption="подпись" />
+// src — ссылка (обычно из массива photos: по номеру). size: s | m | l. align: center | left | right | wide.
+interface Props {
+  src: string;
+  size?: 's' | 'm' | 'l';
+  align?: 'center' | 'left' | 'right' | 'wide';
+  caption?: string;
+  alt?: string;
+}
+const { src, size = 'm', align = 'center', caption, alt } = Astro.props;
+
+// Cloudinary-оптимизация (как cl() в дневнике): ширина под размер
+const widths = { s: 'w_600', m: 'w_900', l: 'w_1300' } as const;
+const w = align === 'wide' ? 'w_1600' : widths[size];
+const opt = (u: string) =>
+  u.includes('res.cloudinary.com/') ? u.replace('/upload/', `/upload/f_auto,q_auto,${w}/`) : u;
+---
+
+<figure class:list={["dphoto", `dphoto--${size}`, `dphoto--${align}`]}>
+    <img src={opt(src)} alt={alt ?? caption ?? ''} loading="lazy" />
+    {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+    .dphoto { margin: 28px 0; }
+    .dphoto img {
+        display: block;
+        width: 100%;
+        margin: 0;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+    }
+    .dphoto figcaption {
+        margin-top: 8px;
+        font-family: var(--font-ui);
+        font-size: var(--size-small);
+        line-height: 1.4;
+        color: var(--color-text-faint);
+        text-align: center;
+    }
+
+    /* размеры (по центру) */
+    .dphoto--s { max-width: 340px; }
+    .dphoto--m { max-width: 540px; }
+    .dphoto--l { max-width: 100%; }
+    .dphoto--center { margin-left: auto; margin-right: auto; }
+
+    /* с краю — текст обтекает */
+    .dphoto--left, .dphoto--right { max-width: 46%; margin-top: 6px; margin-bottom: 18px; }
+    .dphoto--left { float: left; margin-right: 28px; }
+    .dphoto--right { float: right; margin-left: 28px; }
+    .dphoto--left figcaption, .dphoto--right figcaption { text-align: left; }
+
+    /* шире текста — выходит за колонку (только на широких экранах) */
+    .dphoto--wide { max-width: none; }
+    @media (min-width: 1100px) {
+        .dphoto--wide {
+            width: calc(100% + 200px);
+            margin-left: -100px;
+            margin-right: -100px;
+        }
+    }
+
+    /* на узких экранах float и крупные — в одну колонку */
+    @media (max-width: 600px) {
+        .dphoto--left, .dphoto--right {
+            float: none;
+            max-width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    }
+</style>

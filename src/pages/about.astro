@@ -1,0 +1,134 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// ⤵️ Лиона редактирует. Подзаголовок под именем.
+const tagline = 'Управление данными · Дизайн смыслов';
+
+// Фото в ряд (3 портрета). Чистые URL (Cloudinary). Пусто → плейсхолдер.
+const photos = ['', '', ''];
+---
+
+<BaseLayout title="Обо мне | limonesska">
+    <article class="about">
+        <header class="about-head">
+            <h1 class="about-name">Лиона</h1>
+            <p class="about-tagline">{tagline}</p>
+        </header>
+
+        <!-- ── Немного контекста ── -->
+        <section class="about-section">
+            <h2 class="about-h2">Немного контекста</h2>
+            <p class="about-lead">
+                Строю системы там, где другие видят хаос — и этот сайт один из них:
+                живой дневник тех-экспериментов, мыслей и того, что меня формирует.
+            </p>
+            <p>
+                Не бывает непреодолимых преград — есть только задачи, которые ещё не обрели
+                свою структуру. Здесь я кую «Мою броню»: пишу вживую, не дожидаясь идеала,
+                и собираю по чешуйке то, что делает меня устойчивее.
+            </p>
+            <p><em>(заполнить: чем живёшь, что тебе важно, о чём этот сайт)</em></p>
+        </section>
+
+        <!-- ── Немного истории ── -->
+        <section class="about-section">
+            <h2 class="about-h2">Немного истории</h2>
+            <p><em>(заполнить: откуда ты, как пришла к тому, чем занимаешься сейчас)</em></p>
+        </section>
+
+        <!-- ── Фото ── -->
+        <section class="about-section">
+            <h2 class="about-h2">Фото</h2>
+            <div class="about-photos">
+                {photos.map((src) => (
+                    <div class:list={["about-photo", { "is-empty": !src }]}>
+                        {src && <img src={src} alt="Лиона" loading="lazy" />}
+                    </div>
+                ))}
+            </div>
+        </section>
+    </article>
+
+    <style is:global>
+        .about { max-width: 760px; margin: 0 auto; }
+
+        .about-head { margin-bottom: 56px; }
+        .about-name {
+            font-family: var(--font-display);
+            font-size: var(--size-mega);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -1px;
+            color: var(--text);
+            margin: 0 0 10px;
+        }
+        .about-tagline {
+            font-family: var(--font-ui);
+            font-size: var(--size-small);
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--accent-2);
+            margin: 0;
+        }
+
+        .about-section { margin-bottom: 56px; }
+        .about-section:last-child { margin-bottom: 0; }
+
+        .about-h2 {
+            font-family: var(--font-display);
+            font-size: var(--size-h2);
+            color: var(--text);
+            margin: 0 0 22px;
+            position: relative;
+        }
+        .about-h2::before {
+            content: '';
+            position: absolute;
+            left: -38px;
+            top: calc(50% + 2px); /* по центру первой заглавной буквы */
+            transform: translateY(-50%);
+            width: 22px;
+            height: 28px;
+            background-color: var(--accent-2);
+            -webkit-mask: url('/icons/item.svg') no-repeat center / contain;
+            mask: url('/icons/item.svg') no-repeat center / contain;
+        }
+
+        .about-section p {
+            font-family: var(--font-vollkorn);
+            font-size: var(--size-base);
+            line-height: 1.7;
+            color: var(--text-muted);
+            margin: 0 0 18px;
+            max-width: 40em;
+        }
+        .about-section p:last-child { margin-bottom: 0; }
+        .about-section em { color: var(--color-text-faint); }
+        .about-lead { font-size: var(--size-medium); color: var(--text); }
+
+        /* ── Фото в ряд ── */
+        .about-photos {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        .about-photo {
+            aspect-ratio: 3 / 4;
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--card-bg);
+        }
+        .about-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .about-photo.is-empty { border: 1px dashed var(--line); }
+
+        /* на узких экранах поля нет — маркер заголовка встаёт инлайн, чтобы не обрезался */
+        @media (max-width: 820px) {
+            .about-h2 { padding-left: 34px; }
+            .about-h2::before { left: 0; }
+        }
+        @media (max-width: 600px) {
+            .about-photos { gap: 10px; }
+        }
+    </style>
+</BaseLayout>

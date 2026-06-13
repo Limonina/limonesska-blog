@@ -1,0 +1,290 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// ⤵️ Лиона редактирует этот массив. Каждая запись — книга.
+//   title — название, author — автор
+//   shelf — 'library' (прочитанное / в процессе) | 'antilibrary' (хочу / «нравится идея прочесть»)
+//   status — метка под книгой: 'прочитано' | 'читаю' (опц.; обычно для полки library)
+//   subcats — подрубрики (массив). Допустимые значения зависят от полки (см. shelves ниже)
+//   cover — URL обложки (Cloudinary / внешний)
+const books = [
+  {
+    title: 'Age of Ambition: Chasing Fortune, Truth, and Faith in the New China',
+    author: 'Evan Osnos',
+    shelf: 'library',
+    status: 'прочитано',
+    subcats: ['рекомендую', 'изменила-взгляд'],
+    cover: '',
+  },
+  {
+    title: 'Cue the Sun! The Invention of Reality TV',
+    author: 'Emily Nussbaum',
+    shelf: 'library',
+    status: 'читаю',
+    subcats: ['практичная'],
+    cover: '',
+  },
+  {
+    title: 'The Invention of Nature: The Adventures of Alexander von Humboldt',
+    author: 'Andrea Wulf',
+    shelf: 'antilibrary',
+    subcats: ['в-очереди'],
+    cover: '',
+  },
+  {
+    title: 'Age of Wonder',
+    author: 'Richard Holmes',
+    shelf: 'antilibrary',
+    subcats: ['когда-нибудь'],
+    cover: '',
+  },
+];
+
+// Полки + их подрубрики (фильтры). ⤵️ Лиона может править наборы.
+const shelves = [
+  {
+    key: 'library',
+    label: 'Библиотека',
+    lead: 'Прочитанное — то, что прошло через меня: с инсайтами и тем, что осталось со мной.',
+    subcats: ['рекомендую', 'перечитаю', 'изменила-взгляд', 'практичная'],
+  },
+  {
+    key: 'antilibrary',
+    label: 'Антибиблиотека',
+    lead: 'Книги, которые мне нравится считать прочитанными, — то, чего я ещё не знаю.',
+    subcats: ['срочно', 'в-очереди', 'когда-нибудь'],
+  },
+];
+const byShelf = (key) => books.filter((b) => b.shelf === key);
+---
+
+<BaseLayout title="Библиотека | limonesska">
+    <section class="lib">
+        <header class="lib-head">
+            <h1 class="lib-title">
+                {shelves.map((s, i) => (
+                    <>
+                        {i > 0 && <span class="lib-sep">|</span>}
+                        <button class:list={["lib-tab", { "is-active": i === 0 }]} data-shelf={s.key} data-lead={s.lead}>{s.label}</button>
+                    </>
+                ))}
+            </h1>
+            <p class="lib-lead">{shelves[0].lead}</p>
+        </header>
+
+        {shelves.map((s, i) => (
+            <div class:list={["shelf", { "is-active": i === 0 }]} data-shelf-panel={s.key}>
+                <div class="lib-filters">
+                    <button class="filter-chip is-active" data-filter="all">все</button>
+                    {s.subcats.map((sc) => (
+                        <button class="filter-chip" data-filter={sc}>{sc}</button>
+                    ))}
+                </div>
+
+                <ul class="book-grid">
+                    {byShelf(s.key).map((book) => (
+                        <li class="book" data-subcats={(book.subcats ?? []).join(' ')}>
+                            <div class:list={["book-cover", { "is-empty": !book.cover }]}>
+                                {book.cover && <img src={book.cover} alt={book.title} loading="lazy" />}
+                                {book.status && (
+                                    <span class:list={["cover-status", `status-${book.status === 'читаю' ? 'reading' : 'read'}`]}>{book.status}</span>
+                                )}
+                            </div>
+                            <h2 class="book-title">{book.title}</h2>
+                            <span class="book-author">{book.author}</span>
+                            {book.subcats && book.subcats.length > 0 && (
+                                <span class="book-subcats">{book.subcats.join(' · ')}</span>
+                            )}
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        ))}
+    </section>
+
+    <style is:global>
+        .lib { max-width: 1000px; margin: 0 auto; }
+
+        .lib-head { margin-bottom: 36px; }
+
+        .lib-title {
+            font-family: var(--font-display);
+            font-size: var(--size-mega);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -1px;
+            margin: 0 0 14px;
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .lib-sep { color: var(--line); font-weight: 300; }
+        .lib-tab {
+            font: inherit;
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            color: var(--color-text-faint);
+            transition: color 0.25s ease;
+        }
+        .lib-tab:hover { color: var(--text-muted); }
+        .lib-tab.is-active { color: var(--text); }
+
+        .lib-lead {
+            font-family: var(--font-vollkorn);
+            font-size: var(--size-medium);
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        /* ====== Полки ====== */
+        .shelf { display: none; }
+        .shelf.is-active { display: block; }
+
+        /* фильтры-подрубрики (текст через точку) */
+        .lib-filters {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            margin-bottom: 36px;
+        }
+        .filter-chip {
+            background: none;
+            border: none;
+            padding: 2px 0;
+            cursor: pointer;
+            font-family: var(--font-ui);
+            font-size: var(--size-base);
+            font-weight: 500;
+            color: var(--color-text-faint);
+            transition: color 0.2s;
+        }
+        .filter-chip:not(:first-child)::before {
+            content: "·";
+            margin: 0 10px;
+            color: var(--color-text-faint);
+            font-weight: 400;
+        }
+        .filter-chip:hover { color: var(--text); }
+        .filter-chip.is-active { color: var(--accent); font-weight: 700; }
+
+        .book-grid {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px 28px;
+        }
+        .book.is-hidden { display: none; }
+
+        .book-cover {
+            position: relative;
+            aspect-ratio: 2 / 3;
+            margin-bottom: 16px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px var(--shadow);
+            background: var(--card-bg);
+        }
+        .book-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .book-cover.is-empty {
+            border: 1px dashed var(--line);
+            box-shadow: none;
+        }
+
+        /* статус — бейдж в углу обложки (сверху справа) */
+        .cover-status {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 9px;
+            border-radius: 999px;
+            font-family: var(--font-ui);
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: var(--card-bg);
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+        .cover-status::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        .status-read { color: var(--accent-2); }
+        .status-reading { color: var(--accent); }
+
+        /* подпись под обложкой — чуть уже самой обложки (небольшой инсет) */
+        .book-title, .book-author, .book-subcats { padding: 0 8px; }
+
+        .book-title {
+            font-family: var(--font-vollkorn);
+            font-size: var(--size-base);
+            font-weight: 600;
+            line-height: 1.35;
+            color: var(--text);
+            margin: 0 0 4px;
+        }
+
+        .book-author {
+            font-family: var(--font-ui);
+            font-size: var(--size-small);
+            color: var(--color-text-faint);
+        }
+
+        .book-subcats {
+            display: block;
+            margin-top: 8px;
+            font-family: var(--font-ui);
+            font-size: var(--size-small);
+            color: var(--color-text-faint);
+        }
+
+        @media (max-width: 900px) {
+            .book-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .book-grid { grid-template-columns: repeat(2, 1fr); gap: 32px 20px; }
+        }
+    </style>
+
+    <script>
+        // переключение полок
+        const tabs = document.querySelectorAll('.lib-tab');
+        const panels = document.querySelectorAll('[data-shelf-panel]');
+        const leadEl = document.querySelector('.lib-lead');
+        tabs.forEach((tab) => {
+            tab.addEventListener('click', () => {
+                const key = tab.getAttribute('data-shelf');
+                tabs.forEach((t) => t.classList.toggle('is-active', t === tab));
+                panels.forEach((p) => p.classList.toggle('is-active', p.getAttribute('data-shelf-panel') === key));
+                if (leadEl && tab.dataset.lead) leadEl.textContent = tab.dataset.lead;
+            });
+        });
+
+        // фильтр по подрубрике (внутри каждой полки независимо)
+        panels.forEach((panel) => {
+            const chips = panel.querySelectorAll('.filter-chip');
+            const books = panel.querySelectorAll('.book');
+            chips.forEach((chip) => {
+                chip.addEventListener('click', () => {
+                    const f = chip.getAttribute('data-filter');
+                    chips.forEach((c) => c.classList.toggle('is-active', c === chip));
+                    books.forEach((b) => {
+                        const subs = (b.getAttribute('data-subcats') || '').split(' ');
+                        const show = f === 'all' || subs.includes(f);
+                        b.classList.toggle('is-hidden', !show);
+                    });
+                });
+            });
+        });
+    </script>
+</BaseLayout>

@@ -1,0 +1,365 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+// Все данные (фазы, затмения, ретрограды, луна без курса) считаются в браузере
+// библиотекой astronomy-engine — вписывать ничего не нужно.
+// Времена показываются по Москве (UTC+3). VoC — классические аспекты Луны
+// (0/60/90/120/180°) к Солнцу…Сатурну до смены знака.
+---
+
+<BaseLayout title="Лунный календарь | limonesska">
+    <section class="moon">
+        <header class="moon-head">
+            <h1 class="moon-title">Лунный календарь</h1>
+            <p class="moon-lead">
+                Фазы Луны по дням, периоды «Луны без курса», затмения и ретрограды планет.
+                Всё считается автоматически; время — московское.
+            </p>
+        </header>
+
+        <div class="moon-bar">
+            <button class="moon-nav" data-step="prev" aria-label="Предыдущий месяц">‹</button>
+            <h2 class="moon-label" id="moon-label">…</h2>
+            <button class="moon-nav" data-step="next" aria-label="Следующий месяц">›</button>
+        </div>
+
+        <div class="moon-weekdays">
+            <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
+        </div>
+        <div class="moon-grid" id="moon-grid"></div>
+
+        <div class="moon-legend">
+            <span><span class="lg-moon">🌙</span> Луна без курса</span>
+            <span><span class="lg-dot lg-ecl"></span> затмение</span>
+            <span><span class="lg-arrow">↗</span> растёт · <span class="lg-arrow">↘</span> убывает</span>
+            <span>ретроград (полоса снизу):
+                <span class="lg-bar" style="background:#e0a93f"></span>☿
+                <span class="lg-bar" style="background:#ec5fa0"></span>♀
+                <span class="lg-bar" style="background:#5b9bd5"></span>♂
+            </span>
+        </div>
+    </section>
+
+    <style is:global>
+        .moon { max-width: 1000px; margin: 0 auto; }
+        .moon-head { margin-bottom: 28px; }
+        .moon-title {
+            font-family: var(--font-display); font-size: var(--size-mega);
+            font-weight: 700; line-height: 1.1; letter-spacing: -1px;
+            color: var(--text); margin: 0 0 16px;
+        }
+        .moon-lead {
+            font-family: var(--font-vollkorn); font-size: var(--size-medium);
+            line-height: 1.6; color: var(--text-muted); margin: 0; max-width: 40em;
+        }
+
+        .moon-bar { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 22px; }
+        .moon-nav {
+            font-family: var(--font-ui); font-size: 1.4rem; line-height: 1;
+            width: 38px; height: 38px; border-radius: 10px;
+            border: 1px solid var(--line); background: var(--card-bg);
+            color: var(--text-muted); cursor: pointer; transition: 0.2s;
+        }
+        .moon-nav:hover { color: var(--accent); border-color: var(--accent); }
+        .moon-label {
+            font-family: var(--font-display); font-size: var(--size-h2);
+            color: var(--text); margin: 0; min-width: 9em; text-align: center; text-transform: capitalize;
+        }
+
+        .moon-weekdays {
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 8px;
+            font-family: var(--font-ui); font-size: var(--size-small);
+            color: var(--color-text-faint); text-transform: uppercase; letter-spacing: 0.04em;
+        }
+        .moon-weekdays > div { text-align: center; }
+
+        .moon-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; min-height: 360px; }
+        .moon-loading {
+            grid-column: 1 / -1; display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-ui); font-size: var(--size-small); color: var(--color-text-faint);
+            padding: 60px 0;
+        }
+
+        .mc {
+            position: relative; aspect-ratio: 1 / 1;
+            border: 1px solid var(--line); border-radius: 12px; background: var(--card-bg);
+            padding: 8px; display: flex; flex-direction: column; cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s; overflow: hidden;
+        }
+        .mc:hover { border-color: var(--accent); box-shadow: 0 8px 22px var(--shadow); transform: translateY(-2px); }
+        .mc.empty { border: none; background: none; cursor: default; }
+        .mc.empty:hover { box-shadow: none; transform: none; }
+        .mc.is-selected { border-color: var(--accent); box-shadow: 0 8px 22px var(--shadow); }
+        .mc.corridor { background: color-mix(in srgb, var(--accent) 7%, var(--card-bg)); }
+        .mc.today {
+            border-color: var(--accent);
+            background: color-mix(in srgb, var(--accent) 10%, var(--card-bg));
+        }
+
+        .mc-top { display: flex; align-items: flex-start; justify-content: space-between; }
+        .mc-date { font-family: var(--font-ui); font-size: var(--size-small); font-weight: 600; color: var(--text); }
+        .mc.today .mc-date {
+            background: var(--accent); color: var(--card-bg); border-radius: 50%;
+            width: 1.5em; height: 1.5em; display: inline-flex; align-items: center; justify-content: center;
+        }
+        .mc-moonwrap { display: flex; align-items: center; gap: 4px; }
+        .mc-moon { width: 26px; height: 26px; display: block; flex: 0 0 auto; }
+        .mc-moon svg { display: block; width: 100%; height: 100%; }
+        .mc-arrow { font-size: 0.85rem; color: var(--color-text-faint); line-height: 1; position: relative; top: -1.5px; }
+
+        /* нижний блок ячейки: фаза → затмение → луна без курса (VoC внизу), слева */
+        .mc-bottom { margin-top: auto; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding-bottom: 4px; }
+        .mc-phase {
+            font-family: var(--font-ui); font-size: 0.62rem; font-weight: 600;
+            letter-spacing: 0.02em; text-transform: uppercase; color: var(--accent-2); line-height: 1.2;
+        }
+        .mc-ecl { font-family: var(--font-ui); font-size: 0.58rem; font-weight: 700; color: #b4671f; line-height: 1.2; }
+        .mc-voc { font-family: var(--font-ui); font-size: 0.57rem; line-height: 1.25; color: var(--color-text-faint); }
+
+        /* ретрограды — цветные полосы по нижнему краю (тянутся через дни периода) */
+        .mc-stripes { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; z-index: 1; }
+        .mc-stripe { width: 100%; height: 4px; }
+
+        .moon-detail { margin-top: 24px; padding: 22px 24px; border: 1px solid var(--line); border-radius: 14px; background: var(--card-bg); }
+        .moon-detail[hidden] { display: none; }
+        .md-date { font-family: var(--font-ui); font-size: var(--size-small); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent-2); margin: 0 0 12px; }
+        .md-row { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+        .md-moon { width: 46px; height: 46px; flex: 0 0 auto; }
+        .md-phase { font-family: var(--font-vollkorn); font-size: var(--size-h3); color: var(--text); }
+        .md-sub { font-family: var(--font-ui); font-size: var(--size-small); color: var(--text-muted); }
+        .md-events { font-family: var(--font-vollkorn); font-size: var(--size-base); color: var(--text-muted); margin: 6px 0 0; }
+        .md-events strong { color: var(--text); font-weight: 600; }
+
+        .moon-legend {
+            display: flex; flex-wrap: wrap; gap: 18px; margin-top: 26px; padding-top: 18px;
+            border-top: 1px solid var(--line); font-family: var(--font-ui); font-size: var(--size-small); color: var(--text-muted);
+        }
+        .moon-legend span { display: inline-flex; align-items: center; gap: 6px; }
+        .lg-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+        .lg-ecl { background: #b4671f; }
+        .lg-bar { width: 5px; height: 14px; border-radius: 2px; display: inline-block; vertical-align: middle; margin-left: 4px; }
+        .lg-arrow { color: var(--color-text-faint); }
+
+        @media (max-width: 760px) {
+            .mc { border-radius: 9px; padding: 5px; }
+            .mc-moon { width: 20px; height: 20px; }
+            .mc-phase, .mc-voc, .mc-ecl { display: none; }
+            .moon-grid, .moon-weekdays { gap: 5px; }
+        }
+    </style>
+
+    <script>
+        import * as Astronomy from 'astronomy-engine';
+        const B = Astronomy.Body;
+
+        const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+        const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+        const WD = ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+        const QNAME = ['Новолуние','Первая четверть','Полнолуние','Последняя четверть'];
+        const VOC_BODIES = [B.Sun, B.Mercury, B.Venus, B.Mars, B.Jupiter, B.Saturn];
+        const PLANETS = [['Меркурий','☿',B.Mercury], ['Венера','♀',B.Venus], ['Марс','♂',B.Mars]];
+        const RXCOLOR = { 'Меркурий': '#e0a93f', 'Венера': '#ec5fa0', 'Марс': '#5b9bd5' };
+        const ASPECTS = [0, 60, 90, 120, 180];
+
+        const norm = (x) => ((x % 360) + 360) % 360;
+        const angd = (a) => { a = ((a + 180) % 360 + 360) % 360 - 180; return a; };
+        const DAY = 86400000;
+
+        // геоцентрическая эклиптич. долгота «от даты» (тропический зодиак)
+        function glon(body, t) {
+            const d = new Date(t);
+            if (body === B.Sun) return Astronomy.SunPosition(d).elon;
+            if (body === B.Moon) return Astronomy.EclipticGeoMoon(d).lon;
+            const v = Astronomy.GeoVector(body, d, true);
+            const e = Astronomy.RotateVector(Astronomy.Rotation_EQJ_ECT(d), v);
+            return norm(Astronomy.SphereFromVector(e).lon);
+        }
+        const minSep = (ml, bl) => Math.abs(angd(ml - bl));
+        function bisect(f, a, b) { let fa = f(a); for (let k = 0; k < 26; k++) { const m = (a + b) / 2, fm = f(m); if ((fa < 0) === (fm < 0)) { a = m; fa = fm; } else b = m; } return (a + b) / 2; }
+
+        // ── рисунок Луны (доля освещённости + рост/убыль) ──
+        function moonSVG(illum, waxing) {
+            const R = 50, C = 50, dark = '#33333b', lit = '#ece3cf', ring = 'rgba(0,0,0,0.18)';
+            if (illum < 0.015) return `<svg viewBox="0 0 100 100"><circle cx="${C}" cy="${C}" r="${R-1}" fill="${dark}" stroke="${ring}"/></svg>`;
+            if (illum > 0.985) return `<svg viewBox="0 0 100 100"><circle cx="${C}" cy="${C}" r="${R-1}" fill="${lit}" stroke="${ring}"/></svg>`;
+            const tx = R * Math.abs(1 - 2 * illum);
+            const outer = waxing ? 1 : 0;
+            const inner = illum > 0.5 ? outer : 1 - outer;
+            const path = `M${C},${C-R} A${R},${R} 0 0 ${outer} ${C},${C+R} A${tx},${R} 0 0 ${inner} ${C},${C-R} Z`;
+            return `<svg viewBox="0 0 100 100"><circle cx="${C}" cy="${C}" r="${R-1}" fill="${dark}"/><path d="${path}" fill="${lit}"/><circle cx="${C}" cy="${C}" r="${R-1}" fill="none" stroke="${ring}"/></svg>`;
+        }
+
+        // МСК-форматирование
+        const mskParts = (t) => { const d = new Date(t + 3 * 3600000); return { day: d.getUTCDate(), mon: d.getUTCMonth(), hh: String(d.getUTCHours()).padStart(2,'0'), mm: String(d.getUTCMinutes()).padStart(2,'0') }; };
+        const mskHM = (t) => { const p = mskParts(t); return `${p.hh}:${p.mm}`; };
+
+        const cache = {};
+        function computeMonth(y, m) {
+            const k = y + '-' + m;
+            if (cache[k]) return cache[k];
+            const monthStartMs = Date.UTC(y, m, 1) - 3 * 3600000; // граница месяца по МСК → UTC
+            const monthEndMs = Date.UTC(y, m + 1, 1) - 3 * 3600000;
+            const daysIn = new Date(y, m + 1, 0).getDate();
+            const days = {};
+            for (let d = 1; d <= daysIn; d++) days[d] = { illum: 0, waxing: true, major: null, ecl: null, retros: [], voc: [] };
+
+            // фаза/освещённость на полдень МСК
+            for (let d = 1; d <= daysIn; d++) {
+                const noon = Date.UTC(y, m, d, 12) - 3 * 3600000;
+                const elong = norm(glon(B.Moon, noon) - glon(B.Sun, noon));
+                days[d].illum = (1 - Math.cos(elong * Math.PI / 180)) / 2;
+                days[d].waxing = elong < 180;
+            }
+
+            // мажорные фазы
+            let mq = Astronomy.SearchMoonQuarter(new Date(monthStartMs));
+            while (mq.time.date.getTime() < monthEndMs) {
+                const p = mskParts(mq.time.date.getTime());
+                if (mq.time.date.getTime() >= monthStartMs && days[p.day]) days[p.day].major = QNAME[mq.quarter];
+                mq = Astronomy.NextMoonQuarter(mq);
+            }
+
+            // ретрограды (долгота убывает день-ко-дню)
+            for (const [name, sym, body] of PLANETS) {
+                let prev = glon(body, Date.UTC(y, m, 0, 12) - 3 * 3600000); // предыдущий день
+                for (let d = 1; d <= daysIn; d++) {
+                    const cur = glon(body, Date.UTC(y, m, d, 12) - 3 * 3600000);
+                    if (angd(cur - prev) < 0) days[d].retros.push({ name, sym });
+                    prev = cur;
+                }
+            }
+
+            // затмения (± коридор) — ищем в расширенном окне
+            const lo = monthStartMs - 12 * DAY, hi = monthEndMs + 12 * DAY;
+            const eclList = [];
+            let le = Astronomy.SearchLunarEclipse(new Date(lo));
+            while (le.peak.date.getTime() < hi) { eclList.push({ t: le.peak.date.getTime(), type: 'Лунное' }); le = Astronomy.NextLunarEclipse(le.peak); }
+            let se = Astronomy.SearchGlobalSolarEclipse(new Date(lo));
+            while (se.peak.date.getTime() < hi) { eclList.push({ t: se.peak.date.getTime(), type: 'Солнечное' }); se = Astronomy.NextGlobalSolarEclipse(se.peak); }
+            for (let d = 1; d <= daysIn; d++) {
+                const dayMid = Date.UTC(y, m, d, 12) - 3 * 3600000;
+                for (const e of eclList) {
+                    const ep = mskParts(e.t);
+                    if (ep.day === d && ep.mon === m) days[d].ecl = e.type;
+                    if (Math.abs(dayMid - e.t) <= 5.5 * DAY) days[d].corridor = true;
+                }
+            }
+
+            // ── Луна без курса ──
+            const wStart = monthStartMs - 2 * DAY, wEnd = monthEndMs + 2 * DAY, step = 2 * 3600000;
+            const ingress = [];
+            let psign = Math.floor(norm(glon(B.Moon, wStart)) / 30);
+            for (let t = wStart + step; t <= wEnd; t += step) {
+                const s = Math.floor(norm(glon(B.Moon, t)) / 30);
+                if (s !== psign) {
+                    const bnd = ((psign + 1) % 12) * 30;
+                    ingress.push(bisect((tt) => angd(norm(glon(B.Moon, tt)) - bnd), t - step, t));
+                }
+                psign = s;
+            }
+            const asps = [];
+            for (const bd of VOC_BODIES) for (const ang of ASPECTS) {
+                let pf = minSep(glon(B.Moon, wStart), glon(bd, wStart)) - ang;
+                for (let t = wStart + step; t <= wEnd; t += step) {
+                    const f = minSep(glon(B.Moon, t), glon(bd, t)) - ang;
+                    if ((pf < 0) !== (f < 0)) asps.push(bisect((tt) => minSep(glon(B.Moon, tt), glon(bd, tt)) - ang, t - step, t));
+                    pf = f;
+                }
+            }
+            asps.sort((a, b) => a - b);
+            for (const tj of ingress) {
+                if (tj < monthStartMs || tj >= monthEndMs) continue;
+                let start = null;
+                for (const a of asps) { if (a < tj) start = a; else break; }
+                if (start == null) continue;
+                const sp = mskParts(start), ep = mskParts(tj);
+                const endTxt = (sp.day === ep.day) ? mskHM(tj) : `${ep.day}.${String(ep.mon + 1).padStart(2, '0')} ${mskHM(tj)}`;
+                if (days[sp.day]) days[sp.day].voc.push({ text: `${mskHM(start)} → ${endTxt}` });
+            }
+
+            cache[k] = { days, daysIn };
+            return cache[k];
+        }
+
+        // ── Рендер ──
+        let year = new Date().getFullYear(), month = new Date().getMonth();
+        const grid = document.getElementById('moon-grid');
+        const label = document.getElementById('moon-label');
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        let detailEl = null;
+
+        function render() {
+            label.textContent = `${MONTHS[month]} ${year}`;
+            grid.innerHTML = '<div class="moon-loading">Считаю фазы…</div>';
+            if (detailEl) { detailEl.remove(); detailEl = null; }
+            // даём кадр отрисоваться, потом считаем (тяжёлый VoC)
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                const data = computeMonth(year, month);
+                grid.innerHTML = '';
+                const first = new Date(year, month, 1);
+                const lead = (first.getDay() + 6) % 7;
+                for (let i = 0; i < lead; i++) { const e = document.createElement('div'); e.className = 'mc empty'; grid.appendChild(e); }
+                for (let d = 1; d <= data.daysIn; d++) {
+                    const info = data.days[d];
+                    const cell = document.createElement('div');
+                    cell.className = 'mc';
+                    if (info.corridor) cell.classList.add('corridor');
+                    if (+new Date(year, month, d) === +today) cell.classList.add('today');
+                    cell.innerHTML = `
+                        ${info.retros.length ? `<div class="mc-stripes">${info.retros.map(r => `<span class="mc-stripe" style="background:${RXCOLOR[r.name] || '#ddd'}"></span>`).join('')}</div>` : ''}
+                        <div class="mc-top">
+                            <span class="mc-date">${d}</span>
+                            <span class="mc-moonwrap">
+                                <span class="mc-arrow">${info.waxing ? '↗' : '↘'}</span>
+                                <span class="mc-moon">${moonSVG(info.illum, info.waxing)}</span>
+                            </span>
+                        </div>
+                        <div class="mc-bottom">
+                            ${info.major ? `<div class="mc-phase">${info.major}</div>` : ''}
+                            ${info.ecl ? `<div class="mc-ecl">${info.ecl} затмение</div>` : ''}
+                            ${info.voc.length ? `<div class="mc-voc">🌙 ${info.voc.map(v => v.text).join('<br>')}</div>` : ''}
+                        </div>
+                    `;
+                    cell.addEventListener('click', () => selectDay(cell, d, info));
+                    grid.appendChild(cell);
+                }
+            }));
+        }
+
+        function selectDay(cell, d, info) {
+            grid.querySelectorAll('.mc.is-selected').forEach((c) => c.classList.remove('is-selected'));
+            cell.classList.add('is-selected');
+            if (!detailEl) {
+                detailEl = document.createElement('div');
+                detailEl.className = 'moon-detail';
+                document.querySelector('.moon').insertBefore(detailEl, document.querySelector('.moon-legend'));
+            }
+            const dateObj = new Date(year, month, d);
+            const phaseName = info.major || (info.waxing ? 'Растущая Луна' : 'Убывающая Луна');
+            const pct = Math.round(info.illum * 100);
+            const events = [];
+            if (info.ecl) events.push(`<strong>${info.ecl} затмение</strong>`);
+            if (info.retros.length) events.push('Ретроград: ' + info.retros.map(r => r.name).join(', '));
+            detailEl.innerHTML = `
+                <p class="md-date">${d} ${MONTHS_GEN[month]} ${year} · ${WD[dateObj.getDay()]}</p>
+                <div class="md-row">
+                    <span class="md-moon">${moonSVG(info.illum, info.waxing)}</span>
+                    <span><span class="md-phase">${phaseName}</span><br>
+                    <span class="md-sub">освещена на ${pct}% · ${info.waxing ? 'растёт' : 'убывает'}</span></span>
+                </div>
+                ${info.voc.length ? `<p class="md-events">🌙 Луна без курса: ${info.voc.map(v => v.text).join('; ')}</p>` : ''}
+                ${events.length ? `<p class="md-events">${events.join(' · ')}</p>` : ''}
+            `;
+        }
+
+        document.querySelectorAll('.moon-nav').forEach((b) => {
+            b.addEventListener('click', () => {
+                month += b.dataset.step === 'next' ? 1 : -1;
+                if (month < 0) { month = 11; year--; }
+                if (month > 11) { month = 0; year++; }
+                render();
+            });
+        });
+
+        render();
+    </script>
+</BaseLayout>

@@ -28,9 +28,10 @@ const entriesData = entries.map((e) => {
   };
 });
 
-// Месяц, на котором открывается календарь
-const initYear = 2026;
-const initMonth = 4; // май (0 = январь)
+// Месяц, на котором открывается календарь — текущий
+const now = new Date();
+const initYear = now.getFullYear();
+const initMonth = now.getMonth(); // 0 = январь
 ---
 
 <BaseLayout title="Дневник — хроника в реальном времени | limonesska">
@@ -245,7 +246,7 @@ const initMonth = 4; // май (0 = январь)
 
     <style is:global>
         .diary {
-            max-width: 1280px;
+            max-width: 1000px;
             margin: 0 auto;
         }
 
@@ -253,6 +254,9 @@ const initMonth = 4; // май (0 = январь)
         .diary-title {
             font-family: var(--font-display);
             font-size: var(--size-mega);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -1px;
             color: var(--text);
             margin: 0 0 18px;
         }
@@ -265,27 +269,37 @@ const initMonth = 4; // май (0 = январь)
             max-width: 40em;
         }
 
-        /* ── Сцена: [фото слева] [календарь] [запись справа] ── */
+        /* ── Сцена: календарь в общую ширину; панели дня выезжают по бокам ── */
         .cal-stage {
-            display: grid;
-            grid-template-columns: 220px minmax(0, 1fr) 260px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
             gap: 28px;
-            align-items: start;
         }
-        .cal-main { min-width: 0; }
+        .cal-main { min-width: 0; order: 0; }
 
         /* боковые панели: плавный выезд как у карточек-ссылок в постах
-           (через анимацию — чтобы переигрывалось при клике на другой день) */
+           (через анимацию — чтобы переигрывалось при клике на другой день).
+           База — стопкой под календарём; на широком экране (см. ниже) выезжают
+           в боковые поля слева/справа, делая композицию шире. */
         .cal-aside {
-            position: sticky;
-            top: 120px;
             opacity: 0;
             pointer-events: none;
+            order: 1;
         }
+        .cal-aside--left { order: 2; }
+        .cal-aside:not(.is-visible) { display: none; }
         .cal-aside.is-visible {
             opacity: 1;
             pointer-events: auto;
             animation: cal-reveal 0.45s ease 0.08s both;
+        }
+
+        /* широкий экран: фото — в левое поле, запись — в правое (вне колонки) */
+        @media (min-width: 1440px) {
+            .cal-aside { position: absolute; top: 0; width: 200px; }
+            .cal-aside--left { right: calc(100% + 24px); }
+            .cal-aside--right { left: calc(100% + 24px); }
         }
         @keyframes cal-reveal {
             from { opacity: 0; transform: translateY(8px); }

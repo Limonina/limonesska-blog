@@ -1,0 +1,339 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+
+// Стадии готовности поста (иконка-звезда + подпись). ⤵️ Лиона может править подписи.
+const stages = [
+  { icon: 'star_base', label: 'Чешуйка', note: 'только проклюнулась, тонкая' },
+  { icon: 'star_advanced', label: 'Обрастает бронёй', note: 'набирает плотность и детали' },
+  { icon: 'star_max', label: 'Крепкая броня', note: 'дозрело — можно опереться' },
+];
+---
+
+<BaseLayout title="Колофон — как сделан сайт | limonesska">
+    <article class="colophon">
+        <header class="col-head">
+            <h1 class="col-name">Колофон</h1>
+            <p class="col-sub">
+                Модное дизайнерское словечко, означающее «как был создан этот сайт».
+                Я продумала его сама и создала с помощью Claude-агента. Пожалуй, я слишком
+                перемудрила с ним для личного блога, но мне нравится возиться с вебом.
+            </p>
+        </header>
+
+        <section class="col-section">
+            <h2 class="col-h2">Технологии и подход</h2>
+            <p>
+                <a href="https://astro.build/" data-link-type="external" target="_blank" rel="noopener noreferrer">Астро</a>
+                берёт на себя бо́льшую часть работы. Это конструктор для статических сайтов
+                с большим объёмом контента.
+            </p>
+            <p>
+                Для создания и оформления интерфейса я использую обычный HTML, CSS и немного
+                JavaScript. Тексты живут в
+                <a href="https://github.com/mdx-js/mdx" data-link-type="external" target="_blank" rel="noopener noreferrer">MDX</a>-файлах —
+                это улучшенная версия Markdown, которая упрощает создание и повторное
+                использование пользовательских компонентов и интерактивных JavaScript-элементов.
+            </p>
+        </section>
+
+        <section class="col-section">
+            <h2 class="col-h2">Как я пишу контент</h2>
+            <p>
+                Моя система управления контентом — это просто набор обычных файлов и папок.
+                Пост — это текстовый файл, который я правлю в
+                <a href="https://code.visualstudio.com/" data-link-type="external" target="_blank" rel="noopener noreferrer">VS Code</a>.
+                Так у меня появляется полный контроль над типографикой, вёрсткой и каждым
+                кусочком разметки. Захочу — добавлю буквицу, захочу — сноску на полях.
+            </p>
+        </section>
+
+        <section class="col-section">
+            <h2 class="col-h2">Типографика</h2>
+            <p>
+                Три гарнитуры:
+                <a href="https://fonts.google.com/specimen/Playfair+Display" data-link-type="external" target="_blank" rel="noopener noreferrer">Playfair Display</a>
+                — крупные заголовки,
+                <a href="https://fonts.google.com/specimen/Vollkorn" data-link-type="external" target="_blank" rel="noopener noreferrer">Vollkorn</a>
+                — основной читаемый текст,
+                <a href="https://fonts.google.com/specimen/Manrope" data-link-type="external" target="_blank" rel="noopener noreferrer">Manrope</a>
+                — интерфейс, мета и теги.
+            </p>
+            <p>
+                Размеры и цвета заданы токенами в <code>:root</code>, поэтому тёмная тема и
+                единый ритм — это всего пара переменных, а не правка сотни мест.
+            </p>
+        </section>
+
+        <section class="col-section">
+            <h2 class="col-h2">Стадии готовности</h2>
+            <p>
+                У каждого поста на этом сайте есть стадия развития. Она показывает, насколько
+                он завершён и полон.
+            </p>
+            <ul class="stage-list">
+                {stages.map((s) => (
+                    <li class="stage-item">
+                        <span class="stage-icon"><Icon name={s.icon} width={22} height={22} /></span>
+                        <span class="stage-text">
+                            <span class="stage-label">{s.label}</span>
+                            <span class="stage-note">{s.note}</span>
+                        </span>
+                    </li>
+                ))}
+            </ul>
+        </section>
+
+        <section class="col-section">
+            <h2 class="col-h2">Самодельные элементы</h2>
+            <p>
+                В постах живут спецэлементы, которые оформляются автоматически. Вот несколько
+                любимых — прямо живьём:
+            </p>
+
+            <div class="demo">
+                <span class="demo-label">Буквица</span>
+                <p class="demo-dropcap">
+                    Крупная первая буква, с которой красиво стартует текст поста — маленький
+                    ритуал входа в чтение.
+                </p>
+            </div>
+
+            <div class="demo demo--note">
+                <span class="demo-label">Сноска на правом поле</span>
+                <p class="demo-note">
+                    Комментарий выносится в сторону<sup class="demo-sup">1</sup> и не разрывает
+                    основную мысль.
+                    <span class="demo-sidenote"><span class="demo-sidenote-num">1</span> вот так выглядит сама сноска — мелким на полях.</span>
+                </p>
+            </div>
+
+            <div class="demo">
+                <span class="demo-label">Метка достоверности</span>
+                <span class="demo-verified">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Проверено лично
+                </span>
+            </div>
+
+            <p>
+                А ещё — разные типы ссылок со всплывающими карточками (как у ссылок выше:
+                адрес, аннотация, цитата из источника или превью своего поста).
+            </p>
+        </section>
+
+        <section class="col-section">
+            <h2 class="col-h2">Данные и медиа</h2>
+            <p>
+                Лайки постов — глобальные, через
+                <a href="https://supabase.com/" data-link-type="external" target="_blank" rel="noopener noreferrer">Supabase</a>.
+                Фото для дневника хранятся и оптимизируются в
+                <a href="https://cloudinary.com/" data-link-type="external" target="_blank" rel="noopener noreferrer">Cloudinary</a>,
+                а в репозиторий не попадают.
+            </p>
+        </section>
+    </article>
+
+    <style is:global>
+        .colophon { max-width: 760px; margin: 0 auto; }
+
+        .col-head { margin-bottom: 56px; }
+        .col-name {
+            font-family: var(--font-display);
+            font-size: var(--size-mega);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -1px;
+            color: var(--text);
+            margin: 0 0 16px;
+        }
+        .col-sub {
+            font-family: var(--font-vollkorn);
+            font-size: var(--size-medium);
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin: 0;
+            max-width: 40em;
+        }
+
+        .col-section { margin-bottom: 52px; }
+        .col-h2 {
+            font-family: var(--font-display);
+            font-size: var(--size-h2);
+            color: var(--text);
+            margin: 0 0 20px;
+        }
+
+        .col-section p {
+            font-family: var(--font-vollkorn);
+            font-size: var(--size-base);
+            line-height: 1.7;
+            color: var(--text-muted);
+            margin: 0 0 16px;
+            max-width: 40em;
+        }
+        .col-section p:last-child { margin-bottom: 0; }
+        .col-section strong { color: var(--text); font-weight: 600; }
+        .col-section code {
+            font-family: ui-monospace, monospace;
+            font-size: 0.88em;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            padding: 1px 6px;
+        }
+
+        /* Ссылки — как в постах (рыжий + серая линия, hover линией акцентом) */
+        .col-section a {
+            color: var(--color-accent);
+            text-decoration: none;
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: 2px;
+            transition: color 0.25s ease, border-color 0.25s ease;
+        }
+        .col-section a:hover { border-bottom-color: var(--color-accent); }
+        .col-section a[data-link-type] { position: relative; }
+        .col-section a[data-link-type="external"]:hover {
+            color: var(--color-accent-2);
+            border-bottom-color: var(--color-accent-2);
+        }
+
+        /* Всплывающая карточка с адресом (как в постах) */
+        .link-pop {
+            position: absolute; left: 50%; bottom: 100%;
+            transform: translateX(-50%) translateY(8px);
+            margin-bottom: 12px; width: max-content; max-width: 340px;
+            background: var(--color-surface); color: var(--color-text-soft);
+            border: 1px solid var(--color-border); border-radius: 12px; padding: 14px 16px;
+            box-shadow: 0 14px 44px var(--shadow);
+            opacity: 0; visibility: hidden; pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+            z-index: 20; text-align: left;
+        }
+        .col-section a[data-link-type]:hover .link-pop {
+            opacity: 1; visibility: visible; pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+        }
+        .link-pop::before { content: ''; position: absolute; top: 100%; left: 0; right: 0; height: 16px; }
+        .link-pop::after {
+            content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+            border: 8px solid transparent; border-top-color: var(--color-surface); margin-top: -1px;
+        }
+        .col-section a.pop-below .link-pop {
+            bottom: auto; top: 100%; margin-bottom: 0; margin-top: 12px;
+            transform: translateX(-50%) translateY(-8px);
+        }
+        .col-section a.pop-below[data-link-type]:hover .link-pop { transform: translateX(-50%) translateY(0); }
+        .col-section a.pop-below .link-pop::before { top: auto; bottom: 100%; }
+        .col-section a.pop-below .link-pop::after {
+            top: auto; bottom: 100%; margin-top: 0; margin-bottom: -1px;
+            border-top-color: transparent; border-bottom-color: var(--color-surface);
+        }
+        .link-pop-url { font-family: var(--font-ui); font-size: 0.8rem; color: var(--color-text); word-break: break-all; }
+
+        /* Демо спецэлементов */
+        .demo {
+            position: relative;
+            margin: 18px 0;
+            padding: 20px 22px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--card-bg);
+        }
+        .demo-label {
+            display: block;
+            font-family: var(--font-ui);
+            font-size: var(--size-small);
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--accent-2);
+            margin-bottom: 14px;
+        }
+        .demo-dropcap, .demo-note {
+            font-family: var(--font-vollkorn);
+            font-size: var(--size-base);
+            line-height: 1.7;
+            color: var(--text-muted);
+            margin: 0;
+        }
+        .demo-dropcap::first-letter {
+            float: left;
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 3.2em;
+            line-height: 0.74;
+            padding: 0.05em 0.1em 0 0;
+            color: var(--text);
+        }
+        .demo-sup, .demo-sidenote-num {
+            color: var(--color-link);
+            font-weight: 700;
+            font-family: var(--font-ui);
+            font-size: 0.7rem;
+            vertical-align: super;
+        }
+        /* сноска вынесена на правое поле карточки (как в постах) */
+        .demo--note .demo-note { padding-right: 224px; }
+        .demo-sidenote {
+            position: absolute;
+            top: 52px;
+            right: 22px;
+            width: 196px;
+            margin: 0;
+            font-size: var(--size-small);
+            line-height: 1.5;
+            color: var(--color-text-faint);
+        }
+        .demo-sidenote-num { margin-right: 5px; }
+        @media (max-width: 760px) {
+            .demo--note .demo-note { padding-right: 0; }
+            .demo-sidenote {
+                position: static;
+                width: auto;
+                margin-top: 10px;
+                padding-top: 10px;
+                border-top: 1px dashed var(--line);
+            }
+        }
+        .demo-verified {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-family: var(--font-ui);
+            font-size: var(--size-small);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            color: var(--accent-2);
+            border: 1px solid color-mix(in srgb, var(--accent-2) 40%, transparent);
+        }
+        .demo-verified svg { flex-shrink: 0; }
+
+        /* Стадии */
+        .stage-list { list-style: none; margin: 20px 0 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+        .stage-item { display: flex; align-items: flex-start; gap: 14px; }
+        .stage-icon { color: var(--accent-2); display: flex; flex: 0 0 auto; margin-top: 1px; }
+        .stage-text { display: flex; flex-direction: column; }
+        .stage-label { font-family: var(--font-vollkorn); font-size: var(--size-h3); font-weight: 600; color: var(--text); }
+        .stage-note { font-family: var(--font-ui); font-size: var(--size-small); color: var(--color-text-faint); }
+    </style>
+
+    <script>
+        const esc = (s) => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        document.querySelectorAll('.col-section a[data-link-type="external"]').forEach((a) => {
+            if (a.querySelector('.link-pop')) return;
+            const pop = document.createElement('span');
+            pop.className = 'link-pop';
+            pop.innerHTML = '<span class="link-pop-url">' + esc(a.getAttribute('href')) + ' ⧉</span>';
+            a.appendChild(pop);
+            // если сверху мало места (учитываем летающую шапку ~110px) — карточку вниз
+            a.addEventListener('mouseenter', () => {
+                const needed = pop.offsetHeight + 28 + 110;
+                a.classList.toggle('pop-below', a.getBoundingClientRect().top < needed);
+            });
+        });
+    </script>
+</BaseLayout>

@@ -15,7 +15,8 @@
   "dependencies": {
     "@astrojs/mdx": "^6.0.1",
     "@astrojs/vercel": "^10.0.8",
-    "astro": "^6.3.3"
+    "astro": "^6.3.3",
+    "astronomy-engine": "^2.1.19"
   },
   "devDependencies": {
     "cloudinary": "^2.10.0"

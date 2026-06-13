@@ -2,6 +2,7 @@
 import { render } from 'astro:content';
 import { getEntries } from '../../utils/content';
 import PostLayout from '../../layouts/PostLayout.astro';
+import Photo from '../../components/Photo.astro';
 
 export async function getStaticPaths() {
   const entries = await getEntries('diary');
@@ -18,11 +19,6 @@ const words = entry.body ? entry.body.trim().split(/\s+/).length : 0;
 const readingTime = Math.max(1, Math.round(words / 150));
 
 const fmt = (d) => d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
-
-// Чистый URL в photos → навешиваем оптимизацию здесь (как в календаре)
-const cl = (url, t) =>
-  url.includes('res.cloudinary.com/') ? url.replace('/upload/', `/upload/${t}/`) : url;
-const photos = entry.data.photos ?? [];
 ---
 
 <PostLayout
@@ -39,26 +35,7 @@ const photos = entry.data.photos ?? [];
     backHref="/diary"
     backLabel="Дневник"
 >
-    {photos.length > 0 && (
-        <div class="diary-photos">
-            {photos.map((u) => (
-                <img src={cl(u, 'f_auto,q_auto,w_1200')} alt="" loading="lazy" />
-            ))}
-        </div>
-    )}
-    <Content />
+    {/* Фото из photos: больше НЕ выводятся стрипом сверху — они для календаря/галереи.
+        В теле записи фото вставляются инлайн через <Photo src={frontmatter.photos[N]} …/> */}
+    <Content components={{ Photo }} />
 </PostLayout>
-
-<style is:global>
-    .diary-photos {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        margin-bottom: 28px;
-    }
-    .diary-photos img {
-        width: 100%;
-        border-radius: 12px;
-        border: 1px solid var(--line);
-    }
-</style>

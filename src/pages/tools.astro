@@ -1,0 +1,122 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// ⤵️ Лиона редактирует. Чем пользуюсь — по категориям.
+//   В каждой группе items: { name, note (для чего), href (опц.) }
+const groups = [
+  {
+    title: 'Работа и код',
+    items: [
+      { name: 'VS Code', note: 'редактор, в нём же пишу посты', href: '' },
+      { name: 'Claude Code', note: 'ИИ-напарник по коду и сайту', href: '' },
+      { name: 'Astro', note: 'на нём собран этот сайт', href: '' },
+    ],
+  },
+  {
+    title: 'Мышление и заметки',
+    items: [
+      { name: 'Obsidian', note: 'личная база знаний, связи между идеями', href: '' },
+      { name: 'Notion', note: 'планы, таблицы, структура проектов', href: '' },
+    ],
+  },
+  {
+    title: 'Медиа',
+    items: [
+      { name: 'Cloudinary', note: 'хранение и оптимизация фото', href: '' },
+    ],
+  },
+];
+---
+
+<BaseLayout title="Инструментарий — чем пользуюсь | limonesska">
+    <section class="tools">
+        <header class="tools-head">
+            <h1 class="tools-title">Инструментарий</h1>
+            <p class="tools-lead">
+                Чем я пользуюсь каждый день — софт, который держит мою броню в форме.
+                Без партнёрских ссылок, только то, что реально открыто у меня.
+            </p>
+        </header>
+
+        {groups.map((group) => (
+            <div class="tools-group">
+                <h2 class="tools-group-title">{group.title}</h2>
+                <ul class="tools-list">
+                    {group.items.map((item) => (
+                        <li class="tool-item">
+                            <span class="tool-name">
+                                {item.href
+                                    ? <a href={item.href} target="_blank" rel="noopener noreferrer">{item.name}</a>
+                                    : item.name}
+                            </span>
+                            <span class="tool-note">{item.note}</span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        ))}
+    </section>
+
+    <style is:global>
+        .tools { max-width: 760px; margin: 0 auto; }
+
+        .tools-head { margin-bottom: 48px; }
+        .tools-title {
+            font-family: var(--font-display);
+            font-size: var(--size-mega);
+            font-weight: 700;
+            line-height: 1.1;
+            letter-spacing: -1px;
+            color: var(--text);
+            margin: 0 0 18px;
+        }
+        .tools-lead {
+            font-family: var(--font-vollkorn);
+            font-size: var(--size-medium);
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin: 0;
+            max-width: 36em;
+        }
+
+        .tools-group { margin-bottom: 40px; }
+        .tools-group-title {
+            font-family: var(--font-ui);
+            font-size: var(--size-small);
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--accent-2);
+            margin: 0 0 16px;
+        }
+
+        .tools-list { list-style: none; margin: 0; padding: 0; }
+        .tool-item {
+            display: flex;
+            align-items: baseline;
+            gap: 16px;
+            padding: 12px 0;
+            border-top: 1px solid var(--line);
+        }
+        .tool-name {
+            font-family: var(--font-vollkorn);
+            font-size: var(--size-h3);
+            color: var(--text);
+            flex: 0 0 auto;
+            min-width: 9em;
+        }
+        .tool-name a { color: var(--accent); text-decoration: none; }
+        .tool-name a:hover { text-decoration: underline; }
+        .tool-note {
+            font-family: var(--font-ui);
+            font-size: var(--size-base);
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        @media (max-width: 600px) {
+            .tool-item { flex-direction: column; gap: 2px; }
+            .tool-name { min-width: 0; }
+        }
+    </style>
+</BaseLayout>
