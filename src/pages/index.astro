@@ -5,11 +5,29 @@ import PostCard from '../components/PostCard.astro';
 
 const sortByDate = (a, b) => +b.data.pubDate - +a.data.pubDate;
 
+const formatDate = (date) =>
+  date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+
 const blogPosts = (await getEntries('blog')).sort(sortByDate);
 const notes = (await getEntries('notes')).sort(sortByDate);
 
 const latestPosts = blogPosts.slice(0, 4);
 const freshNotes = notes.slice(0, 3);
+
+// Карточка «Популярное». Картинка-фон по умолчанию, если у поста нет cover.
+const FALLBACK_COVER =
+  'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?q=80&w=800&auto=format&fit=crop';
+// Кандидаты для клиентского переранжирования по лайкам (ключ = like-ключ = URL).
+const popularCandidates = blogPosts.map((p) => ({
+  key: `/blog/${p.id}`,
+  href: `/blog/${p.id}`,
+  title: p.data.title,
+  desc: p.data.description ?? '',
+  cover: p.data.cover ?? FALLBACK_COVER,
+  date: formatDate(p.data.pubDate),
+}));
+// SSR-фолбэк: самый свежий пост висит «популярным», пока лайки не наберутся.
+const popular = popularCandidates[0] ?? null;
 
 // Популярные темы. SSR-версия — самые частые теги (фолбэк, пока не загрузились
 // лайки); на клиенте список переранжируется по сумме лайков (см. скрипт ниже).
@@ -29,9 +47,6 @@ const topTags = Object.entries(tagInfo)
   .sort((a, b) => b[1].count - a[1].count)
   .slice(0, 4)
   .map(([t]) => t);
-
-const formatDate = (date) =>
-  date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
 ---
 
 <BaseLayout title="limonesska | Моя броня">
@@ -59,18 +74,27 @@ const formatDate = (date) =>
             </div>
         </div>
 
-        <a href="/blog/moving-to-astro" class="popular-card">
-            <img src="https://images.unsplash.com/photo-1586075010923-2dd4570fb338?q=80&w=800&auto=format&fit=crop" class="popular-bg-img" alt="System" />
+        {popular ? (
+            <a href={popular.href} class="popular-card" data-popular-card>
+                <img src={popular.cover} class="popular-bg-img" alt={popular.title} />
 
-            <div class="popular-overlay-content">
-                <span class="post-tag">Популярное</span>
-                <h3>Сжигаю мосты: почему я ухожу с WordPress на Astro</h3>
-                <p>Отказ от тяжелых баз данных в пользу легкости текстовых файлов.</p>
-                <div class="popular-author-meta">
-                    by <span class="author-name">Limonesska</span> • 16 мая 2026
+                <div class="popular-overlay-content">
+                    <span class="post-tag">Популярное</span>
+                    <h3 data-popular-title>{popular.title}</h3>
+                    {popular.desc && <p data-popular-desc>{popular.desc}</p>}
+                    <div class="popular-author-meta">
+                        by <span class="author-name">Limonesska</span> • <span data-popular-date>{popular.date}</span>
+                    </div>
+                </div>
+            </a>
+        ) : (
+            <div class="popular-card popular-card--empty">
+                <div class="popular-overlay-content">
+                    <span class="post-tag">Популярное</span>
+                    <h3>Скоро здесь появится популярный пост</h3>
                 </div>
             </div>
-        </a>
+        )}
 
         <div class="editors-column">
             <h3 class="column-title">Свежие заметки</h3>
@@ -283,14 +307,17 @@ const formatDate = (date) =>
     }
 </style>
 
-<script define:vars={{ tagInfo }}>
+<script define:vars={{ tagInfo, popularCandidates }}>
+    // Один запрос лайков на оба блока: «Популярные темы» и карточку «Популярное».
+    const likesPromise = fetch('/api/likes').then((r) => r.json()).catch(() => ({}));
+
     // Переранжируем «Популярные темы» по сумме лайков записей с этим тегом.
     // SSR отрисовал топ по частоте — если лайки есть, заменяем на топ по лайкам.
     (async () => {
         const list = document.querySelector('.tags-list');
         if (!list) return;
         try {
-            const likes = await (await fetch('/api/likes')).json();
+            const likes = await likesPromise;
             const scored = Object.entries(tagInfo)
                 .map(([tag, info]) => ({
                     tag,
@@ -305,6 +332,32 @@ const formatDate = (date) =>
                 .join('');
         } catch (e) {
             /* бэкенд не отвечает — оставляем SSR-версию */
+        }
+    })();
+
+    // Карточка «Популярное» = пост с наибольшим числом лайков.
+    // SSR показывает самый свежий; если у другого поста лайков больше — подменяем.
+    (async () => {
+        const card = document.querySelector('[data-popular-card]');
+        if (!card || popularCandidates.length < 2) return;
+        try {
+            const likes = await likesPromise;
+            const best = [...popularCandidates]
+                .map((p) => ({ ...p, likes: likes[p.key] || 0 }))
+                .sort((a, b) => b.likes - a.likes)[0];
+            if (!best || best.likes === 0) return; // лайков нет — оставляем свежий
+            if (card.getAttribute('href') === best.href) return; // уже он
+            card.setAttribute('href', best.href);
+            const img = card.querySelector('.popular-bg-img');
+            if (img) { img.src = best.cover; img.alt = best.title; }
+            const title = card.querySelector('[data-popular-title]');
+            if (title) title.textContent = best.title;
+            const desc = card.querySelector('[data-popular-desc]');
+            if (desc) desc.textContent = best.desc;
+            const date = card.querySelector('[data-popular-date]');
+            if (date) date.textContent = best.date;
+        } catch (e) {
+            /* бэкенд молчит — оставляем SSR-версию */
         }
     })();
 </script>

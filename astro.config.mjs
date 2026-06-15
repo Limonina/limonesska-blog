@@ -11,6 +11,14 @@ import vercel from '@astrojs/vercel';
 export default defineConfig({
   site: 'https://limonesska.ru',
   adapter: vercel(),
+  markdown: {
+    // двойная тема подсветки кода: светлая по умолчанию (инлайн),
+    // тёмная — через CSS-переменные (--shiki-dark*), переключается по data-theme
+    shikiConfig: {
+      themes: { light: 'github-light', dark: 'github-dark' },
+      defaultColor: 'light',
+    },
+  },
   integrations: [
     mdx(),
     // sitemap: исключаем служебное (og-картинки, лендинг-заглушку, api)
