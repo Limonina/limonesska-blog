@@ -6,7 +6,7 @@
 // src — ссылка (обычно из массива photos: по номеру). size: s | m | l. align: center | left | right | wide.
 interface Props {
   src: string;
-  size?: 's' | 'm' | 'l';
+  size?: 'xs' | 's' | 'm' | 'l';
   align?: 'center' | 'left' | 'right' | 'wide';
   caption?: string;
   alt?: string;
@@ -14,7 +14,7 @@ interface Props {
 const { src, size = 'm', align = 'center', caption, alt } = Astro.props;
 
 // Cloudinary-оптимизация (как cl() в дневнике): ширина под размер
-const widths = { s: 'w_600', m: 'w_900', l: 'w_1300' } as const;
+const widths = { xs: 'w_400', s: 'w_600', m: 'w_800', l: 'w_1100' } as const;
 const w = align === 'wide' ? 'w_1600' : widths[size];
 const opt = (u: string) =>
   u.includes('res.cloudinary.com/') ? u.replace('/upload/', `/upload/f_auto,q_auto,${w}/`) : u;
@@ -43,14 +43,22 @@ const opt = (u: string) =>
         text-align: center;
     }
 
-    /* размеры (по центру) */
-    .dphoto--s { max-width: 340px; }
-    .dphoto--m { max-width: 540px; }
+    /* размеры (единая шкала xs < s < m < l) */
+    .dphoto--xs { max-width: 200px; }
+    .dphoto--s { max-width: 320px; }
+    .dphoto--m { max-width: 460px; }
     .dphoto--l { max-width: 100%; }
     .dphoto--center { margin-left: auto; margin-right: auto; }
+    /* l — всегда на всю ширину блоком, текст НЕ обтекает (даже при align=left/right) */
+    .dphoto--l.dphoto--left, .dphoto--l.dphoto--right {
+        float: none;
+        max-width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+    }
 
-    /* с краю — текст обтекает */
-    .dphoto--left, .dphoto--right { max-width: 46%; margin-top: 6px; margin-bottom: 18px; }
+    /* с краю — текст обтекает (ширину задаёт size s/m/l) */
+    .dphoto--left, .dphoto--right { margin-top: 6px; margin-bottom: 18px; }
     .dphoto--left { float: left; margin-right: 28px; }
     .dphoto--right { float: right; margin-left: 28px; }
     .dphoto--left figcaption, .dphoto--right figcaption { text-align: left; }

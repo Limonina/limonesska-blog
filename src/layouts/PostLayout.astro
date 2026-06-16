@@ -26,6 +26,8 @@ interface Props {
   relatedNotes?: RelatedNote[];
   // Заметки: подрубрика слева от звезды-стадии, рубрика в шапке не показывается
   noteMeta?: boolean;
+  // Дневник: подрубрику красим рыжим (accent), как рубрику
+  subAccent?: boolean;
 }
 
 const {
@@ -44,6 +46,7 @@ const {
   backLabel = 'Все статьи',
   relatedNotes = [],
   noteMeta = false,
+  subAccent = false,
 } = Astro.props;
 
 const fmt = (d: Date) =>
@@ -73,7 +76,7 @@ const ogImage = (seg[0] === 'blog' || seg[0] === 'notes') ? `/og/${seg[seg.lengt
         {noteMeta ? (
             (subcategory || stage) && (
                 <div class="post-metainfo">
-                    {subcategory && <a class="post-subrubric" href={`/subcategory/${enc(subcategory)}`}>{subcategory}</a>}
+                    {subcategory && <a class:list={["post-subrubric", { "is-accent": subAccent }]} href={`/subcategory/${enc(subcategory)}`}>{subcategory}</a>}
                     {stage && <Icon name={`star_${stage}`} width={20} height={20} class="post-stage" />}
                 </div>
             )
@@ -187,6 +190,7 @@ const ogImage = (seg[0] === 'blog' || seg[0] === 'notes') ? `/og/${seg[seg.lengt
     }
     .post-rubric { color: var(--color-accent); }
     .post-subrubric { color: var(--color-text); }
+    .post-subrubric.is-accent { color: var(--color-accent); }
     .post-rubric:hover, .post-subrubric:hover { background-size: 50% 1.5px, 50% 1.5px; }
     .post-subrubric:hover { color: var(--color-accent); }
     .post-stage { display: block; color: var(--color-accent-2); margin-bottom: 3px; }
@@ -269,6 +273,8 @@ const ogImage = (seg[0] === 'blog' || seg[0] === 'notes') ? `/og/${seg[seg.lengt
 
     /* ============ ТИПОГРАФИКА ============ */
     .prose { font-family: var(--font-vollkorn); color: var(--color-text); line-height: 1.78; font-size: 1.0625rem; }
+    /* содержим плавающие инлайн-фото (Photo align=left/right), чтобы при коротком тексте они не вылезали под следующий блок */
+    .prose::after { content: ''; display: block; clear: both; }
     .prose > :first-child { margin-top: 0; }
     .prose > p:first-of-type::first-letter {
         float: left; font-family: var(--font-display); font-weight: 700;

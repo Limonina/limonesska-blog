@@ -7,51 +7,26 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 //   status — метка под книгой: 'прочитано' | 'читаю' (опц.; обычно для полки library)
 //   subcats — подрубрики (массив). Допустимые значения зависят от полки (см. shelves ниже)
 //   cover — URL обложки (Cloudinary / внешний)
-const books = [
-  {
-    title: 'Age of Ambition: Chasing Fortune, Truth, and Faith in the New China',
-    author: 'Evan Osnos',
-    shelf: 'library',
-    status: 'прочитано',
-    subcats: ['рекомендую', 'изменила-взгляд'],
-    cover: '',
-  },
-  {
-    title: 'Cue the Sun! The Invention of Reality TV',
-    author: 'Emily Nussbaum',
-    shelf: 'library',
-    status: 'читаю',
-    subcats: ['практичная'],
-    cover: '',
-  },
-  {
-    title: 'The Invention of Nature: The Adventures of Alexander von Humboldt',
-    author: 'Andrea Wulf',
-    shelf: 'antilibrary',
-    subcats: ['в-очереди'],
-    cover: '',
-  },
-  {
-    title: 'Age of Wonder',
-    author: 'Richard Holmes',
-    shelf: 'antilibrary',
-    subcats: ['когда-нибудь'],
-    cover: '',
-  },
-];
+const books = [];
+
+// Текст пунктир-заглушки, когда на полке пока пусто.
+const emptyText = {
+  library: 'Полка пока пустует. Скоро поставлю сюда первые прочитанные книги.',
+  antilibrary: 'Здесь будут книги, до которых я ещё не дошла. Пока собираю эту очередь.',
+};
 
 // Полки + их подрубрики (фильтры). ⤵️ Лиона может править наборы.
 const shelves = [
   {
     key: 'library',
     label: 'Библиотека',
-    lead: 'Прочитанное — то, что прошло через меня: с инсайтами и тем, что осталось со мной.',
+    lead: 'Книги, что прошли сквозь меня и что-то оставили: мысль, поворот или новый взгляд.',
     subcats: ['рекомендую', 'перечитаю', 'изменила-взгляд', 'практичная'],
   },
   {
     key: 'antilibrary',
     label: 'Антибиблиотека',
-    lead: 'Книги, которые мне нравится считать прочитанными, — то, чего я ещё не знаю.',
+    lead: 'Книги, до которых я ещё не дошла, или очередь, которая, кажется, меня переживёт.',
     subcats: ['срочно', 'в-очереди', 'когда-нибудь'],
   },
 ];
@@ -74,30 +49,39 @@ const byShelf = (key) => books.filter((b) => b.shelf === key);
 
         {shelves.map((s, i) => (
             <div class:list={["shelf", { "is-active": i === 0 }]} data-shelf-panel={s.key}>
-                <div class="lib-filters">
-                    <button class="filter-chip is-active" data-filter="all">все</button>
-                    {s.subcats.map((sc) => (
-                        <button class="filter-chip" data-filter={sc}>{sc}</button>
-                    ))}
-                </div>
+                {byShelf(s.key).length > 0 && (
+                    <div class="lib-filters">
+                        <button class="filter-chip is-active" data-filter="all">все</button>
+                        {s.subcats.map((sc) => (
+                            <button class="filter-chip" data-filter={sc}>{sc}</button>
+                        ))}
+                    </div>
+                )}
 
-                <ul class="book-grid">
-                    {byShelf(s.key).map((book) => (
-                        <li class="book" data-subcats={(book.subcats ?? []).join(' ')}>
-                            <div class:list={["book-cover", { "is-empty": !book.cover }]}>
-                                {book.cover && <img src={book.cover} alt={book.title} loading="lazy" />}
-                                {book.status && (
-                                    <span class:list={["cover-status", `status-${book.status === 'читаю' ? 'reading' : 'read'}`]}>{book.status}</span>
+                {byShelf(s.key).length > 0 ? (
+                    <ul class="book-grid">
+                        {byShelf(s.key).map((book) => (
+                            <li class="book" data-subcats={(book.subcats ?? []).join(' ')}>
+                                <div class:list={["book-cover", { "is-empty": !book.cover }]}>
+                                    {book.cover && <img src={book.cover} alt={book.title} loading="lazy" />}
+                                    {book.status && (
+                                        <span class:list={["cover-status", `status-${book.status === 'читаю' ? 'reading' : 'read'}`]}>{book.status}</span>
+                                    )}
+                                </div>
+                                <h2 class="book-title">{book.title}</h2>
+                                <span class="book-author">{book.author}</span>
+                                {book.subcats && book.subcats.length > 0 && (
+                                    <span class="book-subcats">{book.subcats.join(' · ')}</span>
                                 )}
-                            </div>
-                            <h2 class="book-title">{book.title}</h2>
-                            <span class="book-author">{book.author}</span>
-                            {book.subcats && book.subcats.length > 0 && (
-                                <span class="book-subcats">{book.subcats.join(' · ')}</span>
-                            )}
-                        </li>
-                    ))}
-                </ul>
+                            </li>
+                        ))}
+                    </ul>
+                ) : (
+                    <div class="lib-empty">
+                        <div class="lib-empty-cover" aria-hidden="true"></div>
+                        <p class="lib-empty-text">{emptyText[s.key]}</p>
+                    </div>
+                )}
             </div>
         ))}
     </section>
@@ -180,6 +164,31 @@ const byShelf = (key) => books.filter((b) => b.shelf === key);
             gap: 40px 28px;
         }
         .book.is-hidden { display: none; }
+
+        /* пустая полка — пунктир-заглушка */
+        .lib-empty {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            max-width: 520px;
+        }
+        .lib-empty-cover {
+            flex-shrink: 0;
+            width: 110px;
+            aspect-ratio: 2 / 3;
+            border-radius: 12px;
+            border: 1px dashed var(--line);
+        }
+        .lib-empty-text {
+            font-family: var(--font-vollkorn);
+            font-size: var(--size-medium);
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin: 0;
+        }
+        @media (max-width: 600px) {
+            .lib-empty { flex-direction: column; align-items: flex-start; gap: 20px; }
+        }
 
         .book-cover {
             position: relative;
