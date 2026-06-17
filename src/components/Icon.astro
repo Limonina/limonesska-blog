@@ -1,8 +1,4 @@
 ---
-import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
 interface Props {
   name: string;
   width?: number;
@@ -12,17 +8,27 @@ interface Props {
 
 const { name, width = 28, height = 28, class: extraClass } = Astro.props;
 
-const iconsDir = join(dirname(fileURLToPath(import.meta.url)), '../assets/icons');
-let svg = '';
-try {
-  svg = readFileSync(join(iconsDir, `${name}.svg`), 'utf-8');
+// SVG-содержимое вшивается Vite на этапе сборки (?raw), не зависит от ФС в рантайме —
+// иначе на проде (бандл) путь по import.meta.url ломается и иконка рендерится пустой.
+const modules = import.meta.glob('../assets/icons/*.svg', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+
+const icons: Record<string, string> = {};
+for (const [path, content] of Object.entries(modules)) {
+  const base = path.split('/').pop()!.replace(/\.svg$/, '');
+  icons[base] = content;
+}
+
+let svg = icons[name] ?? '';
+if (svg) {
   svg = svg.replace(/(<svg\b[^>]*)\s+width="[^"]*"/, `$1 width="${width}"`);
   svg = svg.replace(/(<svg\b[^>]*)\s+height="[^"]*"/, `$1 height="${height}"`);
   if (extraClass) {
     svg = svg.replace(/(<svg\b)/, `$1 class="${extraClass}"`);
   }
-} catch {
-  // icon not found — render nothing
 }
 ---
 <Fragment set:html={svg} />
