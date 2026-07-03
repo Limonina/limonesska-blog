@@ -124,10 +124,13 @@ const initMonth = now.getMonth(); // 0 = январь
                 if (!photos.length) { leftEl.classList.remove('is-visible'); return; }
                 let html = '<button class="cal-aside-close" aria-label="Закрыть">×</button>';
                 html += '<div class="cal-aside-head">Фото · ' + day + ' ' + monthGen[month] + '</div>';
+                html += '<div class="cal-gwrap">';
                 for (let i = 0; i < photos.length; i++) {
                     html += '<img class="cal-gphoto" data-day="' + day + '" data-idx="' + i + '" src="' + esc(photos[i].thumb) + '" alt="" loading="lazy">';
                 }
+                html += '</div>';
                 leftEl.innerHTML = html;
+                leftEl.classList.toggle('cal-aside--grid', photos.length > 4);
                 reveal(leftEl);
                 leftEl.querySelector('.cal-aside-close').addEventListener('click', () => leftEl.classList.remove('is-visible'));
                 leftEl.querySelectorAll('.cal-gphoto').forEach((img) => {
@@ -338,6 +341,18 @@ const initMonth = now.getMonth(); // 0 = январь
             transition: opacity 0.15s ease;
         }
         .cal-gphoto:hover { opacity: 0.9; }
+        /* много фото (>4): мельче миниатюры в 2 колонки, чтобы панель
+           не перерастала календарь и не наезжала на подвал */
+        .cal-aside--grid .cal-gwrap {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .cal-aside--grid .cal-gphoto {
+            margin-bottom: 0;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+        }
 
         /* ── Лайтбокс: фото на весь экран + листание ── */
         .cal-lightbox {
