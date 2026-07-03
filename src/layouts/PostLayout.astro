@@ -129,35 +129,26 @@ const ogImage = (seg[0] === 'blog' || seg[0] === 'notes') ? `/og/${seg[seg.lengt
         </div>
 
         <section class="post-footnotes" id="post-footnotes" hidden>
-            <ol class="post-footnotes-list" id="post-footnotes-list"></ol>
+            <h2 class="post-footnotes-title">Сноски</h2>
+            <ul class="post-footnotes-list" id="post-footnotes-list"></ul>
         </section>
 
-        <section class="post-backlinks">
-            {relatedNotes.length > 0 && (
-                <>
-                    <h2 class="post-backlinks-title">Заметки к этому посту</h2>
-                    <div class="post-backlinks-grid">
-                        {relatedNotes.map((n) => (
-                            <a href={n.href} class="backlink-card">
-                                <span class="backlink-icon"></span>
-                                <span class="backlink-text">
-                                    <span class="backlink-card-title">{n.title}</span>
-                                    {n.description && <span class="backlink-card-desc">{n.description}</span>}
-                                </span>
-                            </a>
-                        ))}
-                    </div>
-                </>
-            )}
-
-            <div class={relatedNotes.length > 0 ? 'post-likes post-likes--divided' : 'post-likes'}>
-                <button class="like-btn" id="like-btn" data-slug={slug} aria-pressed="false" aria-label="Нравится">
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-                </button>
-                <span class="like-count" id="like-count">0</span>
-                <span class="like-label">нравится</span>
-            </div>
-        </section>
+        {relatedNotes.length > 0 && (
+            <section class="post-backlinks">
+                <h2 class="post-backlinks-title">Заметки к этому посту</h2>
+                <div class="post-backlinks-grid">
+                    {relatedNotes.map((n) => (
+                        <a href={n.href} class="backlink-card">
+                            <span class="backlink-icon"></span>
+                            <span class="backlink-text">
+                                <span class="backlink-card-title">{n.title}</span>
+                                {n.description && <span class="backlink-card-desc">{n.description}</span>}
+                            </span>
+                        </a>
+                    ))}
+                </div>
+            </section>
+        )}
     </article>
 </BaseLayout>
 
@@ -398,15 +389,25 @@ const ogImage = (seg[0] === 'blog' || seg[0] === 'notes') ? `/og/${seg[seg.lengt
     /* ---- Сноски (синие, один шрифт) ---- */
     .prose sup[data-note] {
         color: var(--color-link); cursor: pointer; font-weight: 700;
-        font-family: var(--font-ui); font-size: 0.7rem; vertical-align: super; padding: 0 1px;
+        font-family: var(--font-ui); font-size: 0.62rem; vertical-align: super; padding: 0 1px;
+        scroll-margin-top: 120px; transition: color 0.15s;
     }
+    .prose sup[data-note]:hover { color: var(--color-accent); }
     .sidenote { position: absolute; left: calc(100% + 32px); width: 210px; font-family: var(--font-vollkorn); font-size: 0.85rem; line-height: 1.5; color: var(--color-text-muted); }
-    .sidenote-num { color: var(--color-link); font-weight: 700; font-family: var(--font-ui); font-size: 0.7rem; vertical-align: super; margin-right: 4px; }
+    .sidenote-num { color: var(--color-link); font-weight: 700; font-family: var(--font-ui); font-size: 0.62rem; vertical-align: super; margin-right: 4px; }
 
     .post-footnotes { margin-top: 50px; padding-top: 20px; border-top: 1px solid var(--color-border); }
-    .post-footnotes-list { font-family: var(--font-vollkorn); font-size: 0.9rem; color: var(--color-text-soft); line-height: 1.5; padding-left: 1.2em; margin: 0; }
-    .post-footnotes-list li { margin-bottom: 8px; }
-    .post-footnotes-list li::marker { color: var(--color-link); font-family: var(--font-ui); }
+    .post-footnotes-title { font-family: var(--font-ui); font-size: var(--size-small); font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--color-text-muted); margin: 0 0 16px; }
+    .post-footnotes-list { font-family: var(--font-vollkorn); font-size: 0.9rem; color: var(--color-text-soft); line-height: 1.5; padding-left: 0; margin: 0; list-style: none; }
+    .post-footnotes-list li { display: flex; gap: 10px; margin-bottom: 12px; scroll-margin-top: 120px; border-radius: 8px; }
+    .fn-mark { flex-shrink: 0; color: var(--color-link); font-weight: 700; font-family: var(--font-ui); line-height: 1.6; }
+    .fn-back { color: var(--color-link); text-decoration: none; margin-left: 6px; font-size: 1.05em; vertical-align: baseline; transition: color 0.15s; }
+    .fn-back:hover { color: var(--color-accent); }
+    .fn-flash { animation: fnFlash 1.6s ease; }
+    @keyframes fnFlash {
+        0%, 100% { background: transparent; }
+        15% { background: color-mix(in srgb, var(--color-link) 20%, transparent); }
+    }
 
     /* ============ БЭКЛИНКИ ============ */
     .post-backlinks { margin-top: 60px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 18px; padding: 32px 34px; }
@@ -418,16 +419,6 @@ const ogImage = (seg[0] === 'blog' || seg[0] === 'notes') ? `/og/${seg[seg.lengt
     .backlink-card-title { font-family: var(--font-display); font-size: var(--size-base); font-weight: 700; line-height: 1.25; color: var(--color-text); transition: color 0.2s; }
     .backlink-card:hover .backlink-card-title { color: var(--color-accent); }
     .backlink-card-desc { font-family: var(--font-vollkorn); font-size: 0.9rem; color: var(--color-text-muted); line-height: 1.4; }
-
-    /* ---- Лайк ---- */
-    .post-likes { display: flex; align-items: center; gap: 10px; }
-    .post-likes--divided { margin-top: 26px; padding-top: 22px; border-top: 1px solid var(--color-border); }
-    .like-btn { background: none; border: none; cursor: pointer; color: var(--color-text-muted); padding: 4px; display: flex; transition: color 0.2s, transform 0.15s; }
-    .like-btn:hover { color: var(--color-accent); transform: scale(1.12); }
-    .like-btn.is-liked { color: var(--color-accent); }
-    .like-btn.is-liked svg { fill: var(--color-accent); }
-    .like-count { font-family: var(--font-ui); font-weight: 700; color: var(--color-text); font-size: var(--size-base); }
-    .like-label { font-family: var(--font-ui); font-size: var(--size-small); color: var(--color-text-muted); }
 
     /* Наезд блока на подвал */
     .main-content:has(.post-backlinks) { padding-bottom: 0; }
@@ -510,19 +501,64 @@ const ogImage = (seg[0] === 'blog' || seg[0] === 'notes') ? `/og/${seg[seg.lengt
         const markers = Array.from(prose.querySelectorAll('sup[data-note]'));
         const fnList = document.getElementById('post-footnotes-list');
         const fnSection = document.getElementById('post-footnotes');
+        const SYM = '✦';
+        const flash = (el) => {
+            if (!el) return;
+            el.classList.remove('fn-flash');
+            void el.offsetWidth;              // рестарт анимации
+            el.classList.add('fn-flash');
+            setTimeout(() => el.classList.remove('fn-flash'), 1600);
+        };
         const sidenotes = [];
         markers.forEach((m, i) => {
             const num = i + 1;
             const note = m.getAttribute('data-note') || '';
-            m.textContent = num;
+            m.textContent = SYM;
+            m.id = 'fnref-' + num;
+            m.setAttribute('role', 'button');
+            m.setAttribute('tabindex', '0');
+            m.setAttribute('aria-label', 'Сноска ' + num);
+
             const sn = document.createElement('aside');
             sn.className = 'sidenote';
-            sn.innerHTML = '<span class="sidenote-num">' + num + '</span>' + note;
+            sn.innerHTML = '<span class="sidenote-num">' + SYM + '</span>' + note;
             post.appendChild(sn);
             sidenotes.push({ marker: m, el: sn });
+
+            // клик по маркеру → к сноске снизу (на узком экране; на широком она уже на поле)
+            const goToNote = () => {
+                if (isWide()) { flash(sn); return; }
+                const target = document.getElementById('fn-' + num);
+                if (!target) return;
+                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                flash(target);
+            };
+            m.addEventListener('click', goToNote);
+            m.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToNote(); }
+            });
+
             if (fnList) {
                 const li = document.createElement('li');
-                li.textContent = note;
+                li.id = 'fn-' + num;
+                const mark = document.createElement('span');
+                mark.className = 'fn-mark';
+                mark.textContent = SYM;
+                const text = document.createElement('span');
+                text.className = 'fn-text';
+                text.textContent = note + ' ';
+                const back = document.createElement('a');
+                back.className = 'fn-back';
+                back.href = '#fnref-' + num;
+                back.textContent = '↩';
+                back.setAttribute('aria-label', 'Вернуться к тексту');
+                back.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    m.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    flash(m);
+                });
+                text.appendChild(back);
+                li.append(mark, text);
                 fnList.appendChild(li);
             }
         });
@@ -565,53 +601,6 @@ const ogImage = (seg[0] === 'blog' || seg[0] === 'notes') ? `/og/${seg[seg.lengt
                 a.classList.toggle('pop-below', a.getBoundingClientRect().top < needed);
             });
         });
-
-        // ---- Лайк (глобальный счёт через /api/like + Supabase) ----
-        // localStorage хранит только ФАКТ «я лайкнул» (чтобы не накручивать с одного
-        // браузера), сам счётчик — общий, с сервера. Если бэкенд не настроен —
-        // деградирует до оптимистичного локального значения.
-        const likeBtn = document.getElementById('like-btn');
-        const countEl = document.getElementById('like-count');
-        if (likeBtn && countEl) {
-            const slug = likeBtn.dataset.slug;
-            const key = 'like:' + slug;
-            let liked = localStorage.getItem(key) === '1';
-            let count = 0;
-            let busy = false;
-            const render = () => {
-                likeBtn.classList.toggle('is-liked', liked);
-                likeBtn.setAttribute('aria-pressed', String(liked));
-                countEl.textContent = String(count);
-            };
-            render();
-            // подтянуть реальный счёт
-            fetch('/api/like?slug=' + encodeURIComponent(slug))
-                .then((r) => r.json())
-                .then((d) => { if (typeof d.count === 'number') { count = d.count; render(); } })
-                .catch(() => {});
-
-            likeBtn.addEventListener('click', async () => {
-                if (busy) return;
-                busy = true;
-                const next = !liked;
-                // оптимистично
-                liked = next;
-                count = Math.max(0, count + (next ? 1 : -1));
-                render();
-                if (next) localStorage.setItem(key, '1');
-                else localStorage.removeItem(key);
-                try {
-                    const r = await fetch('/api/like', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ slug, delta: next ? 1 : -1 }),
-                    });
-                    const d = await r.json();
-                    if (typeof d.count === 'number') { count = d.count; render(); }
-                } catch (e) { /* оставляем оптимистичное значение */ }
-                busy = false;
-            });
-        }
 
         // ---- Позиционирование сносок на полях ----
         function positionSidenotes() {

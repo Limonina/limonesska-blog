@@ -27,7 +27,7 @@ const catPhotos = [
   'https://res.cloudinary.com/dikrjzavm/image/upload/v1781621339/diary/7O_10_ydlxa6.jpg',
 ];
 
-// Возраст считается на сборке от даты рождения (обновляется при деплое; Vercel пересобирает на пуш).
+// Возраст считается на сборке от даты рождения (обновляется при деплое; GitHub Actions пересобирает на пуш).
 const birth = new Date('2001-12-20');
 const now = new Date();
 let age = now.getFullYear() - birth.getFullYear();
