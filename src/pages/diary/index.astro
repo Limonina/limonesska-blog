@@ -17,10 +17,14 @@ const entriesData = entries.map((e) => {
     y: d.getFullYear(),
     m: d.getMonth(),
     d: d.getDate(),
-    photos: (e.data.photos ?? []).map((u) => ({
-      thumb: cl(u, 'f_auto,q_auto,w_600'),
-      full: cl(u, 'f_auto,q_auto,w_1600'),
-    })),
+    // В календарь/галерею — ТОЛЬКО фото (видео отдаётся Cloudinary по /video/upload/
+    // и как <img> не играет; в теле записи оно рендерится через <Photo>).
+    photos: (e.data.photos ?? [])
+      .filter((u) => !u.includes('/video/upload/'))
+      .map((u) => ({
+        thumb: cl(u, 'f_auto,q_auto,w_600'),
+        full: cl(u, 'f_auto,q_auto,w_1600'),
+      })),
     title: e.data.title ?? '',
     description: e.data.description ?? '',
     hasText: !!(e.body && e.body.trim()), // есть ли текст-запись (для «Читать запись»)

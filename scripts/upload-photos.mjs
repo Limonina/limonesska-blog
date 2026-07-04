@@ -16,7 +16,9 @@ import { readdir, unlink } from 'node:fs/promises';
 import path from 'node:path';
 
 const DIR = 'photos-upload';
-const EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.gif', '.avif']);
+const IMG_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.gif', '.avif']);
+const VIDEO_EXTS = new Set(['.mp4', '.mov', '.webm', '.m4v']);
+const EXTS = new Set([...IMG_EXTS, ...VIDEO_EXTS]);
 const KEEP = process.argv.includes('--keep');
 
 // SDK сам читает CLOUDINARY_URL из окружения (--env-file=.env)
@@ -45,11 +47,13 @@ const uploaded = []; // имена успешно залитых файлов �
 const failed = [];   // {file, reason} — не залились (тяжёлые/битые), остаются в папке
 for (const f of files) {
   try {
+    const isVideo = VIDEO_EXTS.has(path.extname(f).toLowerCase());
     const res = await cloudinary.uploader.upload(path.join(DIR, f), {
       folder: 'diary',
       use_filename: true,
       unique_filename: true,
       overwrite: false,
+      resource_type: isVideo ? 'video' : 'image',
     });
     // Чистый URL — оптимизацию (f_auto,q_auto + размер) навешивает сайт при отрисовке
     const url = res.secure_url;
