@@ -172,7 +172,9 @@ const initMonth = now.getMonth(); // 0 = январь
                     const days = daysWithPhotos();
                     if (!days.length) return;
                     const i = days.indexOf(lbDay);
-                    const nd = days[(i + dir + days.length) % days.length]; // перескок на след./пред. день
+                    const j = i + dir; // след./пред. день без заворачивания
+                    if (j < 0 || j >= days.length) return; // упираемся в начало/конец общей плёнки
+                    const nd = days[j];
                     lbDay = nd;
                     lbIdx = dir > 0 ? 0 : photosForDay(nd).length - 1;
                 }
