@@ -603,20 +603,34 @@ const ogImage = (seg[0] === 'blog' || seg[0] === 'notes') ? `/og/${seg[seg.lengt
         });
 
         // ---- Позиционирование сносок на полях ----
+        // top маркера считаем от .post через getBoundingClientRect (не зависит от offsetParent),
+        // поэтому вставленные <Photo>/картинки/видео, меняющие высоту, учитываются автоматически.
         function positionSidenotes() {
             if (!isWide()) return;
+            const postTop = post.getBoundingClientRect().top;
             let lastBottom = 0;
             sidenotes.forEach(({ marker, el }) => {
-                const y = Math.max(marker.offsetTop, lastBottom);
+                const y = Math.max(marker.getBoundingClientRect().top - postTop, lastBottom);
                 el.style.top = y + 'px';
                 lastBottom = y + el.offsetHeight + 16;
             });
         }
+        let posRaf = 0;
+        const schedulePosition = () => {
+            if (posRaf) return;
+            posRaf = requestAnimationFrame(() => { posRaf = 0; positionSidenotes(); });
+        };
         positionSidenotes();
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(positionSidenotes);
         window.addEventListener('load', positionSidenotes);
-        let rT;
-        window.addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(positionSidenotes, 150); });
+        window.addEventListener('resize', schedulePosition);
+        // Общий пересчёт: любое изменение высоты контента (догрузка фото/видео,
+        // lazy-load при скролле, свап шрифта, рефлоу) → перекладываем выноски.
+        if (window.ResizeObserver) new ResizeObserver(schedulePosition).observe(prose);
+        prose.querySelectorAll('img, video').forEach((el) => {
+            el.addEventListener('load', schedulePosition);
+            el.addEventListener('loadedmetadata', schedulePosition);
+        });
     }
 
     if (document.readyState !== 'loading') initPost();
