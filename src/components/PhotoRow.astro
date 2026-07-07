@@ -1,0 +1,58 @@
+---
+// Ряд из нескольких фото/видео в одну строчку, по центру, во всю ширину текста.
+// Использование в MDX:
+//   <PhotoRow srcs={[frontmatter.photos[2], frontmatter.photos[3]]} />
+//   <PhotoRow srcs={[frontmatter.photos[4], frontmatter.photos[5], frontmatter.photos[6]]} />
+// Ширину каждого кадра ряд делит поровну. crop/rotate — общие для всех кадров ряда.
+interface Props {
+  srcs: string[];
+  crop?: string;  // напр. "9:16" — обрезать вшитый пилларбокс по центру
+  rotate?: string | number;
+}
+const { srcs, crop, rotate } = Astro.props;
+
+// после обрезки по соотношению шейвим ~3% с краёв — съедает вшитый пилларбокс (см. Photo.astro)
+const cropT = (crop ? `c_crop,g_center,ar_${crop}/c_crop,g_center,w_0.94/` : '') + (rotate ? `a_${rotate}/` : '');
+// ширина под ряд: делим текст на N кадров → каждому ~w_600 хватает с запасом
+const w = 'w_700';
+const opt = (u: string) =>
+  u.includes('res.cloudinary.com/') ? u.replace('/upload/', `/upload/${cropT}f_auto,q_auto,${w}/`) : u;
+const isVideo = (u: string) => u.includes('/video/upload/');
+const videoSrc = (u: string) =>
+  u.includes('res.cloudinary.com/')
+    ? u.replace('/upload/', `/upload/${cropT}q_auto,${w}/`).replace(/\.\w+$/, '.mp4')
+    : u;
+const poster = (u: string) =>
+  u.includes('res.cloudinary.com/')
+    ? u.replace('/upload/', `/upload/${cropT}so_0,f_auto,q_auto,${w}/`).replace(/\.\w+$/, '.jpg')
+    : undefined;
+---
+
+<div class="dphoto-row" style={`--n:${srcs.length}`}>
+    {srcs.map((src) => (
+        isVideo(src) ? (
+            <video src={videoSrc(src)} poster={poster(src)} controls playsinline preload="metadata"></video>
+        ) : (
+            <img src={opt(src)} alt="" loading="lazy" />
+        )
+    ))}
+</div>
+
+<style>
+    .dphoto-row {
+        display: flex;
+        gap: 12px;
+        margin: 28px 0;
+        align-items: flex-start;
+    }
+    .dphoto-row > img, .dphoto-row > video {
+        display: block;
+        flex: 1 1 0;
+        min-width: 0;
+        width: 100%;
+        height: auto;
+        margin: 0;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+    }
+</style>

@@ -3,6 +3,7 @@ import { render } from 'astro:content';
 import { getEntries } from '../../utils/content';
 import PostLayout from '../../layouts/PostLayout.astro';
 import Photo from '../../components/Photo.astro';
+import PhotoRow from '../../components/PhotoRow.astro';
 
 export async function getStaticPaths() {
   const entries = await getEntries('diary');
@@ -39,5 +40,5 @@ const fmt = (d) => d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long'
 >
     {/* Фото из photos: больше НЕ выводятся стрипом сверху — они для календаря/галереи.
         В теле записи фото вставляются инлайн через <Photo src={frontmatter.photos[N]} …/> */}
-    <Content components={{ Photo }} />
+    <Content components={{ Photo, PhotoRow }} />
 </PostLayout>

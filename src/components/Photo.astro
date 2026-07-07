@@ -22,8 +22,10 @@ const isVideo = src.includes('/video/upload/');
 // Cloudinary-оптимизация (как cl() в дневнике): ширина под размер
 const widths = { xs: 'w_400', s: 'w_600', m: 'w_800', l: 'w_1100' } as const;
 const w = align === 'wide' ? 'w_1600' : widths[size];
-// crop/rotate — отдельными сегментами впереди: обрезка по центру и/или поворот
-const cropT = (crop ? `c_crop,g_center,ar_${crop}/` : '') + (rotate ? `a_${rotate}/` : '');
+// crop/rotate — отдельными сегментами впереди: обрезка по центру и/или поворот.
+// После обрезки по соотношению дополнительно шейвим ~3% с краёв (w_0.94) —
+// съедает тонкую чёрную полосу вшитого пилларбокса у вертикальных видео.
+const cropT = (crop ? `c_crop,g_center,ar_${crop}/c_crop,g_center,w_0.94/` : '') + (rotate ? `a_${rotate}/` : '');
 const opt = (u: string) =>
   u.includes('res.cloudinary.com/') ? u.replace('/upload/', `/upload/${cropT}f_auto,q_auto,${w}/`) : u;
 // Видео: форсим mp4 (h264) — .mov Cloudinary отдаёт как QuickTime, не все браузеры играют
