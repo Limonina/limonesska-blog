@@ -295,6 +295,137 @@ const ogImage = (seg[0] === 'blog' || seg[0] === 'notes') ? `/og/${seg[seg.lengt
     }
     .prose ol { padding-left: 1.5em; margin: 0 0 1.4em; }
     .prose ol li { margin-bottom: 0.6em; }
+
+    /* ===== Карточка-рецепт (<Recipe>, src/components/Recipe.astro) ===== */
+    .recipe-card {
+        background: var(--card-bg);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        box-shadow: 0 12px 40px -18px var(--shadow);
+        overflow: hidden;
+        margin: 2em 0;
+    }
+    /* шапка */
+    .rc-head {
+        display: flex; align-items: center; gap: 18px;
+        padding: 24px 30px 20px;
+        background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 7%, transparent), transparent);
+        border-bottom: 1px solid var(--line);
+    }
+    .rc-medallion {
+        flex: none; width: 54px; height: 54px;
+        border-radius: 50%; display: grid; place-items: center;
+        font-size: 1.65rem;
+        background: color-mix(in srgb, var(--accent-2) 12%, var(--card-bg));
+        box-shadow: 0 0 0 1px var(--line), 0 0 0 5px color-mix(in srgb, var(--accent-2) 8%, transparent);
+    }
+    .rc-titles { min-width: 0; }
+    .rc-eyebrow {
+        font-family: var(--font-ui); font-size: 0.68rem; font-weight: 700;
+        letter-spacing: 0.16em; text-transform: uppercase;
+        color: var(--accent); margin: 0 0 3px;
+    }
+    .rc-title {
+        font-family: var(--font-display); font-size: var(--size-h3); font-weight: 700;
+        line-height: 1.1; margin: 0; color: var(--text); text-wrap: balance;
+    }
+    /* чипы */
+    .rc-chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px 30px 0; }
+    .rc-chip {
+        display: inline-flex; align-items: center; gap: 7px;
+        font-family: var(--font-ui); font-size: 0.76rem; font-weight: 600;
+        color: var(--text-muted);
+        background: color-mix(in srgb, var(--text) 4%, var(--card-bg));
+        border: 1px solid var(--line); border-radius: 100px;
+        padding: 5px 13px 5px 11px;
+    }
+    .rc-chip::before {
+        content: ""; width: 6px; height: 6px; border-radius: 50%;
+        background: var(--accent-2); flex: none;
+    }
+    .rc-body { padding: 22px 30px 28px; }
+    .rc-label {
+        font-family: var(--font-ui); font-size: 0.72rem; font-weight: 700;
+        letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent);
+        margin: 0 0 14px; display: flex; align-items: center; gap: 10px;
+    }
+    .rc-label::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+    /* две колонки */
+    .rc-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+    .rc-block { min-width: 0; }
+    /* ингредиенты с выносками */
+    .rc-ing { list-style: none; margin: 0 !important; padding: 0 !important; }
+    .rc-ing li { display: flex; align-items: baseline; gap: 6px; margin-bottom: 9px; font-size: 0.98rem; }
+    .rc-ing li::before { display: none !important; } /* гасим маркер .prose */
+    .rc-ing .name { color: var(--text); }
+    .rc-ing .name--full { color: var(--text-soft); }
+    .rc-ing .dots {
+        flex: 1; align-self: stretch; border-bottom: 1.5px dotted var(--line);
+        margin-bottom: 5px; min-width: 14px;
+    }
+    .rc-ing .amt {
+        font-family: var(--font-ui); font-size: 0.85rem; color: var(--text-muted);
+        font-variant-numeric: tabular-nums; white-space: nowrap;
+    }
+    .rc-ing .amt.long { white-space: normal; text-align: right; max-width: 58%; }
+    /* посуда — маркер-ромбик */
+    .rc-tools ul { list-style: none; margin: 0 !important; padding: 0 !important; }
+    .recipe-card .rc-tools ul li {
+        position: relative; padding-left: 22px; margin-bottom: 9px;
+        font-size: 0.96rem; color: var(--text-soft);
+    }
+    .recipe-card .rc-tools ul li::before {
+        content: ""; position: absolute; left: 2px; top: 0.62em;
+        width: 7px; height: 7px; border-radius: 2px;
+        background: var(--accent-2); transform: rotate(45deg);
+        -webkit-mask: none; mask: none;
+    }
+    /* шаги — таймлайн */
+    .rc-steps { margin-top: 30px; }
+    .recipe-card .rc-steps ol {
+        list-style: none; margin: 0 !important; padding: 0 !important;
+        counter-reset: step; position: relative;
+    }
+    .recipe-card .rc-steps ol > li {
+        counter-increment: step; position: relative;
+        padding-left: 52px; padding-bottom: 22px;
+        margin: 0; font-size: 1rem; color: var(--text);
+    }
+    .recipe-card .rc-steps ol > li:last-child { padding-bottom: 0; }
+    .recipe-card .rc-steps ol > li::before { /* линия-соединитель */
+        content: ""; position: absolute; left: 17px; top: 30px; bottom: -6px; width: 2px;
+        background: linear-gradient(var(--accent-2), color-mix(in srgb, var(--accent-2) 25%, transparent));
+    }
+    .recipe-card .rc-steps ol > li:last-child::before { display: none; }
+    .recipe-card .rc-steps ol > li::after { /* кружок-номер */
+        content: counter(step); position: absolute; left: 0; top: -2px;
+        width: 36px; height: 36px; display: grid; place-items: center;
+        border-radius: 50%; background: var(--card-bg);
+        border: 2px solid var(--accent-2); color: var(--accent-2);
+        font-family: var(--font-ui); font-weight: 700; font-size: 0.9rem;
+    }
+    .rc-steps ol > li strong { color: var(--accent-2); font-weight: 600; }
+    /* фишка */
+    .rc-tip {
+        display: flex; gap: 12px; margin: 24px 0 0; padding: 14px 16px;
+        border-radius: 0 12px 12px 0; border-left: 3px solid var(--accent-2);
+        background: color-mix(in srgb, var(--accent-2) 8%, transparent);
+    }
+    .rc-tip-icon { flex: none; font-size: 1.15rem; line-height: 1.3; }
+    .rc-tip-body { font-family: var(--font-ui); font-size: 0.9rem; color: var(--text-soft); }
+    .rc-tip-body p { margin: 0 !important; }
+    .rc-tip-label {
+        font-family: var(--font-ui); font-size: 0.66rem; font-weight: 700;
+        letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-2);
+        display: block; margin-bottom: 2px;
+    }
+    @media (max-width: 560px) {
+        .recipe-card { border-radius: 16px; }
+        .rc-head { padding: 20px 20px 18px; }
+        .rc-chips { padding: 14px 20px 0; }
+        .rc-body { padding: 20px 20px 24px; }
+        .rc-cols { grid-template-columns: 1fr; gap: 26px; }
+    }
     .prose code {
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
         background: var(--color-border-soft); padding: 0.15em 0.4em; border-radius: 5px; font-size: 0.9em;

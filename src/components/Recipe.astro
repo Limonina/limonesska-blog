@@ -1,0 +1,117 @@
+---
+// Карточка-рецепт для тела записи (дневник/посты). «Богатый» вариант:
+// шапка с медальоном-иконкой, чипы-метаданные, ингредиенты и посуда в две колонки
+// (у ингредиентов — точечные выноски до количества), шаги — вертикальный таймлайн.
+//
+// Использование в MDX:
+//   <Recipe
+//     title="Блинчики на молоке"
+//     icon="🥞"
+//     eyebrow="Рецепт"
+//     chips={["~30 минут", "~5 порций", "просто"]}
+//     ingredients={[
+//       ["Молоко", "2 л"],
+//       ["Мука", "по консистенции"],   // пара [название, количество] → выноска
+//       "Соль и перец по вкусу",        // или строка → без количества
+//     ]}
+//   >
+//     <Fragment slot="tools">
+//     - Венчик
+//     - Половник
+//     </Fragment>
+//     <Fragment slot="steps">
+//     1. Прогреть молоко до **тёплого**.   ← **жирным** = зелёный акцент в шаге
+//     2. Взбить яйца с сахаром…
+//     </Fragment>
+//     <Fragment slot="tip">
+//     Тёплое тесто не остужает сковороду…   ← «фишка» отдельным колаутом
+//     </Fragment>
+//   </Recipe>
+//
+// Все пропсы и слоты необязательны. `steps` — нумерованным списком (1. 2. 3.),
+// `tools` — обычным `-`. Повествование оставляй обычным текстом вокруг карточки.
+interface Props {
+  title?: string;
+  icon?: string;
+  eyebrow?: string;
+  chips?: string[];
+  ingredients?: (string | [string, string])[];
+}
+const { title, icon, eyebrow = 'Рецепт', chips = [], ingredients = [] } = Astro.props;
+const s = Astro.slots;
+const hasHead = Boolean(title || icon);
+---
+
+<article class="recipe-card">
+  {hasHead && (
+    <header class="rc-head">
+      {icon && <div class="rc-medallion">{icon}</div>}
+      <div class="rc-titles">
+        {eyebrow && <p class="rc-eyebrow">{eyebrow}</p>}
+        {title && <h4 class="rc-title">{title}</h4>}
+      </div>
+    </header>
+  )}
+
+  {chips.length > 0 && (
+    <div class="rc-chips">
+      {chips.map((c) => <span class="rc-chip">{c}</span>)}
+    </div>
+  )}
+
+  <div class="rc-body">
+    {(ingredients.length > 0 || s.has('tools')) && (
+      <div class="rc-cols">
+        {ingredients.length > 0 && (
+          <div class="rc-block">
+            <p class="rc-label">Ингредиенты</p>
+            <ul class="rc-ing">
+              {ingredients.map((item) => {
+                if (Array.isArray(item)) {
+                  const [name, amt] = item;
+                  return (
+                    <li>
+                      <span class="name">{name}</span>
+                      <span class="dots"></span>
+                      <span class:list={["amt", amt.length > 11 && "long"]}>{amt}</span>
+                    </li>
+                  );
+                }
+                return <li><span class="name name--full">{item}</span></li>;
+              })}
+            </ul>
+          </div>
+        )}
+        {s.has('tools') && (
+          <div class="rc-block rc-tools">
+            <p class="rc-label">Посуда и техника</p>
+            <slot name="tools" />
+          </div>
+        )}
+      </div>
+    )}
+
+    {s.has('steps') && (
+      <div class="rc-steps">
+        <p class="rc-label">Приготовление</p>
+        <slot name="steps" />
+      </div>
+    )}
+
+    {s.has('tip') && (
+      <aside class="rc-tip">
+        <span class="rc-tip-icon">💡</span>
+        <div class="rc-tip-body">
+          <span class="rc-tip-label">Фишка</span>
+          <slot name="tip" />
+        </div>
+      </aside>
+    )}
+
+    <slot />
+  </div>
+</article>
+
+{/* Стили карточки живут в PostLayout.astro (глобальный блок рядом с .prose):
+    компонент используется только через MDX `components={{Recipe}}`, и его
+    собственный <style> в бандл не попадает надёжно. */}
