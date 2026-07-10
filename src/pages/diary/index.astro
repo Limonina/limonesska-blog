@@ -74,9 +74,9 @@ const initMonth = now.getMonth(); // 0 = январь
 
         <div class="cal-lightbox" id="cal-lightbox" hidden>
             <button class="cal-lb-btn cal-lb-close" aria-label="Закрыть">×</button>
-            <button class="cal-lb-btn cal-lb-prev" aria-label="Назад">‹</button>
+            <button class="cal-lb-btn cal-lb-prev" aria-label="Назад"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"/></svg></button>
             <img class="cal-lb-img" alt="" />
-            <button class="cal-lb-btn cal-lb-next" aria-label="Вперёд">›</button>
+            <button class="cal-lb-btn cal-lb-next" aria-label="Вперёд"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg></button>
             <div class="cal-lb-meta" id="cal-lb-meta"></div>
         </div>
     </section>
@@ -148,11 +148,45 @@ const initMonth = now.getMonth(); // 0 = январь
             const lbMeta = document.getElementById('cal-lb-meta');
             let lbDay = null, lbIdx = 0;
 
+            // URL соседнего кадра «плёнки» (в пределах дня, с перескоком на след./пред. день) — для предзагрузки
+            function filmNeighbor(dir) {
+                const photos = photosForDay(lbDay);
+                const next = lbIdx + dir;
+                if (next >= 0 && next < photos.length) return photos[next].full;
+                const days = daysWithPhotos();
+                const j = days.indexOf(lbDay) + dir;
+                if (j < 0 || j >= days.length) return null;
+                const np = photosForDay(days[j]);
+                const p = dir > 0 ? np[0] : np[np.length - 1];
+                return p ? p.full : null;
+            }
+            const lbPreload = []; // держим ссылки на Image, чтобы кадры осели в кэше
+            function preloadNeighbors() {
+                [filmNeighbor(1), filmNeighbor(-1)].forEach((u) => {
+                    if (!u) return;
+                    const im = new Image();
+                    im.src = u;
+                    lbPreload.push(im);
+                    if (lbPreload.length > 8) lbPreload.shift();
+                });
+            }
+
+            let lbToken = 0; // защита от гонки при быстром листании
             function renderLb() {
                 const photos = photosForDay(lbDay);
                 if (!photos.length) return;
-                lbImg.src = photos[lbIdx].full;
+                const url = photos[lbIdx].full;
                 lbMeta.textContent = lbDay + ' ' + monthGen[month] + ' · ' + (lbIdx + 1) + '/' + photos.length;
+                const token = ++lbToken;
+                lbImg.classList.remove('is-loaded'); // прячем кадр — виден только тёмный фон
+                const pre = new Image();
+                pre.onload = () => {
+                    if (token !== lbToken) return;   // пока грузилось — уже листнули дальше
+                    lbImg.src = url;
+                    lbImg.classList.add('is-loaded');
+                };
+                pre.src = url;
+                preloadNeighbors();
             }
             function openLb(day, idx) {
                 lbDay = day; lbIdx = idx;
@@ -378,7 +412,10 @@ const initMonth = now.getMonth(); // 0 = январь
             object-fit: contain;
             border-radius: 8px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transition: opacity 0.22s ease;
         }
+        .cal-lb-img.is-loaded { opacity: 1; }
         .cal-lb-btn {
             position: absolute;
             background: rgba(255, 255, 255, 0.12);
