@@ -8,8 +8,9 @@ interface Props {
   srcs: string[];
   crop?: string;  // напр. "9:16" — обрезать вшитый пилларбокс по центру
   rotate?: string | number;
+  align?: 'center' | 'left' | 'right'; // center (по умолч.) — во всю ширину; left/right — ряд обтекается текстом сбоку
 }
-const { srcs, crop, rotate } = Astro.props;
+const { srcs, crop, rotate, align = 'center' } = Astro.props;
 
 // после обрезки по соотношению шейвим ~3% с краёв — съедает вшитый пилларбокс (см. Photo.astro)
 const cropT = (crop ? `c_crop,g_center,ar_${crop}/c_crop,g_center,w_0.94/` : '') + (rotate ? `a_${rotate}/` : '');
@@ -28,7 +29,7 @@ const poster = (u: string) =>
     : undefined;
 ---
 
-<div class="dphoto-row" style={`--n:${srcs.length}`}>
+<div class:list={["dphoto-row", `dphoto-row--${align}`]} style={`--n:${srcs.length}`}>
     {srcs.map((src) => (
         isVideo(src) ? (
             <video src={videoSrc(src)} poster={poster(src)} controls playsinline preload="metadata"></video>
@@ -54,5 +55,24 @@ const poster = (u: string) =>
         margin: 0;
         border-radius: 12px;
         border: 1px solid var(--line);
+    }
+
+    /* с краю — ряд обтекается текстом сбоку (ширину держим компактной) */
+    .dphoto-row--left, .dphoto-row--right {
+        max-width: 360px;
+        margin-top: 6px;
+        margin-bottom: 18px;
+    }
+    .dphoto-row--left { float: left; margin-right: 28px; }
+    .dphoto-row--right { float: right; margin-left: 28px; }
+
+    /* на узких экранах float сбрасывается — ряд во всю ширину */
+    @media (max-width: 600px) {
+        .dphoto-row--left, .dphoto-row--right {
+            float: none;
+            max-width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+        }
     }
 </style>

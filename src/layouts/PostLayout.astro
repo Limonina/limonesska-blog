@@ -455,7 +455,7 @@ const ogImage = (seg[0] === 'blog' || seg[0] === 'notes') ? `/og/${seg[seg.lengt
     .prose hr { border: none; border-top: 1px solid var(--color-border); margin: 2.5em 0; }
 
     /* ---- Лайтбокс инлайн-фото (клик по <Photo> → на весь экран) ---- */
-    .prose .dphoto img { cursor: zoom-in; }
+    .prose .dphoto img, .prose .dphoto-row img { cursor: zoom-in; }
     .plightbox {
         position: fixed; inset: 0; z-index: 200;
         display: flex; align-items: center; justify-content: center;
@@ -666,7 +666,7 @@ const ogImage = (seg[0] === 'blog' || seg[0] === 'notes') ? `/og/${seg[seg.lengt
         const lb = document.getElementById('post-lightbox');
         if (lb) {
             const lbImg = lb.querySelector('.plb-img');
-            const imgs = Array.from(prose.querySelectorAll('.dphoto img'));
+            const imgs = Array.from(prose.querySelectorAll('.dphoto img, .dphoto-row img'));
             // крупная версия для лайтбокса: подменяем ширину в Cloudinary-трансформе
             const big = (src) => src.replace(/q_auto,w_[\d.]+/, 'q_auto,w_1600');
             const multi = imgs.length > 1;
