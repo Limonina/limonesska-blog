@@ -167,6 +167,16 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
             .main-content { padding: 110px 20px 40px; }
         }
     </style>
+
+    <!-- GoatCounter — статистика просмотров (без кук). Замени ПОДДОМЕН на свой
+         после регистрации на goatcounter.com. Не грузится в dev-сборке. -->
+    {import.meta.env.PROD && (
+        <script
+            data-goatcounter="https://limonesska.goatcounter.com/count"
+            async
+            src="//gc.zgo.at/count.js"
+        ></script>
+    )}
 </head>
 <body>
     <Header />
