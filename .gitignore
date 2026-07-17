@@ -50,3 +50,6 @@ photos-upload/
 
 # сторонние skill'ы, установленные через `npx skills add` — не в публичный репо
 .agents/
+
+# страница-заставка под запись рилса /znak — не публикуем на сайт
+src/pages/znak.astro

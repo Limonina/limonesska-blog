@@ -21,6 +21,21 @@ const words = entry.body ? entry.body.trim().split(/\s+/).length : 0;
 const readingTime = Math.max(1, Math.round(words / 150));
 
 const fmt = (d) => d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+
+// ── «Ещё фото дня» ──
+// Фото из photos: которые НЕ вставлены в тело записи через <Photo>/<PhotoRow>
+// (в теле они адресуются как frontmatter.photos[N]). Их показываем отдельной
+// галереей-кнопкой — так же, как они висят в сетке календаря /diary.
+const cl = (url, t) =>
+  url.includes('res.cloudinary.com/') ? url.replace('/upload/', `/upload/${t}/`) : url;
+const allPhotos = entry.data.photos ?? [];
+const usedIdx = new Set(
+  [...(entry.body ?? '').matchAll(/photos\[\s*(\d+)\s*\]/g)].map((m) => Number(m[1]))
+);
+const extraPhotos = allPhotos
+  .map((u, i) => ({ u, i }))
+  .filter(({ u, i }) => !usedIdx.has(i) && !u.includes('/video/upload/'))
+  .map(({ u }) => cl(u, 'f_auto,q_auto,w_600'));
 ---
 
 <PostLayout
@@ -42,4 +57,65 @@ const fmt = (d) => d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long'
     {/* Фото из photos: больше НЕ выводятся стрипом сверху — они для календаря/галереи.
         В теле записи фото вставляются инлайн через <Photo src={frontmatter.photos[N]} …/> */}
     <Content components={{ Photo, PhotoRow, Recipe }} />
+
+    {extraPhotos.length > 0 && (
+        <div class="dgal">
+            <button type="button" class="dgal-toggle" aria-expanded="false">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+                </svg>
+                <span class="dgal-label">Ещё кадры этого дня</span>
+                <span class="dgal-count">{extraPhotos.length}</span>
+            </button>
+            <div class="dgal-grid" hidden>
+                {extraPhotos.map((src) => <img src={src} alt="" loading="lazy" />)}
+            </div>
+        </div>
+    )}
 </PostLayout>
+
+<style is:global>
+    /* «Ещё кадры этого дня» — галерея фото, что не вставлены в текст */
+    .prose .dgal { clear: both; margin: 2.4em 0 0.6em; }
+    .dgal-toggle {
+        display: inline-flex; align-items: center; gap: 0.5em;
+        font-family: var(--font-ui); font-weight: 600; font-size: var(--size-small);
+        color: var(--accent); background: transparent;
+        border: 1px solid var(--line); border-radius: 999px;
+        padding: 0.5em 0.95em; cursor: pointer;
+        transition: border-color 0.2s ease, background 0.2s ease;
+    }
+    .dgal-toggle:hover { border-color: var(--accent); }
+    .dgal-toggle svg { flex: none; }
+    .dgal-count {
+        display: inline-grid; place-items: center; min-width: 1.5em; height: 1.5em;
+        padding: 0 0.4em; border-radius: 999px;
+        background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent);
+        font-size: 0.72rem; line-height: 1;
+    }
+    .dgal-toggle[aria-expanded="true"] svg { transform: rotate(0); }
+    .dgal-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px; margin-top: 16px;
+    }
+    .dgal-grid[hidden] { display: none; }
+    .dgal-grid img {
+        width: 100%; aspect-ratio: 1; object-fit: cover;
+        margin: 0; border-radius: 10px; border: 1px solid var(--line);
+        cursor: zoom-in; transition: filter 0.2s ease, transform 0.2s ease;
+    }
+    .dgal-grid img:hover { filter: brightness(1.05); }
+</style>
+
+<script>
+    document.querySelectorAll('.dgal-toggle').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const grid = btn.parentElement?.querySelector('.dgal-grid');
+            if (!grid) return;
+            const willOpen = grid.hidden;
+            grid.hidden = !willOpen;
+            btn.setAttribute('aria-expanded', String(willOpen));
+        });
+    });
+</script>
