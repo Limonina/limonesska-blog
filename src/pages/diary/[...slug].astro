@@ -4,6 +4,7 @@ import { getEntries } from '../../utils/content';
 import PostLayout from '../../layouts/PostLayout.astro';
 import Photo from '../../components/Photo.astro';
 import PhotoRow from '../../components/PhotoRow.astro';
+import Compare from '../../components/Compare.astro';
 import Recipe from '../../components/Recipe.astro';
 
 export async function getStaticPaths() {
@@ -56,7 +57,7 @@ const extraPhotos = allPhotos
 >
     {/* Фото из photos: больше НЕ выводятся стрипом сверху — они для календаря/галереи.
         В теле записи фото вставляются инлайн через <Photo src={frontmatter.photos[N]} …/> */}
-    <Content components={{ Photo, PhotoRow, Recipe }} />
+    <Content components={{ Photo, PhotoRow, Compare, Recipe }} />
 
     {extraPhotos.length > 0 && (
         <div class="dgal">

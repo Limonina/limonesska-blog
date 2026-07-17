@@ -1,0 +1,100 @@
+---
+// Слайдер «до/после» — две картинки с вертикальной линией-ползунком (тянешь
+// туда-сюда). Использование в MDX:
+//   <Compare before={frontmatter.photos[3]} after={frontmatter.photos[4]} size="s" align="left" />
+// before — левый слой (до), after — фон (после). size: xs|s|m|l, align: center|left|right|wide.
+interface Props {
+  before: string;
+  after: string;
+  size?: 'xs' | 's' | 'm' | 'l';
+  align?: 'center' | 'left' | 'right' | 'wide';
+  caption?: string;
+  labels?: boolean; // подписи «до»/«после» на кадре (по умолч. да)
+}
+const { before, after, size = 'm', align = 'center', caption, labels = true } = Astro.props;
+
+const widths = { xs: 'w_400', s: 'w_600', m: 'w_800', l: 'w_1100' } as const;
+const w = align === 'wide' ? 'w_1600' : widths[size];
+const opt = (u: string) =>
+  u.includes('res.cloudinary.com/') ? u.replace('/upload/', `/upload/f_auto,q_auto,${w}/`) : u;
+---
+
+<figure class:list={["dphoto", "dcompare", `dphoto--${size}`, `dphoto--${align}`]}>
+    <div class="dcompare-box" style="--pos:50%">
+        <img class="dcompare-after" src={opt(after)} alt="после" loading="lazy" />
+        <img class="dcompare-before" src={opt(before)} alt="до" loading="lazy" />
+        {labels && (
+            <>
+                <span class="dcompare-tag dcompare-tag--l">до</span>
+                <span class="dcompare-tag dcompare-tag--r">после</span>
+            </>
+        )}
+        <div class="dcompare-line" aria-hidden="true"><span class="dcompare-grip"></span></div>
+        <input class="dcompare-range" type="range" min="0" max="100" value="50" aria-label="Сравнение до и после" />
+    </div>
+    {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style is:global>
+    .dcompare-box {
+        position: relative; width: 100%; overflow: hidden;
+        border-radius: 12px; border: 1px solid var(--line);
+        line-height: 0; user-select: none; touch-action: none;
+    }
+    .dcompare-box img { display: block; width: 100%; height: auto; margin: 0; border: 0; border-radius: 0; }
+    /* «после» — фон; «до» поверх, обрезается по линии (видно только слева от --pos) */
+    .dcompare-after { position: relative; }
+    .dcompare-before {
+        position: absolute; inset: 0; height: 100%; object-fit: cover;
+        clip-path: inset(0 calc(100% - var(--pos)) 0 0);
+    }
+    /* вертикальная линия + кружок-ручка */
+    .dcompare-line {
+        position: absolute; top: 0; bottom: 0; left: var(--pos);
+        width: 2px; margin-left: -1px; background: var(--card-bg);
+        box-shadow: 0 0 0 1px rgba(0,0,0,.15); pointer-events: none;
+    }
+    .dcompare-grip {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        width: 34px; height: 34px; border-radius: 50%;
+        background: var(--card-bg); border: 2px solid var(--accent);
+        box-shadow: 0 2px 10px rgba(0,0,0,.25);
+    }
+    .dcompare-grip::before, .dcompare-grip::after {
+        content: ''; position: absolute; top: 50%; width: 0; height: 0;
+        border-block: 5px solid transparent;
+    }
+    .dcompare-grip::before { left: 6px; transform: translateY(-50%); border-right: 6px solid var(--accent); }
+    .dcompare-grip::after  { right: 6px; transform: translateY(-50%); border-left: 6px solid var(--accent); }
+    /* подписи */
+    .dcompare-tag {
+        position: absolute; top: 10px; z-index: 2;
+        font-family: var(--font-ui); font-size: 0.68rem; font-weight: 600; line-height: 1;
+        color: #fff; background: rgba(0,0,0,.45); padding: 4px 8px; border-radius: 999px;
+        pointer-events: none;
+    }
+    .dcompare-tag--l { left: 10px; }
+    .dcompare-tag--r { right: 10px; }
+    /* невидимый range на всю площадь — тянется мышью/пальцем, работают стрелки */
+    .dcompare-range {
+        position: absolute; inset: 0; width: 100%; height: 100%; margin: 0;
+        background: transparent; -webkit-appearance: none; appearance: none;
+        cursor: ew-resize; z-index: 3;
+    }
+    .dcompare-range:focus-visible { outline: none; }
+    .dcompare-range:focus-visible ~ .dcompare-line .dcompare-grip { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 35%, transparent); }
+    .dcompare-range::-webkit-slider-thumb { -webkit-appearance: none; width: 40px; height: 100%; background: transparent; border: 0; cursor: ew-resize; }
+    .dcompare-range::-moz-range-thumb { width: 40px; height: 100%; background: transparent; border: 0; cursor: ew-resize; }
+    .dcompare-range::-moz-range-track { background: transparent; }
+</style>
+
+<script>
+    document.querySelectorAll('.dcompare').forEach((fig) => {
+        const box = fig.querySelector('.dcompare-box') as HTMLElement | null;
+        const range = fig.querySelector('.dcompare-range') as HTMLInputElement | null;
+        if (!box || !range) return;
+        const set = (v: string | number) => box.style.setProperty('--pos', v + '%');
+        range.addEventListener('input', () => set(range.value));
+        set(range.value);
+    });
+</script>
