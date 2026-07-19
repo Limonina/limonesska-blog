@@ -22,10 +22,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             <button class="moon-nav" data-step="next" aria-label="Следующий месяц">›</button>
         </div>
 
-        <div class="moon-weekdays">
-            <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
+        <div class="moon-stage">
+            <aside class="moon-note" id="moon-note" hidden></aside>
+            <div class="moon-calendar">
+                <div class="moon-weekdays">
+                    <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
+                </div>
+                <div class="moon-grid" id="moon-grid"></div>
+            </div>
+            <aside class="moon-detail" id="moon-detail" hidden></aside>
         </div>
-        <div class="moon-grid" id="moon-grid"></div>
 
         <div class="moon-legend">
             <span><span class="lg-moon">🌙</span> Луна без курса</span>
@@ -48,6 +54,20 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
     <style is:global>
         .moon { max-width: 1000px; margin: 0 auto; }
+        /* сцена: заметка «нельзя планировать» слева · календарь · инфо о дне справа */
+        .moon-stage {
+            display: flex; align-items: flex-start; justify-content: center; gap: 20px;
+            width: 100%;
+        }
+        .moon-calendar { flex: 0 0 auto; width: 1000px; max-width: 100%; margin: 0 auto; }
+        .moon-note, .moon-detail { flex: 0 0 300px; align-self: stretch; }
+        .moon-note[hidden], .moon-detail[hidden] { display: none; }
+        /* когда открыта хоть одна панель — сцене нужна доп. ширина по бокам (сетка не сжимается) */
+        .moon.has-panel { max-width: 1640px; }
+        .moon.has-panel .moon-head,
+        .moon.has-panel .moon-bar,
+        .moon.has-panel .moon-legend,
+        .moon.has-panel .moon-toolbar { max-width: 1000px; margin-left: auto; margin-right: auto; }
         .moon-head { margin-bottom: 28px; }
         .moon-title {
             font-family: var(--font-display); font-size: var(--size-mega);
@@ -126,8 +146,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         .mc-stripes { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; z-index: 1; }
         .mc-stripe { width: 100%; height: 4px; }
 
-        .moon-detail { margin-top: 24px; padding: 22px 24px; border: 1px solid var(--line); border-radius: 14px; background: var(--card-bg); }
-        .moon-detail[hidden] { display: none; }
+        .moon-detail { padding: 22px 24px; border: 1px solid var(--line); border-radius: 14px; background: var(--card-bg); animation: moon-slide-r 0.28s ease both; }
+        @keyframes moon-slide-r { from { opacity: 0; transform: translateX(16px); } to { opacity: 1; transform: none; } }
         .md-date { font-family: var(--font-ui); font-size: var(--size-small); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent-2); margin: 0 0 12px; }
         .md-row { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
         .md-moon { width: 46px; height: 46px; flex: 0 0 auto; }
@@ -135,6 +155,20 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         .md-sub { font-family: var(--font-ui); font-size: var(--size-small); color: var(--text-muted); }
         .md-events { font-family: var(--font-vollkorn); font-size: var(--size-base); color: var(--text-muted); margin: 6px 0 0; }
         .md-events strong { color: var(--text); font-weight: 600; }
+
+        /* заметка «нельзя планировать» — слева, рыжим акцентом */
+        .moon-note {
+            padding: 20px 22px; border-radius: 14px;
+            border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line));
+            background: color-mix(in srgb, var(--accent) 8%, var(--card-bg));
+            animation: moon-slide-l 0.28s ease both;
+        }
+        @keyframes moon-slide-l { from { opacity: 0; transform: translateX(-16px); } to { opacity: 1; transform: none; } }
+        .mn-head { font-family: var(--font-ui); font-size: var(--size-small); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--accent); margin: 0 0 8px; display: flex; align-items: center; gap: 6px; }
+        .mn-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+        .mn-list li { font-family: var(--font-vollkorn); font-size: var(--size-base); line-height: 1.5; color: var(--text-muted); }
+        .mn-list li strong { color: var(--text); font-weight: 600; }
+        .mn-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
 
         .moon-legend {
             display: flex; flex-wrap: wrap; gap: 18px; margin-top: 26px; padding-top: 18px;
@@ -145,6 +179,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         .lg-ecl { background: #b4671f; }
         .lg-bar { width: 5px; height: 14px; border-radius: 2px; display: inline-block; vertical-align: middle; margin-left: 4px; }
         .lg-arrow { color: var(--color-text-faint); }
+
+        /* нет места по бокам (сетка 1000 + карточки) — панели складываются под календарь */
+        @media (max-width: 1680px) {
+            .moon.has-panel { max-width: 1000px; }
+            .moon-stage { flex-wrap: wrap; }
+            .moon-calendar { order: -1; width: 100%; flex-basis: 100%; }
+            .moon-note, .moon-detail { flex: 1 1 260px; margin-top: 18px; }
+        }
 
         @media (max-width: 760px) {
             .mc { border-radius: 9px; padding: 5px; }
@@ -172,15 +214,15 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         .moon-print { display: none; }
 
         @media print {
-            @page { size: A4 portrait; margin: 12mm; }
+            @page { size: A4 landscape; margin: 0; }
             /* печатаем точные цвета */
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            /* прячем всё, кроме контейнера печати */
-            .site-header, .site-footer, .moon-head, .moon-bar, .moon-toolbar,
-            .moon > .moon-weekdays, .moon > .moon-grid, .moon-legend, .moon-detail, .moon-overlay { display: none !important; }
-            .moon { max-width: none; margin: 0; }
+            /* прячем всё, кроме контейнера печати; .moon целиком — иначе его пустой бокс + верхний padding шапки даёт разрыв на первой странице */
+            .site-header, .site-footer, .moon, .moon-overlay { display: none !important; }
+            /* убираем отступ под фикс-шапку — из-за него «Январь» уезжал вниз только на первой странице */
+            .main-content { padding: 0 !important; }
             .moon-print { display: block !important; }
-            .print-month { page-break-after: always; }
+            .print-month { page-break-after: always; padding: 14mm; box-sizing: border-box; }
             .print-month:last-child { page-break-after: auto; }
             .pm-title {
                 font-family: var(--font-display); font-size: 1.6rem; font-weight: 700;
@@ -189,6 +231,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             .pm-grid { min-height: 0; gap: 4px; }
             .pm-grid .mc, .print-month .mc { aspect-ratio: auto; min-height: 92px; break-inside: avoid; }
             .print-month .mc:hover { transform: none; box-shadow: none; }
+
+            /* финальная страница «Обозначения и правила» */
+            .print-legend .pl-cols { display: grid; grid-template-columns: 1fr 1.2fr; gap: 24px; margin-top: 6px; }
+            .print-legend .pl-h { font-family: var(--font-ui); font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #b4671f; margin: 0 0 10px; }
+            .print-legend .pl-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+            .print-legend .pl-list li { font-family: var(--font-vollkorn); font-size: 0.86rem; line-height: 1.4; color: #1a1a1a; }
+            .print-legend .pl-list strong { font-weight: 700; }
+            .print-legend .pl-ic { display: inline-flex; align-items: center; gap: 3px; font-family: var(--font-ui); font-weight: 600; margin-right: 4px; }
+            .print-legend .pl-ecl { width: 9px; height: 9px; border-radius: 50%; background: #b4671f; }
+            .print-legend .pl-bar { width: 5px; height: 13px; border-radius: 2px; display: inline-block; vertical-align: middle; margin-right: 3px; }
+            .print-legend .pl-rx { white-space: nowrap; }
         }
     </style>
 
@@ -203,6 +256,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         const VOC_BODIES = [B.Sun, B.Mercury, B.Venus, B.Mars, B.Jupiter, B.Saturn];
         const PLANETS = [['Меркурий','☿',B.Mercury], ['Венера','♀',B.Venus], ['Марс','♂',B.Mars]];
         const RXCOLOR = { 'Меркурий': '#e0a93f', 'Венера': '#ec5fa0', 'Марс': '#5b9bd5' };
+        const RX_GEN = { 'Меркурий': 'Меркурия', 'Венера': 'Венеры', 'Марс': 'Марса' };
+        const RX_ADVICE = {
+            'Меркурий': 'не подписывать договоры, не покупать технику, перепроверять письма, билеты и даты; хорошо доделывать и возвращаться к старому',
+            'Венера': 'не начинать отношения, не заключать брак, не делать крупных покупок «для красоты» и не менять внешность (стрижка, косметология)',
+            'Марс': 'не начинать новые дела и спорт «с нуля», не идти на конфликт, беречься от травм и плановых операций; сбавить темп',
+        };
         const ASPECTS = [0, 60, 90, 120, 180];
 
         const norm = (x) => ((x % 360) + 360) % 360;
@@ -330,7 +389,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         const grid = document.getElementById('moon-grid');
         const label = document.getElementById('moon-label');
         const today = new Date(); today.setHours(0, 0, 0, 0);
-        let detailEl = null;
+        const notePanel = document.getElementById('moon-note');
+        const detailPanel = document.getElementById('moon-detail');
 
         function cellHTML(d, info) {
             return `
@@ -369,7 +429,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         function render() {
             label.textContent = `${MONTHS[month]} ${year}`;
             grid.innerHTML = '<div class="moon-loading">Считаю фазы…</div>';
-            if (detailEl) { detailEl.remove(); detailEl = null; }
+            notePanel.hidden = true; detailPanel.hidden = true;
+            document.querySelector('.moon').classList.remove('has-panel');
             requestAnimationFrame(() => requestAnimationFrame(() => {
                 buildGrid(grid, year, month, computeMonth(year, month), true);
             }));
@@ -394,6 +455,37 @@ import BaseLayout from '../layouts/BaseLayout.astro';
                 pc.appendChild(block);
                 await new Promise((r) => requestAnimationFrame(r)); // не морозим UI
             }
+            // финальная страница — обозначения и что нельзя делать в особые дни
+            const legend = document.createElement('section');
+            legend.className = 'print-month print-legend';
+            legend.innerHTML = `
+                <h2 class="pm-title">Обозначения и правила</h2>
+                <div class="pl-cols">
+                    <div class="pl-block">
+                        <h3 class="pl-h">Обозначения</h3>
+                        <ul class="pl-list">
+                            <li><span class="pl-ic">↗ / ↘</span> Луна растёт / убывает</li>
+                            <li><span class="pl-ic">🌙</span> Луна без курса (интервал по МСК)</li>
+                            <li><span class="pl-ic pl-ecl"></span> затмение (солнечное / лунное)</li>
+                            <li>ретроград — полоса по нижнему краю дня:<br>
+                                <span class="pl-rx"><span class="pl-bar" style="background:#e0a93f"></span>☿ Меркурий</span>,
+                                <span class="pl-rx"><span class="pl-bar" style="background:#ec5fa0"></span>♀ Венера</span>,
+                                <span class="pl-rx"><span class="pl-bar" style="background:#5b9bd5"></span>♂ Марс</span></li>
+                        </ul>
+                    </div>
+                    <div class="pl-block">
+                        <h3 class="pl-h">Чего лучше не делать в эти дни</h3>
+                        <ul class="pl-list">
+                            <li><strong><span class="pl-bar" style="background:#e0a93f"></span>Ретроград Меркурия ☿</strong> — не подписывать договоры, не покупать технику и гаджеты, перепроверять письма, билеты и даты. Хорошо: перечитывать, доделывать, возвращаться к старому.</li>
+                            <li><strong><span class="pl-bar" style="background:#ec5fa0"></span>Ретроград Венеры ♀</strong> — не начинать отношения, не заключать брак, не делать крупных покупок «для красоты» и не менять внешность (стрижка, косметология). Хорошо: пересмотреть бюджет и вкусы.</li>
+                            <li><strong><span class="pl-bar" style="background:#5b9bd5"></span>Ретроград Марса ♂</strong> — не начинать новые дела и спорт «с нуля», не идти на конфликт, беречься от травм и плановых операций. Хорошо: сбавить темп, доделывать начатое.</li>
+                            <li><strong>Луна без курса 🌙</strong> — не начинать важное, переносить встречи и сделки. Подходит для рутины, отдыха и «дел в стол».</li>
+                            <li><strong>Затмение</strong> — не принимать резких решений и не начинать крупное, беречь силы.</li>
+                            <li><strong>Новолуние</strong> — время намерений и планов, но не активного старта. <strong>Полнолуние</strong> — пик эмоций, лучше без важных решений.</li>
+                        </ul>
+                    </div>
+                </div>`;
+            pc.appendChild(legend);
             overlay.hidden = true;
             window.print();
         }
@@ -401,27 +493,38 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         function selectDay(cell, d, info) {
             grid.querySelectorAll('.mc.is-selected').forEach((c) => c.classList.remove('is-selected'));
             cell.classList.add('is-selected');
-            if (!detailEl) {
-                detailEl = document.createElement('div');
-                detailEl.className = 'moon-detail';
-                document.querySelector('.moon').insertBefore(detailEl, document.querySelector('.moon-legend'));
-            }
+            document.querySelector('.moon').classList.add('has-panel');
+
             const dateObj = new Date(year, month, d);
             const phaseName = info.major || (info.waxing ? 'Растущая Луна' : 'Убывающая Луна');
             const pct = Math.round(info.illum * 100);
-            const events = [];
-            if (info.ecl) events.push(`<strong>${info.ecl} затмение</strong>`);
-            if (info.retros.length) events.push('Ретроград: ' + info.retros.map(r => r.name).join(', '));
-            detailEl.innerHTML = `
+
+            // правая панель — дата и фаза
+            detailPanel.innerHTML = `
                 <p class="md-date">${d} ${MONTHS_GEN[month]} ${year} · ${WD[dateObj.getDay()]}</p>
                 <div class="md-row">
                     <span class="md-moon">${moonSVG(info.illum, info.waxing)}</span>
                     <span><span class="md-phase">${phaseName}</span><br>
                     <span class="md-sub">освещена на ${pct}% · ${info.waxing ? 'растёт' : 'убывает'}</span></span>
-                </div>
-                ${info.voc.length ? `<p class="md-events">🌙 Луна без курса: ${info.voc.map(v => v.text).join('; ')}</p>` : ''}
-                ${events.length ? `<p class="md-events">${events.join(' · ')}</p>` : ''}
-            `;
+                </div>`;
+            detailPanel.hidden = false;
+            detailPanel.style.animation = 'none'; void detailPanel.offsetWidth; detailPanel.style.animation = '';
+
+            // левая панель — предупреждение «нельзя планировать» (ретроград / Луна без курса / затмение)
+            const warns = [];
+            if (info.ecl) warns.push(`<strong><span class="mn-dot" style="background:#b4671f"></span>${info.ecl} затмение</strong> — резкие события, лучше ничего не начинать`);
+            info.retros.forEach(r => warns.push(`<strong><span class="mn-dot" style="background:${RXCOLOR[r.name] || '#ddd'}"></span>Ретроград ${RX_GEN[r.name] || r.name}</strong> — ${RX_ADVICE[r.name] || 'не начинать новое, доделывать старое'}`));
+            if (info.voc.length) warns.push(`<strong><span class="mn-dot" style="background:var(--accent-2)"></span>Луна без курса</strong> (${info.voc.map(v => v.text).join('; ')}) — дела «в стол», без важных решений`);
+
+            if (warns.length) {
+                notePanel.innerHTML = `
+                    <p class="mn-head">⚠ Не планировать важное</p>
+                    <ul class="mn-list">${warns.map(w => `<li>${w}</li>`).join('')}</ul>`;
+                notePanel.hidden = false;
+                notePanel.style.animation = 'none'; void notePanel.offsetWidth; notePanel.style.animation = '';
+            } else {
+                notePanel.hidden = true;
+            }
         }
 
         document.querySelectorAll('.moon-nav').forEach((b) => {
