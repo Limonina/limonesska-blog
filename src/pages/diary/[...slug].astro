@@ -7,15 +7,30 @@ import PhotoRow from '../../components/PhotoRow.astro';
 import Compare from '../../components/Compare.astro';
 import Recipe from '../../components/Recipe.astro';
 
+const fmtDate = (d) => d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+
 export async function getStaticPaths() {
   const entries = await getEntries('diary');
-  return entries.map((entry) => ({
+  // по дате от старых к новым; за один день бывает несколько записей — их держим
+  // в стабильном порядке по id, чтобы стрелки не прыгали между сборками
+  const sorted = [...entries].sort((a, b) => {
+    const d = a.data.pubDate.getTime() - b.data.pubDate.getTime();
+    return d !== 0 ? d : a.id.localeCompare(b.id);
+  });
+  const brief = (e) =>
+    e ? { slug: e.id, title: e.data.title ?? fmtDate(e.data.pubDate) } : null;
+
+  return sorted.map((entry, i) => ({
     params: { slug: entry.id },
-    props: { entry },
+    props: {
+      entry,
+      prev: brief(sorted[i - 1]), // день раньше
+      next: brief(sorted[i + 1]), // день позже
+    },
   }));
 }
 
-const { entry } = Astro.props;
+const { entry, prev, next } = Astro.props;
 const { Content } = await render(entry);
 
 const words = entry.body ? entry.body.trim().split(/\s+/).length : 0;
@@ -73,6 +88,24 @@ const extraPhotos = allPhotos
             </div>
         </div>
     )}
+
+    {(prev || next) && (
+        <nav class="dnav" aria-label="Соседние записи дневника">
+            {prev ? (
+                <a class="dnav-link dnav-prev" href={`/diary/${prev.slug}/`} rel="prev">
+                    <span class="dnav-label"><span class="dnav-arrow">←</span><span>Предыдущая</span></span>
+                    <span class="dnav-title">{prev.title}</span>
+                </a>
+            ) : <span />}
+
+            {next ? (
+                <a class="dnav-link dnav-next" href={`/diary/${next.slug}/`} rel="next">
+                    <span class="dnav-label"><span>Следующая</span><span class="dnav-arrow">→</span></span>
+                    <span class="dnav-title">{next.title}</span>
+                </a>
+            ) : <span />}
+        </nav>
+    )}
 </PostLayout>
 
 <style is:global>
@@ -107,6 +140,43 @@ const extraPhotos = allPhotos
         cursor: zoom-in; transition: filter 0.2s ease, transform 0.2s ease;
     }
     .dgal-grid img:hover { filter: brightness(1.05); }
+
+    /* Соседние записи дневника — тот же язык, что у «назад» и карточек-бэклинков:
+       плоско, без рамок; мета в UI-шрифте капсом, заголовок в Playfair */
+    .prose .dnav {
+        clear: both;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 28px;
+        margin: 3em 0 0.5em;
+    }
+    .dnav-link {
+        display: flex; flex-direction: column; gap: 6px;
+        text-decoration: none; color: inherit;
+        border: none; padding: 0;
+    }
+    .dnav-next { grid-column: 2; align-items: flex-end; text-align: right; }
+    .dnav-label {
+        font-family: var(--font-ui); font-size: var(--size-small);
+        color: var(--color-text-muted);
+        text-transform: uppercase; letter-spacing: 0.5px;
+        display: inline-flex; align-items: center; gap: 7px;
+        transition: color 0.2s, gap 0.25s ease;
+    }
+    .dnav-label > span { display: inline-flex; align-items: center; line-height: 1; }
+    .dnav-arrow { font-size: 1.25em; line-height: 1; transform: translateY(-0.06em); }
+    .dnav-title {
+        font-family: var(--font-display); font-size: var(--size-base);
+        font-weight: 700; line-height: 1.25;
+        color: var(--color-text); transition: color 0.2s;
+    }
+    .dnav-link:hover .dnav-label { color: var(--color-accent); gap: 14px; }
+    .dnav-link:hover .dnav-title { color: var(--color-accent); }
+
+    @media (max-width: 600px) {
+        .prose .dnav { grid-template-columns: 1fr; gap: 22px; }
+        .dnav-next { grid-column: 1; align-items: flex-start; text-align: left; }
+    }
 </style>
 
 <script>
