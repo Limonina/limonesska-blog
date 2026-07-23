@@ -1,0 +1,816 @@
+---
+/**
+ * /photobook-reel — служебная страница под запись рилса (сценарий «пустая сетка → книжка»).
+ * Вне навигации. Данные берёт из того же хранилища, что и конструктор /photobook:
+ * все месяцы с фото становятся страницами, между ними — перелистывание.
+ * Пробел или R — заново, H — спрятать подсказку.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+// тайминги, мс — крутить здесь
+const T = {
+  cover: 1600, // обложка
+  open: 1100, // обложка открывается
+  intro: 1000, // шапка месяца выезжает
+  week: 620, // влёт фото: одна неделя
+  look: 900, // пауза полюбоваться
+  point: 420, // курсор подъезжает к фото
+  tap: 260, // клик по фото
+  zoomIn: 900, // фото открывается
+  zoomHold: 700, // …и сколько его держим
+  zoomOut: 700, // закрывается обратно
+  zooms: 3, // сколько случайных кадров открыть
+  flip: 1000, // перелистывание страницы
+  build: 1700, // кнопка + прогресс
+  paper: 1600, // книга ложится на стол
+  fastFlip: 480, // листаем книгу к обложке в финале
+  end: 1600, // финальный кадр — закрытая книга
+};
+/** минимальная длина ролика: если актов не хватает, недостающее уходит в паузы */
+const TARGET = 20000;
+const MAX_PAGES = 5;
+---
+
+<BaseLayout title="Фотокнига — плеер под запись">
+  <div class="reel-wrap">
+    <div
+      class="reel"
+      id="reel"
+      data-t={JSON.stringify(T)}
+      data-max={MAX_PAGES}
+      data-target={TARGET}
+    >
+      <div class="book" id="book"></div>
+
+      <div class="export">
+        <div class="btn">Собрать PDF</div>
+        <div class="bar"><i></i></div>
+      </div>
+
+      <span class="cursor" id="cursor"></span>
+
+    </div>
+
+    <p class="hint" id="hint">
+      Пробел или R — заново · H — спрятать подсказку. Страниц столько, сколько месяцев с фото.
+    </p>
+  </div>
+</BaseLayout>
+
+<style is:global>
+  .reel-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  /* сцена ровно 9:16 — под запись экрана */
+  .reel {
+    position: relative;
+    width: min(430px, 90vw);
+    aspect-ratio: 9 / 16;
+    overflow: hidden;
+    border-radius: 18px;
+    box-shadow: 0 12px 40px var(--shadow);
+    background: linear-gradient(150deg, #efe6da, #e2d4c3);
+    font-family: var(--font-ui);
+    color: #221f1c;
+  }
+
+  .book {
+    position: absolute;
+    inset: 0;
+    perspective: 1600px;
+    transition: transform 900ms cubic-bezier(0.22, 0.8, 0.2, 1);
+    transform-style: preserve-3d;
+  }
+  /* предпоследний акт: книга ложится на стол */
+  .reel.paper .book,
+  .reel.end .book {
+    transform: perspective(1400px) rotateX(12deg) scale(0.92);
+  }
+
+  .sheet {
+    position: absolute;
+    inset: 0;
+    padding: 7% 6.5%;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(150deg, #f7f1e8, #ece0d2);
+    transform-origin: left center;
+    backface-visibility: hidden;
+    transition:
+      transform 1000ms cubic-bezier(0.4, 0.05, 0.2, 1),
+      box-shadow 1000ms ease;
+  }
+  /* перелистнутая страница уходит влево, как настоящий лист */
+  .sheet.gone {
+    transform: rotateY(-168deg);
+    box-shadow: 24px 0 40px rgba(60, 40, 25, 0.3);
+  }
+  /* финал: книгу листают быстро */
+  .sheet.quick {
+    transition-duration: 460ms;
+  }
+
+  .head {
+    text-align: center;
+    margin-bottom: 5%;
+  }
+  .eyebrow {
+    margin: 0 0 0.5rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.32em;
+    color: #d2603a;
+  }
+  .month {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 2.6rem;
+    line-height: 1;
+  }
+  .year {
+    margin: 0.4rem 0 0;
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    letter-spacing: 0.3em;
+    color: #8b8078;
+  }
+  .rule {
+    display: block;
+    width: 46px;
+    height: 2px;
+    margin: 0.9rem auto 0;
+    background: #d2603a;
+  }
+
+  /* шапка выезжает только на первой странице — дальше она уже «напечатана» */
+  .sheet.intro .eyebrow {
+    animation: rise 700ms 100ms both;
+  }
+  .sheet.intro .month {
+    animation: rise 800ms 220ms both;
+  }
+  .sheet.intro .year {
+    animation: rise 800ms 360ms both;
+  }
+  .sheet.intro .rule {
+    animation: grow 700ms 520ms both;
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes grow {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  .wd,
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2.5%;
+  }
+  .wd {
+    margin-bottom: 2.5%;
+    font-size: 0.52rem;
+    letter-spacing: 0.14em;
+    color: #8b8078;
+    text-align: center;
+  }
+  .cell {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 16%;
+    background: rgba(255, 255, 255, 0.35);
+    border: 1px solid rgba(120, 95, 75, 0.18);
+    overflow: hidden;
+  }
+  .cell .num {
+    position: absolute;
+    top: 6%;
+    left: 9%;
+    font-size: 0.46rem;
+    color: #8b8078;
+    z-index: 2;
+  }
+  .cell.has .num {
+    color: #221f1c;
+  }
+  .cell.has.light .num {
+    color: #fff;
+  }
+  .cell.has {
+    border-color: transparent;
+    background: #fffdfa;
+    box-shadow: 0 4px 12px rgba(60, 40, 25, 0.18);
+  }
+  .cell img {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+  }
+
+  /* день «прилетел» — класс .in вешает JS, неделя за неделей */
+  .cell.has:not(.in) {
+    background: rgba(255, 255, 255, 0.35);
+    border-color: rgba(120, 95, 75, 0.18);
+    box-shadow: none;
+  }
+  .cell.has:not(.in) img {
+    opacity: 0;
+  }
+  .cell.has.in img {
+    animation: drop 520ms cubic-bezier(0.2, 0.9, 0.25, 1.2) both;
+    animation-delay: var(--d);
+  }
+  .cell.has.in {
+    animation: pop 520ms cubic-bezier(0.2, 0.9, 0.25, 1.2) both;
+    animation-delay: var(--d);
+  }
+  /* страницы после первой уже заполнены — без анимации */
+  .cell.has.in.instant,
+  .cell.has.in.instant img {
+    animation: none;
+    opacity: 1;
+  }
+
+  @keyframes drop {
+    from {
+      opacity: 0;
+      transform: translate(-50%, calc(-50% - 40px)) rotate(calc(var(--rot) - 6deg)) scale(1.15);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, -50%) rotate(var(--rot)) scale(1);
+    }
+  }
+  @keyframes pop {
+    from {
+      background: rgba(255, 255, 255, 0.35);
+      box-shadow: none;
+    }
+    to {
+      background: #fffdfa;
+      box-shadow: 0 4px 12px rgba(60, 40, 25, 0.18);
+    }
+  }
+
+  .export {
+    position: absolute;
+    left: 6.5%;
+    right: 6.5%;
+    bottom: 7%;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 400ms ease;
+    z-index: 5;
+  }
+  .reel.exporting .export {
+    opacity: 1;
+    transform: none;
+  }
+  .export .btn {
+    background: #221f1c;
+    color: #f7f1e8;
+    text-align: center;
+    padding: 0.7rem;
+    border-radius: 10px;
+    font-size: 0.75rem;
+  }
+  .export .bar {
+    height: 3px;
+    margin-top: 0.5rem;
+    background: rgba(120, 95, 75, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .export .bar i {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: #d2603a;
+  }
+  .reel.exporting .export .bar i {
+    animation: fill 1400ms 200ms ease-out both;
+  }
+  @keyframes fill {
+    to {
+      width: 100%;
+    }
+  }
+
+
+  /* --- обложка --- */
+  .sheet.cover {
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(150deg, #e7d9c6, #d9c4ab);
+  }
+  .cover .big {
+    font-family: var(--font-display);
+    font-size: 4.2rem;
+    line-height: 1;
+    margin: 0.6rem 0 0;
+  }
+  .cover .sub {
+    margin: 1rem 0 0;
+    font-size: 0.62rem;
+    letter-spacing: 0.3em;
+    color: #6d6259;
+  }
+
+  /* --- курсор: показываем, что по фото «кликают» --- */
+  .cursor {
+    position: absolute;
+    z-index: 9;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid rgba(34, 31, 28, 0.6);
+    background: rgba(255, 255, 255, 0.35);
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    transition:
+      left 400ms cubic-bezier(0.3, 0.8, 0.2, 1),
+      top 400ms cubic-bezier(0.3, 0.8, 0.2, 1),
+      opacity 220ms ease;
+  }
+  .cursor.on {
+    opacity: 1;
+  }
+  .cursor.tap {
+    animation: tap 260ms ease;
+  }
+  @keyframes tap {
+    50% {
+      transform: translate(-50%, -50%) scale(0.6);
+      background: rgba(210, 96, 58, 0.5);
+    }
+  }
+
+  /* --- крупный план дня --- */
+  .zoom {
+    position: absolute;
+    z-index: 8;
+    border-radius: 16%;
+    overflow: hidden;
+    background: #fffdfa;
+    box-shadow: 0 20px 50px rgba(60, 40, 25, 0.35);
+    transition: all 900ms cubic-bezier(0.3, 0.8, 0.2, 1);
+  }
+  .zoom img {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+  }
+
+  .hint {
+    font-family: var(--font-ui);
+    font-size: var(--size-small);
+    color: var(--text-muted);
+    text-align: center;
+    margin: 0;
+  }
+  .hint.off {
+    visibility: hidden;
+  }
+</style>
+
+<script>
+  import { allPhotos, getState } from '../lib/photobook/storage';
+  import { monthMatrix, RU_MONTHS, RU_WEEKDAYS } from '../lib/photobook/calendar';
+  import { coverRect, type Placement } from '../lib/photobook/render';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+
+  const reel = $('reel');
+  // значения из frontmatter приходят только через data-атрибуты
+  const T = JSON.parse(reel.dataset.t || '{}');
+  const MAX_PAGES = Number(reel.dataset.max || 5);
+  const TARGET = Number(reel.dataset.target || 20000);
+
+  type Asset = { id: string; url: string; w: number; h: number };
+  type Month = {
+    year: number;
+    month: number;
+    cells: Record<number, Placement>;
+    white?: Record<number, boolean>;
+  };
+
+  const assets = new Map<string, Asset>();
+  let sheets: HTMLElement[] = [];
+  let cover: HTMLElement | null = null;
+
+  async function loadMonths(): Promise<Month[]> {
+    const params = new URLSearchParams(location.search);
+    const wantDemo = params.has('demo');
+
+    if (!wantDemo) {
+      const [photos, state] = await Promise.all([
+        allPhotos().catch(() => []),
+        getState<any>().catch(() => undefined),
+      ]);
+      for (const p of photos) {
+        assets.set(p.id, { id: p.id, url: URL.createObjectURL(p.blob), w: p.w, h: p.h });
+      }
+      const months = ((state?.months ?? []) as Month[])
+        .filter((m) => Object.keys(m.cells).length)
+        .sort((a, b) => a.year * 12 + a.month - (b.year * 12 + b.month));
+      if (months.length) return months.slice(0, MAX_PAGES);
+      assets.clear();
+    }
+    return demoMonths();
+  }
+
+  /* ---------- демо-картинки: рисуем сами, ничего не качаем ---------- */
+
+  const ZOO = [
+    ['🐱', 'кот считает, что это его дом'],
+    ['🐶', 'гулять? гулять!'],
+    ['🦊', 'подозрительно рыжий день'],
+    ['🐼', 'план на сегодня: лежать'],
+    ['🐸', 'не моя проблема'],
+    ['🐢', 'всё успею, но не сразу'],
+    ['🦉', 'сова одобряет этот час'],
+    ['🐧', 'официально одет'],
+    ['🐝', 'занят(а), но не знаю чем'],
+    ['🦔', 'колючий, но добрый'],
+    ['🐙', 'восемь дел одновременно'],
+    ['🦩', 'стою красиво'],
+    ['🐰', 'убежал от понедельника'],
+    ['🐻', 'хочу спать до весны'],
+    ['🐳', 'мысли размером с кита'],
+    ['🦆', 'плыву по течению'],
+    ['🐝', 'мёд закончился'],
+    ['🐨', 'обнял и не отпускаю'],
+    ['🦥', 'делаю, но медленно'],
+    ['🐥', 'новый день, новый я'],
+  ];
+  const TINT = ['#f3ddc9', '#e7dfcd', '#dfe6d8', '#f0d7d2', '#dde3ec', '#efe3d0'];
+
+  /** карточка «фото»: крупный зверь и подпись — вместо настоящих снимков */
+  function drawCard(i: number): string {
+    const S = 480;
+    const c = document.createElement('canvas');
+    c.width = S;
+    c.height = S;
+    const ctx = c.getContext('2d')!;
+    const [emoji, line] = ZOO[i % ZOO.length];
+
+    ctx.fillStyle = TINT[i % TINT.length];
+    ctx.fillRect(0, 0, S, S);
+
+    ctx.textAlign = 'center';
+    ctx.font = '210px serif';
+    ctx.fillText(emoji, S / 2, S / 2 + 40);
+
+    ctx.fillStyle = 'rgba(34,31,28,0.72)';
+    ctx.font = '28px sans-serif';
+    wrap(ctx, line, S / 2, S - 96, S - 60, 34);
+
+    return c.toDataURL('image/jpeg', 0.85);
+  }
+
+  function wrap(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, max: number, lh: number) {
+    const words = text.split(' ');
+    const lines: string[] = [];
+    let line = '';
+    for (const w of words) {
+      const next = line ? `${line} ${w}` : w;
+      if (ctx.measureText(next).width > max && line) {
+        lines.push(line);
+        line = w;
+      } else line = next;
+    }
+    if (line) lines.push(line);
+    lines.forEach((l, i) => ctx.fillText(l, x, y + i * lh - (lines.length - 1) * lh));
+  }
+
+  /** три месяца, набитые демо-карточками — чтобы было что снимать без заливки */
+  async function demoMonths(): Promise<Month[]> {
+    const now = new Date();
+    const base = now.getFullYear() * 12 + now.getMonth();
+    const out: Month[] = [];
+
+    const pool: Asset[] = [];
+    for (let i = 0; i < 40; i++) {
+      pool.push({ id: `demo${i}`, url: drawCard(i), w: 480, h: 480 });
+    }
+    pool.forEach((a) => assets.set(a.id, a));
+
+    let take = 0;
+    for (let k = 2; k >= 0; k--) {
+      const year = Math.floor((base - k) / 12);
+      const month = ((base - k) % 12 + 12) % 12;
+      const days = new Date(year, month + 1, 0).getDate();
+      const cells: Record<number, Placement> = {};
+      for (let d = 1; d <= days; d++) {
+        // пара пустых дней в месяце — так натуральнее
+        if (d % 9 === 4) continue;
+        const a = pool[take++ % pool.length];
+        cells[d] = { photoId: a.id, scale: 1, offsetX: 0, offsetY: 0, rotate: 0 };
+      }
+      out.push({ year, month, cells });
+    }
+    return out;
+  }
+
+  /** страница месяца: шапка + сетка. Порядок в стопке задаёт z-index */
+  function buildSheet(m: Month, index: number, total: number): HTMLElement {
+    const sheet = document.createElement('div');
+    sheet.className = 'sheet';
+    sheet.style.zIndex = String(total - index);
+
+    const head = document.createElement('div');
+    head.className = 'head';
+    head.innerHTML =
+      `<p class="eyebrow">ИТОГ МЕСЯЦА</p>` +
+      `<h2 class="month">${RU_MONTHS[m.month]}</h2>` +
+      `<p class="year">${m.year}</p>` +
+      `<span class="rule"></span>`;
+    sheet.appendChild(head);
+
+    const wd = document.createElement('div');
+    wd.className = 'wd';
+    wd.innerHTML = RU_WEEKDAYS.map((d) => `<span>${d.toUpperCase()}</span>`).join('');
+    sheet.appendChild(wd);
+
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    let filled = 0;
+
+    monthMatrix(m.year, m.month).forEach((week, w) => {
+      week.forEach((day, c) => {
+        const box = document.createElement('div');
+        box.className = 'cell';
+        if (!day) {
+          box.style.visibility = 'hidden';
+          grid.appendChild(box);
+          return;
+        }
+        const pl = m.cells[day];
+        const asset = pl ? assets.get(pl.photoId) : null;
+        if (pl && asset) {
+          filled++;
+          box.classList.add('has');
+          if (m.white?.[day]) box.classList.add('light');
+          // внутри недели фото падают почти одновременно, недели — по очереди
+          box.style.setProperty('--d', `${c * 45}ms`);
+          box.dataset.week = String(w);
+          box.appendChild(makeImg(asset, pl));
+        }
+        const num = document.createElement('span');
+        num.className = 'num';
+        num.textContent = String(day);
+        box.appendChild(num);
+        grid.appendChild(box);
+      });
+    });
+    sheet.appendChild(grid);
+    sheet.dataset.filled = String(filled);
+    sheet.dataset.weeks = String(monthMatrix(m.year, m.month).length);
+    return sheet;
+  }
+
+  /** кадр внутри клетки — та же математика, что в превью и в PDF */
+  function makeImg(asset: Asset, pl: Placement) {
+    const img = document.createElement('img');
+    img.src = asset.url;
+    const rot = ((pl.rotate % 360) + 360) % 360;
+    const sw = rot % 180 === 0 ? asset.w : asset.h;
+    const sh = rot % 180 === 0 ? asset.h : asset.w;
+    const r = coverRect(sw, sh, 100, 100, pl);
+    const zoom = r.dw / sw;
+    img.style.width = `${asset.w * zoom}%`;
+    img.style.height = `${asset.h * zoom}%`;
+    img.style.marginLeft = `${r.dx + r.dw / 2 - 50}%`;
+    img.style.marginTop = `${r.dy + r.dh / 2 - 50}%`;
+    img.style.setProperty('--rot', `${rot}deg`);
+    img.style.transform = `translate(-50%, -50%) rotate(${rot}deg)`;
+    return img;
+  }
+
+  /* ---------- крупный план дня ---------- */
+
+  let zoomEl: HTMLElement | null = null;
+  let target: HTMLElement | null = null;
+  /** какие дни уже показывали крупно — чтобы не повторяться в одном прогоне */
+  let shown = new Set<HTMLElement>();
+
+  /** выбираем случайный день и подводим к нему курсор */
+  function pointAt(sheet: HTMLElement) {
+    const cells = Array.from(sheet.querySelectorAll<HTMLElement>('.cell.has.in')).filter(
+      (c) => !shown.has(c),
+    );
+    if (!cells.length) return;
+    target = cells[Math.floor(Math.random() * cells.length)];
+    shown.add(target);
+
+    const r = target.getBoundingClientRect();
+    const base = reel.getBoundingClientRect();
+    const cur = $('cursor');
+    cur.classList.remove('tap');
+    cur.classList.add('on');
+    cur.style.left = `${r.left - base.left + r.width * 0.62}px`;
+    cur.style.top = `${r.top - base.top + r.height * 0.62}px`;
+  }
+
+  function tapNow() {
+    const cur = $('cursor');
+    cur.classList.remove('tap');
+    void cur.offsetWidth;
+    cur.classList.add('tap');
+  }
+
+  function zoomInto() {
+    const cell = target;
+    $('cursor').classList.remove('on');
+    if (!cell) return;
+    const from = cell.getBoundingClientRect();
+    const base = reel.getBoundingClientRect();
+
+    const el = document.createElement('div');
+    el.className = 'zoom';
+    el.innerHTML = cell.innerHTML;
+    Object.assign(el.style, {
+      left: `${from.left - base.left}px`,
+      top: `${from.top - base.top}px`,
+      width: `${from.width}px`,
+      height: `${from.height}px`,
+    });
+    reel.appendChild(el);
+    zoomEl = el;
+    el.dataset.from = JSON.stringify({
+      x: from.left - base.left,
+      y: from.top - base.top,
+      w: from.width,
+      h: from.height,
+    });
+
+    // следующим кадром — раскрываем на весь лист
+    requestAnimationFrame(() => {
+      const size = base.width * 0.74;
+      Object.assign(el.style, {
+        left: `${(base.width - size) / 2}px`,
+        top: `${(base.height - size) / 2}px`,
+        width: `${size}px`,
+        height: `${size}px`,
+      });
+    });
+  }
+
+  function zoomBack() {
+    const el = zoomEl;
+    if (!el) return;
+    const from = JSON.parse(el.dataset.from || '{}');
+    Object.assign(el.style, {
+      left: `${from.x}px`,
+      top: `${from.y}px`,
+      width: `${from.w}px`,
+      height: `${from.h}px`,
+    });
+    window.setTimeout(() => el.remove(), 950);
+    zoomEl = null;
+  }
+
+  /* ---------- таймлайн ---------- */
+
+  let timer: number | undefined;
+
+  function play() {
+    clearTimeout(timer);
+    zoomEl?.remove();
+    zoomEl = null;
+    shown = new Set();
+    reel.querySelectorAll('.zoom').forEach((z) => z.remove());
+    reel.classList.remove('exporting', 'paper', 'end');
+    cover?.classList.remove('gone', 'quick');
+    sheets.forEach((s, i) => {
+      s.classList.remove('gone', 'intro', 'quick');
+      // первая страница начинается пустой, остальные уже заполнены
+      s.querySelectorAll('.cell.has').forEach((c) => {
+        c.classList.toggle('in', i > 0);
+        c.classList.toggle('instant', i > 0);
+      });
+    });
+    void reel.offsetWidth; // форс-reflow — иначе keyframes не перезапустятся
+
+    type Step = { run: () => void; dur: number; hold?: boolean };
+    const steps: Step[] = [];
+
+    // 1. обложка и её открытие
+    if (cover) {
+      steps.push({ run: () => {}, dur: T.cover, hold: true });
+      steps.push({ run: () => cover!.classList.add('gone'), dur: T.open });
+    }
+
+    // 2. шапка месяца
+    steps.push({ run: () => sheets[0].classList.add('intro'), dur: T.intro });
+
+    // 3. фото влетают неделя за неделей
+    const weeks = Number(sheets[0].dataset.weeks || 5);
+    for (let w = 0; w < weeks; w++) {
+      steps.push({
+        run: () =>
+          sheets[0]
+            .querySelectorAll<HTMLElement>(`.cell.has[data-week="${w}"]`)
+            .forEach((c) => c.classList.add('in')),
+        dur: T.week,
+      });
+    }
+    steps.push({ run: () => {}, dur: T.look, hold: true });
+
+    // 4. по нескольким кадрам «кликают»: курсор подъезжает, фото открывается и закрывается
+    for (let z = 0; z < (T.zooms ?? 1); z++) {
+      steps.push({ run: () => pointAt(sheets[0]), dur: T.point });
+      steps.push({ run: () => tapNow(), dur: T.tap });
+      steps.push({ run: () => zoomInto(), dur: T.zoomIn });
+      steps.push({ run: () => {}, dur: T.zoomHold, hold: true });
+      steps.push({ run: () => zoomBack(), dur: T.zoomOut });
+    }
+
+    // 5. листаем остальные месяцы
+    for (let i = 1; i < sheets.length; i++) {
+      steps.push({ run: () => sheets[i - 1].classList.add('gone'), dur: T.flip });
+      steps.push({ run: () => {}, dur: T.look, hold: true });
+    }
+
+    // 6. сборка PDF
+    steps.push({ run: () => reel.classList.add('exporting'), dur: T.build });
+
+    // 7. книга ложится на стол — страницы остаются как есть, без рывка
+    steps.push({ run: () => reel.classList.add('paper'), dur: T.paper });
+
+    // 8. книга закрывается: страницы одна за другой возвращаются к обложке — и стоп
+    const stack = [cover, ...sheets].filter(Boolean) as HTMLElement[];
+    for (let i = stack.length - 1; i >= 0; i--) {
+      steps.push({
+        run: () => {
+          stack.forEach((s) => s.classList.add('quick'));
+          stack[i].classList.remove('gone');
+        },
+        dur: T.fastFlip,
+      });
+    }
+
+    steps.push({ run: () => reel.classList.add('end'), dur: T.end });
+
+    // подтягиваем до целевой длины: добираем паузами, а не скоростью
+    const total = steps.reduce((n, s) => n + s.dur, 0);
+    const holds = steps.filter((s) => s.hold);
+    if (total < TARGET && holds.length) {
+      const extra = (TARGET - total) / holds.length;
+      holds.forEach((s) => (s.dur += extra));
+    }
+
+    const next = (i: number) => {
+      if (i >= steps.length) return;
+      steps[i].run();
+      timer = window.setTimeout(() => next(i + 1), steps[i].dur);
+    };
+    next(0);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' || e.key.toLowerCase() === 'r') {
+      e.preventDefault();
+      play();
+    }
+    if (e.key.toLowerCase() === 'h') $('hint').classList.toggle('off');
+  });
+
+  loadMonths()
+    .then((months) => {
+      const book = $('book');
+      sheets = months.map((m, i) => buildSheet(m, i, months.length));
+      sheets.forEach((s) => book.appendChild(s));
+
+      // обложка кладётся поверх стопки и открывается первой
+      cover = document.createElement('div');
+      cover.className = 'sheet cover';
+      cover.style.zIndex = String(months.length + 1);
+      cover.innerHTML =
+        `<p class="eyebrow">БУМАЖНЫЙ ДНЕВНИК</p>` +
+        `<p class="big">${months[0].year}</p>` +
+        `<span class="rule"></span>` +
+        `<p class="sub">${months.length > 1 ? 'МЕСЯЦ ЗА МЕСЯЦЕМ' : 'ОДИН МЕСЯЦ'}</p>`;
+      book.appendChild(cover);
+    })
+    .catch(() => {})
+    .finally(() => window.setTimeout(play, 500));
+</script>

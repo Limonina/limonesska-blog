@@ -1,0 +1,1048 @@
+---
+/**
+ * /photobook — конструктор печатного дневника: месячная сетка + фото по датам → PDF для типографии.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import uiCyr from '@fontsource/manrope/files/manrope-cyrillic-400-normal.woff?url';
+import uiLat from '@fontsource/manrope/files/manrope-latin-400-normal.woff?url';
+import dispCyr from '@fontsource/playfair-display/files/playfair-display-cyrillic-400-normal.woff?url';
+import dispLat from '@fontsource/playfair-display/files/playfair-display-latin-400-normal.woff?url';
+---
+
+<BaseLayout title="Дневник на печать — месячная сетка">
+  <section class="pb">
+    <header class="pb-head">
+      <h1>Дневник на печать</h1>
+      <p class="lead">
+        Месяц на страницу, фото по своим дням. На выходе — PDF, готовый для типографии:
+        вылеты, линии реза по ячейкам, текст в кривых.
+      </p>
+    </header>
+
+    <div class="pb-grid">
+      <aside
+        class="pb-panel"
+        data-ui={`${uiCyr}|${uiLat}`}
+        data-display={`${dispCyr}|${dispLat}`}
+      >
+        <h2>Книга</h2>
+        <label class="fld">
+          <span>Формат</span>
+          <select id="f-format"></select>
+        </label>
+
+        <h2>Сетка</h2>
+        <label class="chk"><input id="o-title" type="checkbox" /><span>Название месяца</span></label>
+        <label class="chk"><input id="o-week" type="checkbox" /><span>Дни недели</span></label>
+        <label class="chk"><input id="o-num" type="checkbox" /><span>Числа</span></label>
+        <label class="chk"><input id="o-round" type="checkbox" /><span>Скруглённые углы фото</span></label>
+
+        <h2>Фото</h2>
+        <div class="drop" id="drop">
+          <input
+            id="f-files"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+            multiple
+            hidden
+          />
+          <button type="button" id="pick">Выбрать фото</button>
+          <p class="hint">или перетащи сюда · JPEG, PNG, WebP</p>
+        </div>
+        <div class="acts">
+          <button type="button" id="clear">Очистить месяц</button>
+          <button type="button" id="reset">Удалить всё</button>
+        </div>
+        <ul class="note how">
+          <li>Перетащи фото на нужный день — или выбери его кликом и щёлкни по дню.</li>
+          <li>В ячейке: тянуть — двигать кадр, колесо — приблизить, ↻ — повернуть, × — убрать.</li>
+          <li>Клик по числу — белое или чёрное, чтобы читалось на любом фото.</li>
+          <li>Стрелки ‹ › над сеткой — другой месяц; в PDF уйдут все, где есть фото.</li>
+          <li>«Собрать PDF» — файл для типографии: вылеты 5 мм, 300 dpi, текст в кривых.</li>
+          <li>
+            Фото и раскладка хранятся в этом браузере и остаются после перезагрузки.
+            Никуда не отправляются; «Удалить всё» стирает их насовсем.
+          </li>
+        </ul>
+        <div class="pool" id="pool"></div>
+
+        <button type="button" id="export" class="cta">Собрать PDF</button>
+        <button type="button" id="story" class="cta ghost">Картинка для сторис</button>
+        <p class="status" id="status"></p>
+        <ul class="warns" id="warns"></ul>
+      </aside>
+
+      <main class="pb-book">
+        <div class="pager">
+          <button type="button" id="prev" aria-label="Предыдущий месяц">‹</button>
+          <span id="pager-label"></span>
+          <button type="button" id="next" aria-label="Следующий месяц">›</button>
+        </div>
+        <p class="cell-size" id="cell-size"></p>
+        <div id="book"></div>
+      </main>
+    </div>
+  </section>
+</BaseLayout>
+
+<style is:global>
+  .pb {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .pb-head {
+    margin-bottom: 2rem;
+  }
+  .pb-head h1 {
+    font-family: var(--font-display);
+    font-size: var(--size-mega);
+    margin: 0 0 0.5rem;
+  }
+  .pb-head .lead {
+    font-family: var(--font-vollkorn);
+    font-size: var(--size-medium);
+    color: var(--text-muted);
+    max-width: 46ch;
+    margin: 0;
+  }
+
+  .pb-grid {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .pb-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .pb-panel {
+    position: sticky;
+    top: 1.5rem;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 1.1rem;
+    font-family: var(--font-ui);
+    font-size: var(--size-small);
+  }
+  .pb-panel h2 {
+    font-family: var(--font-ui);
+    font-size: var(--size-small);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin: 1.4rem 0 0.7rem;
+  }
+  .pb-panel h2:first-child {
+    margin-top: 0;
+  }
+
+  .fld {
+    display: block;
+    margin-bottom: 0.6rem;
+  }
+  .fld span {
+    display: block;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+  }
+  .fld input,
+  .fld select {
+    width: 100%;
+    padding: 0.4rem 0.5rem;
+    font: inherit;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+  }
+  .fld-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+  .chk {
+    display: flex;
+    gap: 0.45rem;
+    align-items: center;
+    margin-bottom: 0.35rem;
+    cursor: pointer;
+  }
+
+  .pb-panel button {
+    font: inherit;
+    cursor: pointer;
+    padding: 0.45rem 0.7rem;
+    border-radius: 7px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    color: var(--text);
+  }
+  .pb-panel button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .cta {
+    width: 100%;
+    margin-top: 0.9rem;
+    background: var(--text) !important;
+    color: var(--card-bg) !important;
+    border-color: var(--text) !important;
+    padding: 0.6rem !important;
+  }
+  .cta:hover {
+    opacity: 0.88;
+  }
+  .cta.ghost {
+    margin-top: 0.4rem;
+    background: var(--bg) !important;
+    color: var(--text) !important;
+    border-color: var(--line) !important;
+  }
+  .cta.ghost:hover {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+    opacity: 1;
+  }
+  .acts {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin-top: 0.6rem;
+  }
+
+  .drop {
+    border: 1px dashed var(--line);
+    border-radius: 9px;
+    padding: 0.9rem;
+    text-align: center;
+  }
+  .drop.over {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+  .drop .hint {
+    margin: 0.4rem 0 0;
+    color: var(--text-muted);
+  }
+
+  .pool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 0.6rem;
+  }
+  .pool figure {
+    position: relative;
+    width: 52px;
+    height: 52px;
+    margin: 0;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 2px solid transparent;
+    cursor: grab;
+  }
+  .pool figure.sel {
+    border-color: var(--accent);
+  }
+  .pool figure.used::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: color-mix(in srgb, var(--bg) 55%, transparent);
+  }
+  .pool img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .status {
+    margin: 0.6rem 0 0;
+    color: var(--text-muted);
+  }
+  .warns {
+    margin: 0.5rem 0 0;
+    padding-left: 1rem;
+    color: var(--accent);
+  }
+  .warns li {
+    margin-bottom: 0.25rem;
+  }
+
+  .note {
+    margin: 0.2rem 0 0;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+  .how {
+    margin: 0.7rem 0 0;
+    padding-left: 1rem;
+  }
+  .how li {
+    margin-bottom: 0.35rem;
+  }
+
+  /* --- листалка --- */
+  .pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    font-family: var(--font-ui);
+    font-size: var(--size-small);
+    color: var(--text-muted);
+  }
+  .pager button {
+    font: inherit;
+    font-size: 1.3rem;
+    line-height: 1;
+    width: 2rem;
+    height: 2rem;
+    cursor: pointer;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--card-bg);
+    color: var(--text);
+  }
+  .pager button:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .pager button:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+  .cell-size {
+    margin: -0.6rem 0 1.2rem;
+    text-align: center;
+    font-family: var(--font-ui);
+    font-size: var(--size-small);
+    color: var(--text-muted);
+  }
+
+  /* --- сетка --- */
+  .spread {
+    margin-bottom: 2rem;
+  }
+  .pages {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    width: fit-content;
+    margin: 0 auto;
+  }
+  .page {
+    position: relative;
+    color: var(--text);
+  }
+  .page .m-title {
+    position: absolute;
+    font-family: var(--font-display);
+    line-height: 1.15;
+  }
+  /* название месяца во внешнем поле — читается снизу вверх */
+  .page .m-title.vert {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    white-space: nowrap;
+  }
+  .page .m-wd {
+    position: absolute;
+    font-family: var(--font-ui);
+    text-align: center;
+    color: var(--text-muted);
+    line-height: 1;
+  }
+  .cell {
+    position: absolute;
+    overflow: hidden;
+  }
+  .cell.round,
+  .cell.round img {
+    border-radius: 8%;
+  }
+  .cell.empty {
+    outline: 1px solid var(--line);
+  }
+  .cell.over {
+    outline: 2px solid var(--accent);
+  }
+  .cell img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    object-fit: cover;
+    display: block;
+  }
+  /* число дня — в углу клетки, без подложки */
+  .page .num {
+    position: absolute;
+    font-family: var(--font-ui);
+    line-height: 1;
+    color: var(--text);
+    cursor: pointer;
+    z-index: 1;
+  }
+  .page .num.light {
+    color: #fff;
+  }
+  .cell .rm,
+  .cell .rot {
+    position: absolute;
+    top: 2px;
+    width: 17px;
+    height: 17px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    font-size: 11px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    z-index: 2;
+  }
+  .cell .rm {
+    right: 2px;
+  }
+  .cell .rot {
+    right: 22px;
+    font-size: 13px;
+  }
+  /* глиф стрелки сидит выше базовой линии — правим оптически */
+  .cell .rot span {
+    display: block;
+    transform: translateY(-0.5px);
+  }
+  .cell:hover .rm,
+  .cell:hover .rot {
+    opacity: 1;
+  }
+</style>
+
+<script>
+  import { FORMATS, DEFAULT_SETTINGS, getFormat, pageGeom, type BookSettings } from '../lib/photobook/formats';
+  import {
+    planSheets,
+    sheetLayout,
+    monthTitle,
+    type MonthOpts,
+    type SplitMode,
+    type Sheet,
+  } from '../lib/photobook/calendar';
+  import { coverRect, defaultPlacement, type PhotoAsset, type Placement } from '../lib/photobook/render';
+  import { readShotDate } from '../lib/photobook/exif';
+  import { buildPdf, type MonthPage } from '../lib/photobook/pdf';
+  import { allPhotos, putPhoto, putState, getState, clearAll } from '../lib/photobook/storage';
+  import { renderStory } from '../lib/photobook/story';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+
+  // техника печати фиксирована — пользователь её не крутит
+  const settings: BookSettings = {
+    ...DEFAULT_SETTINGS,
+    format: 'a4l',
+    bleed: 5,
+    margin: 10,
+    gutter: 16,
+    gap: 2,
+    dpi: 300,
+    cropMarks: false,
+  };
+  const opts: MonthOpts = {
+    showTitle: true,
+    showWeekdays: true,
+    showDayNumbers: true,
+    rounded: true,
+  };
+  const split: SplitMode = 'auto';
+
+  const assets = new Map<string, PhotoAsset & { date: Date | null }>();
+  /** месяцы книги, ключ «год-месяц»; заводятся по мере того, как их листают или заполняют */
+  const store = new Map<string, MonthPage>();
+  /** открытый месяц — сквозной номер, год × 12 + месяц */
+  let cursor = new Date().getFullYear() * 12 + new Date().getMonth();
+  let selected: string | null = null;
+  let uid = 0;
+
+  const key = (year: number, month: number) => `${year}-${month}`;
+  const ym = (idx: number) => ({ year: Math.floor(idx / 12), month: ((idx % 12) + 12) % 12 });
+
+  function getMonth(year: number, month: number): MonthPage {
+    const k = key(year, month);
+    let m = store.get(k);
+    if (!m) {
+      m = { year, month, cells: {} };
+      store.set(k, m);
+    }
+    return m;
+  }
+
+  /* ---------- сохранение (IndexedDB этого браузера) ---------- */
+
+  let saveTimer = 0;
+  /** раскладка пишется на диск с небольшой задержкой — чтобы не дёргать базу на каждый пиксель */
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = window.setTimeout(() => {
+      putState({
+        version: 1,
+        format: settings.format,
+        opts,
+        cursor,
+        months: [...store.values()].filter(
+          (m) => Object.keys(m.cells).length || Object.keys(m.white ?? {}).length,
+        ),
+      }).catch(() => {});
+    }, 400);
+  }
+
+  async function restore() {
+    const [photos, state] = await Promise.all([
+      allPhotos().catch(() => []),
+      getState<any>().catch(() => undefined),
+    ]);
+
+    for (const p of photos) {
+      assets.set(p.id, {
+        id: p.id,
+        name: p.name,
+        url: URL.createObjectURL(p.blob),
+        w: p.w,
+        h: p.h,
+        date: p.date ? new Date(p.date) : null,
+      });
+      const n = Number(p.id.replace(/\D/g, ''));
+      if (n > uid) uid = n;
+    }
+
+    if (state) {
+      if (state.format) settings.format = state.format;
+      Object.assign(opts, state.opts ?? {});
+      if (typeof state.cursor === 'number') cursor = state.cursor;
+      for (const m of state.months ?? []) {
+        // фото могло не сохраниться — такие дни просто пропускаем
+        const cells: MonthPage['cells'] = {};
+        for (const [day, pl] of Object.entries(m.cells ?? {})) {
+          if (assets.has((pl as Placement).photoId)) cells[Number(day)] = pl as Placement;
+        }
+        store.set(key(m.year, m.month), { year: m.year, month: m.month, cells, white: m.white ?? {} });
+      }
+      // подтянуть значения в поля панели
+      $<HTMLSelectElement>('f-format').value = settings.format;
+      $<HTMLInputElement>('o-title').checked = opts.showTitle;
+      $<HTMLInputElement>('o-week').checked = opts.showWeekdays;
+      $<HTMLInputElement>('o-num').checked = opts.showDayNumbers;
+      $<HTMLInputElement>('o-round').checked = opts.rounded;
+    }
+  }
+
+  /** что уйдёт в PDF: все месяцы с фото по порядку (или хотя бы открытый) */
+  function bookMonths(): MonthPage[] {
+    const filled = [...store.values()]
+      .filter((m) => Object.keys(m.cells).length)
+      .sort((a, b) => a.year * 12 + a.month - (b.year * 12 + b.month));
+    if (filled.length) return filled;
+    const { year, month } = ym(cursor);
+    return [getMonth(year, month)];
+  }
+
+  /* ---------- панель ---------- */
+
+  $<HTMLSelectElement>('f-format').innerHTML = FORMATS.map(
+    (f) => `<option value="${f.id}">${f.name} · ${f.hint}</option>`,
+  ).join('');
+  const bind = (id: string, get: () => any, set: (v: any) => void, cast: (v: string) => any) => {
+    const el = $<HTMLInputElement>(id);
+    if (el.type === 'checkbox') el.checked = Boolean(get());
+    else el.value = String(get());
+    el.addEventListener('change', () => {
+      set(el.type === 'checkbox' ? el.checked : cast(el.value));
+      renderBook();
+      renderPool();
+    });
+  };
+
+  const S = (k: keyof BookSettings) => [() => settings[k], (v: any) => ((settings as any)[k] = v)] as const;
+  const O = (k: keyof MonthOpts) => [() => opts[k], (v: any) => ((opts as any)[k] = v)] as const;
+
+  bind('f-format', ...S('format'), String);
+  bind('o-title', ...O('showTitle'), Boolean);
+  bind('o-week', ...O('showWeekdays'), Boolean);
+  bind('o-num', ...O('showDayNumbers'), Boolean);
+  bind('o-round', ...O('rounded'), Boolean);
+
+  /* ---------- фото ---------- */
+
+  const drop = $('drop');
+  const filesInput = $<HTMLInputElement>('f-files');
+  $('pick').addEventListener('click', () => filesInput.click());
+  filesInput.addEventListener('change', () => addFiles(filesInput.files));
+
+  ['dragenter', 'dragover'].forEach((ev) =>
+    drop.addEventListener(ev, (e) => {
+      e.preventDefault();
+      drop.classList.add('over');
+    }),
+  );
+  ['dragleave', 'drop'].forEach((ev) =>
+    drop.addEventListener(ev, (e) => {
+      e.preventDefault();
+      drop.classList.remove('over');
+    }),
+  );
+  drop.addEventListener('drop', (e: DragEvent) => addFiles(e.dataTransfer?.files ?? null));
+
+  /** браузер не умеет рисовать HEIC/HEIF — такие файлы не берём */
+  const SUPPORTED = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp'];
+  const isHeic = (f: File) =>
+    /\.(heic|heif)$/i.test(f.name) || f.type === 'image/heic' || f.type === 'image/heif';
+
+  async function addFiles(list: FileList | null) {
+    if (!list) return;
+    const rejected: string[] = [];
+    const added: (PhotoAsset & { date: Date | null })[] = [];
+    for (const file of Array.from(list)) {
+      if (isHeic(file) || (file.type && !SUPPORTED.includes(file.type))) {
+        rejected.push(file.name);
+        continue;
+      }
+      if (!file.type.startsWith('image/')) continue;
+      const url = URL.createObjectURL(file);
+      const [dims, exif] = await Promise.all([
+        new Promise<{ w: number; h: number }>((res) => {
+          const img = new Image();
+          img.onload = () => res({ w: img.naturalWidth, h: img.naturalHeight });
+          img.onerror = () => res({ w: 0, h: 0 });
+          img.src = url;
+        }),
+        readShotDate(file),
+      ]);
+      const id = `p${++uid}`;
+      const asset = {
+        id,
+        name: file.name,
+        url,
+        w: dims.w,
+        h: dims.h,
+        // только реальная дата съёмки из EXIF: дата файла врёт после копирований
+        // и раскидывала фото по случайным числам
+        date: exif,
+      };
+      assets.set(id, asset);
+      added.push(asset);
+      // сам файл кладём в базу браузера — переживёт перезагрузку
+      putPhoto({
+        id,
+        name: file.name,
+        w: dims.w,
+        h: dims.h,
+        date: exif ? exif.getTime() : null,
+        blob: file,
+      }).catch(() => {});
+    }
+    const parts = [
+      added.length ? `Загружено: ${added.length}` : '',
+      rejected.length ? `HEIC не открывается браузером: ${rejected.length}` : '',
+    ].filter(Boolean);
+    $('status').textContent = parts.join(' · ');
+
+    renderPool();
+  }
+
+  $('clear').addEventListener('click', () => {
+    const { year, month } = ym(cursor);
+    const m = getMonth(year, month);
+    m.cells = {};
+    m.white = {};
+    renderBook();
+    renderPool();
+  });
+
+  $('reset').addEventListener('click', async () => {
+    if (!confirm('Удалить все фото и раскладку из этого браузера?')) return;
+    assets.forEach((a) => URL.revokeObjectURL(a.url));
+    assets.clear();
+    store.clear();
+    selected = null;
+    cursor = new Date().getFullYear() * 12 + new Date().getMonth();
+    await clearAll().catch(() => {});
+    $('status').textContent = 'Всё очищено';
+    renderBook();
+    renderPool();
+  });
+
+  function usedIds(): Set<string> {
+    const s = new Set<string>();
+    store.forEach((p) => Object.values(p.cells).forEach((pl) => s.add(pl.photoId)));
+    return s;
+  }
+
+  function renderPool() {
+    const pool = $('pool');
+    const used = usedIds();
+    pool.innerHTML = '';
+    for (const a of assets.values()) {
+      const fig = document.createElement('figure');
+      fig.className = `${selected === a.id ? 'sel' : ''} ${used.has(a.id) ? 'used' : ''}`;
+      fig.draggable = true;
+      // дата съёмки остаётся подсказкой — по ней понятно, на какой день класть
+      fig.title = `${a.name} · ${a.w}×${a.h}${a.date ? ` · снято ${a.date.toLocaleDateString('ru-RU')}` : ''}`;
+      fig.innerHTML = `<img src="${a.url}" alt="">`;
+      fig.addEventListener('click', () => {
+        selected = selected === a.id ? null : a.id;
+        renderPool();
+      });
+      fig.addEventListener('dragstart', (e) => e.dataTransfer?.setData('text/plain', a.id));
+      pool.appendChild(fig);
+    }
+  }
+
+  /* ---------- превью ---------- */
+
+  function renderBook() {
+    const book = $('book');
+    const f = getFormat(settings.format);
+    const pageMm = f.trimW;
+    const avail = Math.min(book.clientWidth || 780, 880);
+
+    const { year, month } = ym(cursor);
+    const mp = getMonth(year, month);
+    const group = planSheets([mp], split, f.trimW, f.trimH);
+
+    // листы книги идут подряд, от номера открытого месяца зависит сторона корешка
+    const order = bookMonths().findIndex((m) => m.year === year && m.month === month);
+    const base = Math.max(0, order) * group.length;
+
+    // ширина строки всегда одна и та же, поэтому горизонтальный лист
+    // выглядит ровно как разворот двух вертикальных
+    const sc = avail / (pageMm * group.length);
+
+    $('pager-label').textContent = monthTitle(year, month);
+
+    // размер напечатанного фото — чтобы было понятно, что получится на бумаге
+    const probe = sheetLayout(pageGeom(settings, 'left'), group[0], opts).cells[0].rect;
+    const cm = (mm: number) => (mm / 10).toFixed(1).replace('.', ',');
+    $('cell-size').textContent = `Фото на печати ≈ ${cm(probe.w)} × ${cm(probe.h)} см`;
+
+    book.innerHTML = '';
+    const wrap = document.createElement('div');
+    wrap.className = 'spread';
+    const row = document.createElement('div');
+    row.className = 'pages';
+    group.forEach((sheet, gi) => row.appendChild(renderPage(sheet, mp, base + gi, sc)));
+    wrap.appendChild(row);
+    book.appendChild(wrap);
+
+    save();
+  }
+
+  $('prev').addEventListener('click', () => {
+    cursor--;
+    renderBook();
+  });
+  $('next').addEventListener('click', () => {
+    cursor++;
+    renderBook();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.target !== document.body) return;
+    if (e.key === 'ArrowLeft') {
+      cursor--;
+      renderBook();
+    }
+    if (e.key === 'ArrowRight') {
+      cursor++;
+      renderBook();
+    }
+  });
+
+  const clamp = (v: number) => Math.max(-1, Math.min(1, v));
+
+  /**
+   * Превью считает ровно то же, что coverRect при сборке PDF:
+   * картинка кладётся в ячейку своим размером, а не через object-fit,
+   * иначе после приближения её нельзя было двигать по обеим осям.
+   * Возвращает свободный ход в пикселях — на него опирается перетаскивание.
+   */
+  function applyPlacement(
+    img: HTMLImageElement,
+    pl: Placement,
+    asset: PhotoAsset,
+    boxW: number,
+    boxH: number,
+  ) {
+    const rot = ((pl.rotate % 360) + 360) % 360;
+    // при 90/270 фото вписывается в ячейку «на боку» — стороны меняем местами
+    const sw = rot % 180 === 0 ? asset.w : asset.h;
+    const sh = rot % 180 === 0 ? asset.h : asset.w;
+    const r = coverRect(sw, sh, boxW, boxH, pl);
+    const zoom = r.dw / sw;
+
+    img.style.left = `${r.dx + r.dw / 2}px`;
+    img.style.top = `${r.dy + r.dh / 2}px`;
+    img.style.width = `${asset.w * zoom}px`;
+    img.style.height = `${asset.h * zoom}px`;
+    img.style.transform = `translate(-50%, -50%) rotate(${rot}deg)`;
+
+    return {
+      freeX: Math.max(0, r.dw - boxW) / 2,
+      freeY: Math.max(0, r.dh - boxH) / 2,
+    };
+  }
+
+  function renderPage(sheet: Sheet, mp: MonthPage, si: number, sc: number): HTMLElement {
+    const side: 'left' | 'right' = si % 2 === 0 ? 'left' : 'right';
+    const g = pageGeom(settings, side);
+    const geom = sheetLayout(g, sheet, opts);
+
+    // превью показывает страницу как в дневнике — по обрезному формату.
+    // вылеты, метки реза и прочая типографская обвязка добавляются при сборке PDF
+    const el = document.createElement('div');
+    el.className = 'page';
+    el.style.width = `${g.trimW * sc}px`;
+    el.style.height = `${g.trimH * sc}px`;
+
+    const frame = (cls: string, x: number, y: number, w: number, h: number) => {
+      const d = document.createElement('div');
+      d.className = cls;
+      Object.assign(d.style, {
+        left: `${x * sc}px`,
+        top: `${y * sc}px`,
+        width: `${w * sc}px`,
+        height: `${h * sc}px`,
+      });
+      return d;
+    };
+
+    if (geom.title) {
+      const vertical = geom.titleInMargin;
+      const t = frame(
+        `m-title${vertical ? ' vert' : ''}`,
+        geom.title.x,
+        geom.title.y + (vertical ? 0 : 2),
+        geom.title.w,
+        geom.title.h,
+      );
+      t.style.fontSize = `${(vertical ? Math.min(14, geom.title.w * 0.55) : 9) * sc}px`;
+      t.textContent = monthTitle(sheet.year, sheet.month);
+      el.appendChild(t);
+    }
+
+    for (const wd of geom.weekdays) {
+      const d = frame('m-wd', wd.rect.x, wd.rect.y, wd.rect.w, wd.rect.h);
+      d.style.fontSize = `${3 * sc}px`;
+      d.textContent = wd.label;
+      el.appendChild(d);
+    }
+
+    for (const cell of geom.cells) {
+      if (!cell.day) continue;
+      const day = cell.day;
+      const pl = mp.cells[day];
+      const asset = pl ? assets.get(pl.photoId) : null;
+      const box = frame(
+        `cell ${asset ? 'filled' : 'empty'} ${opts.rounded ? 'round' : ''}`,
+        cell.rect.x,
+        cell.rect.y,
+        cell.rect.w,
+        cell.rect.h,
+      );
+
+      let dragged = false;
+      if (asset && pl) {
+        box.innerHTML =
+          `<img src="${asset.url}" alt="">` +
+          `<button class="rot" title="повернуть"><span>↻</span></button>` +
+          `<button class="rm" title="убрать">×</button>`;
+        const img = box.querySelector('img') as HTMLImageElement;
+        const bw = cell.rect.w * sc;
+        const bh = cell.rect.h * sc;
+        let free = applyPlacement(img, pl, asset, bw, bh);
+
+        box.querySelector('.rm')!.addEventListener('click', (e) => {
+          e.stopPropagation();
+          delete mp.cells[day];
+          renderBook();
+          renderPool();
+        });
+        box.querySelector('.rot')!.addEventListener('click', (e) => {
+          e.stopPropagation();
+          pl.rotate = (pl.rotate + 90) % 360;
+          free = applyPlacement(img, pl, asset, bw, bh);
+          save();
+        });
+
+        // двигаем кадр внутри ячейки
+        box.addEventListener('pointerdown', (e: PointerEvent) => {
+          // кнопки ячейки (убрать / повернуть) обрабатывают клик сами
+          if ((e.target as HTMLElement).closest('button')) return;
+          e.preventDefault();
+          const startX = e.clientX;
+          const startY = e.clientY;
+          const from = { x: pl.offsetX, y: pl.offsetY };
+          dragged = false;
+          box.setPointerCapture(e.pointerId);
+
+          const move = (ev: PointerEvent) => {
+            const dx = ev.clientX - startX;
+            const dy = ev.clientY - startY;
+            if (Math.abs(dx) > 2 || Math.abs(dy) > 2) dragged = true;
+            // сдвиг курсора переводим в долю свободного хода — по каждой оси свой
+            if (free.freeX > 0) pl.offsetX = clamp(from.x + dx / free.freeX);
+            if (free.freeY > 0) pl.offsetY = clamp(from.y + dy / free.freeY);
+            free = applyPlacement(img, pl, asset, bw, bh);
+          };
+          const up = () => {
+            box.removeEventListener('pointermove', move);
+            box.removeEventListener('pointerup', up);
+            save();
+          };
+          box.addEventListener('pointermove', move);
+          box.addEventListener('pointerup', up);
+        });
+
+        // колесо — приблизить кадр
+        box.addEventListener(
+          'wheel',
+          (e: WheelEvent) => {
+            e.preventDefault();
+            pl.scale = Math.min(3, Math.max(1, pl.scale * (e.deltaY < 0 ? 1.08 : 1 / 1.08)));
+            free = applyPlacement(img, pl, asset, bw, bh);
+            save();
+          },
+          { passive: false },
+        );
+      }
+      if (opts.showDayNumbers) {
+        const white = Boolean(mp.white?.[day]);
+        const num = frame(
+          `num${white ? ' light' : ''}`,
+          cell.numRect.x,
+          cell.numRect.y,
+          cell.numRect.w,
+          cell.numRect.h,
+        );
+        num.style.fontSize = `${geom.daySize * sc}px`;
+        num.textContent = String(day);
+        num.title = 'клик — белое или чёрное число';
+        // на тёмном фото чёрное число не читается — переключаем на выворотку
+        num.addEventListener('click', (e) => {
+          e.stopPropagation();
+          mp.white = mp.white ?? {};
+          if (mp.white[day]) delete mp.white[day];
+          else mp.white[day] = true;
+          num.classList.toggle('light');
+          save();
+        });
+        el.appendChild(num);
+      }
+
+      box.addEventListener('click', () => {
+        if (dragged) return; // это было перетаскивание кадра, а не выбор фото
+        if (selected) {
+          mp.cells[day] = defaultPlacement(selected);
+          renderBook();
+          renderPool();
+        }
+      });
+      box.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        box.classList.add('over');
+      });
+      box.addEventListener('dragleave', () => box.classList.remove('over'));
+      box.addEventListener('drop', (e: DragEvent) => {
+        e.preventDefault();
+        box.classList.remove('over');
+        const id = e.dataTransfer?.getData('text/plain');
+        if (id && assets.has(id)) {
+          mp.cells[day] = defaultPlacement(id);
+          renderBook();
+          renderPool();
+        }
+      });
+
+      el.appendChild(box);
+    }
+
+    return el;
+  }
+
+  /* ---------- экспорт ---------- */
+
+  const panel = $('drop').closest('.pb-panel') as HTMLElement;
+  const fonts = {
+    ui: panel.dataset.ui!.split('|'),
+    display: panel.dataset.display!.split('|'),
+  };
+
+  $('export').addEventListener('click', async () => {
+    const status = $('status');
+    const warns = $('warns');
+    warns.innerHTML = '';
+    status.textContent = 'Собираю…';
+    try {
+      const list = bookMonths();
+      const { blob, warnings } = await buildPdf(
+        { settings, opts, split, months: list },
+        assets,
+        fonts,
+        (done, total) => (status.textContent = `Лист ${done} из ${total}…`),
+      );
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `дневник-${list[0].year}-${settings.format}.pdf`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      status.textContent = `Готово · ${(blob.size / 1048576).toFixed(1)} МБ`;
+      warns.innerHTML = warnings.map((w) => `<li>${w}</li>`).join('');
+    } catch (err) {
+      console.error(err);
+      status.textContent = `Ошибка: ${(err as Error).message}`;
+    }
+  });
+
+  // «итог месяца» картинкой 1080 × 1920 — открытый месяц, та же сетка
+  $('story').addEventListener('click', async () => {
+    const status = $('status');
+    status.textContent = 'Рисую картинку…';
+    try {
+      const { year, month } = ym(cursor);
+      const blob = await renderStory(getMonth(year, month), opts, assets, fonts);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `итог-месяца-${year}-${String(month + 1).padStart(2, '0')}.png`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      status.textContent = `Готово · ${(blob.size / 1048576).toFixed(1)} МБ · 1080 × 1920`;
+    } catch (err) {
+      console.error(err);
+      status.textContent = `Ошибка: ${(err as Error).message}`;
+    }
+  });
+
+  window.addEventListener('resize', () => renderBook());
+
+  restore()
+    .catch(() => {})
+    .finally(() => {
+      renderPool();
+      renderBook();
+    });
+</script>
