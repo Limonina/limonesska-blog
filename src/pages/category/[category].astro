@@ -1,5 +1,5 @@
 ---
-import { getEntries } from '../../utils/content';
+import { getEntries, slugOf } from '../../utils/content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import EntryList from '../../components/EntryList.astro';
 
@@ -26,7 +26,7 @@ export async function getStaticPaths() {
         .filter(({ e }) => e.data.category === category)
         .sort((a, b) => +b.e.data.pubDate - +a.e.data.pubDate)
         .map(({ e, kind, base }) => ({
-          href: `${base}/${e.id}`,
+          href: `${base}/${slugOf(e)}`,
           title: e.data.title,
           description: e.data.description,
           date: fmt(e.data.pubDate),

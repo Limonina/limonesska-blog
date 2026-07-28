@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getEntries } from '../../utils/content';
+import { getEntries, slugOf } from '../../utils/content';
 
 // ── Дневник тянет ТОЛЬКО свою коллекцию (личные записи по дням) ──
 const entries = await getEntries('diary');
@@ -28,7 +28,7 @@ const entriesData = entries.map((e) => {
     title: e.data.title ?? '',
     description: e.data.description ?? '',
     hasText: !!(e.body && e.body.trim()), // есть ли текст-запись (для «Читать запись»)
-    href: `/diary/${e.id}`,
+    href: `/diary/${slugOf(e)}`,
   };
 });
 

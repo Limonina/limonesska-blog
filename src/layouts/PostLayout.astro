@@ -171,7 +171,8 @@ const ogImage = (seg[0] === 'blog' || seg[0] === 'notes') ? `/og/${seg[seg.lengt
     }
     .post-back:hover { color: var(--color-accent); gap: 14px; }
     .post-back > span { display: inline-flex; align-items: center; line-height: 1; }
-    .post-back-arrow { font-size: 1.25em; line-height: 1; transform: translateY(-0.06em); }
+    /* глиф «←» ниже оптического центра прописных (у «Д» ещё и ножки) — поднимаем к центру капители */
+    .post-back-arrow { font-size: 1.25em; line-height: 1; transform: translateY(-0.105em); }
 
     /* ---- Метаинфо ---- */
     .post-metainfo {
@@ -465,7 +466,9 @@ const ogImage = (seg[0] === 'blog' || seg[0] === 'notes') ? `/og/${seg[seg.lengt
     .plb-img {
         max-width: 92vw; max-height: 92vh; object-fit: contain;
         border-radius: 8px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        opacity: 0; transition: opacity 0.22s ease;
     }
+    .plb-img.is-loaded { opacity: 1; }
     .plb-btn {
         position: absolute; background: none; border: none; color: #fff;
         cursor: pointer; opacity: 0.8; line-height: 1; transition: opacity 0.2s;
@@ -675,9 +678,27 @@ const ogImage = (seg[0] === 'blog' || seg[0] === 'notes') ? `/og/${seg[seg.lengt
             prevBtn.style.display = multi ? '' : 'none';
             nextBtn.style.display = multi ? '' : 'none';
             let idx = 0;
-            const show = (i) => { idx = (i + imgs.length) % imgs.length; lbImg.src = big(imgs[idx].currentSrc || imgs[idx].src); };
+            let token = 0;                      // защита от гонки при быстром листании
+            const srcAt = (i) => big(imgs[i].currentSrc || imgs[i].src);
+            const show = (i) => {
+                idx = (i + imgs.length) % imgs.length;
+                const url = srcAt(idx);
+                const my = ++token;
+                lbImg.classList.remove('is-loaded'); // прячем кадр — виден только тёмный фон
+                const pre = new Image();
+                pre.onload = () => {
+                    if (my !== token) return;        // пока грузилось — уже листнули дальше
+                    lbImg.src = url;
+                    lbImg.classList.add('is-loaded');
+                };
+                pre.src = url;
+                if (multi) {                         // подгружаем соседей заранее
+                    new Image().src = srcAt((idx + 1) % imgs.length);
+                    new Image().src = srcAt((idx - 1 + imgs.length) % imgs.length);
+                }
+            };
             const open = (i) => { show(i); lb.hidden = false; document.body.style.overflow = 'hidden'; };
-            const close = () => { lb.hidden = true; lbImg.src = ''; document.body.style.overflow = ''; };
+            const close = () => { lb.hidden = true; lbImg.classList.remove('is-loaded'); lbImg.src = ''; document.body.style.overflow = ''; };
             imgs.forEach((img, i) => img.addEventListener('click', () => open(i)));
             lb.querySelector('.plb-close').addEventListener('click', close);
             prevBtn.addEventListener('click', (e) => { e.stopPropagation(); show(idx - 1); });

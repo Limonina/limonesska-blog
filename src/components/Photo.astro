@@ -11,10 +11,12 @@ interface Props {
   caption?: string;
   alt?: string;
   crop?: string; // напр. "9:16" — обрезать вшитый пилларбокс (чёрные полосы в самом файле) по центру
+  gravity?: string; // куда сдвинуть окно кропа: center (по умолч.) | south | north | east | west…
+  shiftY?: string | number; // тонкий сдвиг окна кропа от центра по вертикали (доля высоты: 0.08 — на 8% вниз, -0.08 — вверх)
   rotate?: string | number; // угол поворота в градусах (Cloudinary a_…): 90 — из вертикали в горизонталь
   clear?: 'left' | 'right' | 'both'; // сбросить обтекание предыдущим float (чтобы фото встало с нового ряда, а не сбоку)
 }
-const { src, size = 'm', align = 'center', caption, alt, crop, rotate, clear } = Astro.props;
+const { src, size = 'm', align = 'center', caption, alt, crop, gravity = 'center', shiftY, rotate, clear } = Astro.props;
 
 // Видео Cloudinary отдаёт по пути /video/upload/ — рендерим <video> вместо <img>
 const isVideo = src.includes('/video/upload/');
@@ -25,7 +27,9 @@ const w = align === 'wide' ? 'w_1600' : widths[size];
 // crop/rotate — отдельными сегментами впереди: обрезка по центру и/или поворот.
 // После обрезки по соотношению дополнительно шейвим ~3% с краёв (w_0.94) —
 // съедает тонкую чёрную полосу вшитого пилларбокса у вертикальных видео.
-const cropT = (crop ? `c_crop,g_center,ar_${crop}/c_crop,g_center,w_0.94/` : '') + (rotate ? `a_${rotate}/` : '');
+const cropT =
+  (crop ? `c_crop,g_${gravity},ar_${crop}${shiftY ? `,y_${shiftY}` : ''}/c_crop,g_center,w_0.94/` : '') +
+  (rotate ? `a_${rotate}/` : '');
 const opt = (u: string) =>
   u.includes('res.cloudinary.com/') ? u.replace('/upload/', `/upload/${cropT}f_auto,q_auto,${w}/`) : u;
 // Видео: форсим mp4 (h264) — .mov Cloudinary отдаёт как QuickTime, не все браузеры играют

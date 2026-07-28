@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getEntries } from '../utils/content';
+import { getEntries, slugOf } from '../utils/content';
 
 // Индекс для клиентского поиска: заголовок + описание + теги + ПОЛНЫЙ текст
 // записи (для поиска «по всему»), по статьям, заметкам и дневнику.
@@ -28,7 +28,7 @@ export const GET: APIRoute = async () => {
       title: e.data.title || fmt(e.data.pubDate),
       description: e.data.description ?? '',
       tags: e.data.tags,
-      url: `${base}/${e.id}`,
+      url: `${base}/${slugOf(e)}`,
       kind,
       date: fmt(e.data.pubDate),
       ts: +e.data.pubDate,

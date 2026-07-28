@@ -13,8 +13,11 @@ interface Props {
 }
 const { srcs, crop, gravity = 'center', rotate, align = 'center' } = Astro.props;
 
-// после обрезки по соотношению шейвим ~3% с краёв — съедает вшитый пилларбокс (см. Photo.astro)
-const cropT = (crop ? `c_crop,g_${gravity},ar_${crop}/c_crop,g_center,w_0.94/` : '') + (rotate ? `a_${rotate}/` : '');
+// после обрезки по соотношению шейвим ~3% с краёв — съедает вшитый пилларбокс (только у видео, см. Photo.astro)
+const cropTf = (vid: boolean) =>
+  (crop ? `c_crop,g_${gravity},ar_${crop}/` + (vid ? 'c_crop,g_center,w_0.94/' : '') : '') +
+  (rotate ? `a_${rotate}/` : '');
+const cropT = cropTf(false);
 // ширина под ряд: делим текст на N кадров → каждому ~w_600 хватает с запасом
 const w = 'w_700';
 const opt = (u: string) =>
@@ -22,11 +25,11 @@ const opt = (u: string) =>
 const isVideo = (u: string) => u.includes('/video/upload/');
 const videoSrc = (u: string) =>
   u.includes('res.cloudinary.com/')
-    ? u.replace('/upload/', `/upload/${cropT}q_auto,${w}/`).replace(/\.\w+$/, '.mp4')
+    ? u.replace('/upload/', `/upload/${cropTf(true)}q_auto,${w}/`).replace(/\.\w+$/, '.mp4')
     : u;
 const poster = (u: string) =>
   u.includes('res.cloudinary.com/')
-    ? u.replace('/upload/', `/upload/${cropT}so_0,f_auto,q_auto,${w}/`).replace(/\.\w+$/, '.jpg')
+    ? u.replace('/upload/', `/upload/${cropTf(true)}so_0,f_auto,q_auto,${w}/`).replace(/\.\w+$/, '.jpg')
     : undefined;
 ---
 

@@ -1,6 +1,6 @@
 ---
 import { render } from 'astro:content';
-import { getEntries } from '../../utils/content';
+import { getEntries, slugOf } from '../../utils/content';
 import PostLayout from '../../layouts/PostLayout.astro';
 import Photo from '../../components/Photo.astro';
 import PhotoRow from '../../components/PhotoRow.astro';
@@ -18,10 +18,10 @@ export async function getStaticPaths() {
     return d !== 0 ? d : a.id.localeCompare(b.id);
   });
   const brief = (e) =>
-    e ? { slug: e.id, title: e.data.title ?? fmtDate(e.data.pubDate) } : null;
+    e ? { slug: slugOf(e), title: e.data.title ?? fmtDate(e.data.pubDate) } : null;
 
   return sorted.map((entry, i) => ({
-    params: { slug: entry.id },
+    params: { slug: slugOf(entry) },
     props: {
       entry,
       prev: brief(sorted[i - 1]), // день раньше
