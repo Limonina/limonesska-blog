@@ -995,6 +995,8 @@ import dispLat from '@fontsource/playfair-display/files/playfair-display-latin-4
     const warns = $('warns');
     warns.innerHTML = '';
     status.textContent = 'Собираю…';
+    // цель Метрики: клик по «Собрать PDF» (в dev счётчика нет — ym может отсутствовать)
+    (window as any).ym?.(110607267, 'reachGoal', 'pdf_export');
     try {
       const list = bookMonths();
       const { blob, warnings } = await buildPdf(
