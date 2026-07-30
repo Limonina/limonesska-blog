@@ -181,18 +181,49 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         .lg-arrow { color: var(--color-text-faint); }
 
         /* нет места по бокам (сетка 1000 + карточки) — панели складываются под календарь */
-        @media (max-width: 1680px) {
+        @media screen and (max-width: 1680px) {
             .moon.has-panel { max-width: 1000px; }
             .moon-stage { flex-wrap: wrap; }
             .moon-calendar { order: -1; width: 100%; flex-basis: 100%; }
             .moon-note, .moon-detail { flex: 1 1 260px; margin-top: 18px; }
         }
 
-        @media (max-width: 760px) {
+        /* планшет: панели под календарём идут в один столбец, а не в два узких */
+        @media screen and (max-width: 900px) {
+            .moon-note, .moon-detail { flex: 1 1 100%; margin-top: 14px; }
+        }
+
+        @media screen and (max-width: 760px) {
             .mc { border-radius: 9px; padding: 5px; }
             .mc-moon { width: 20px; height: 20px; }
             .mc-phase, .mc-voc, .mc-ecl { display: none; }
             .moon-grid, .moon-weekdays { gap: 5px; }
+            .moon-grid { min-height: 0; }
+            .moon-head { margin-bottom: 20px; }
+            .moon-bar { gap: 10px; margin-bottom: 16px; }
+            .moon-label { min-width: 0; font-size: var(--size-h3); }
+            .moon-legend { gap: 10px 14px; margin-top: 20px; }
+            .moon-detail, .moon-note { padding: 16px 18px; }
+        }
+
+        /* телефон: в ячейке остаются только число и луна, друг под другом */
+        @media screen and (max-width: 520px) {
+            .moon-grid, .moon-weekdays { gap: 3px; }
+            .moon-weekdays { font-size: 0.6rem; }
+            .mc { padding: 3px; border-radius: 7px; }
+            .mc-top { flex-direction: column; align-items: center; gap: 1px; }
+            .mc-date { font-size: 0.62rem; }
+            .mc.today .mc-date { width: 1.4em; height: 1.4em; }
+            .mc-arrow { display: none; }
+            .mc-moon { width: 17px; height: 17px; }
+            .mc-stripe { height: 3px; }
+            .moon-nav { width: 34px; height: 34px; font-size: 1.2rem; }
+        }
+
+        /* тач: ховера нет, ячейка не должна дёргаться при тапе */
+        @media (hover: none) {
+            .mc:hover { transform: none; box-shadow: none; border-color: var(--line); }
+            .mc.today:hover, .mc.is-selected:hover { border-color: var(--accent); }
         }
 
         /* ── Печать ── */
@@ -525,6 +556,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             } else {
                 notePanel.hidden = true;
             }
+
+            // на телефоне/планшете панели уезжают под календарь — подтягиваем их в кадр
+            if (window.matchMedia('(max-width: 900px)').matches) {
+                (notePanel.hidden ? detailPanel : notePanel)
+                    .scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
         }
 
         document.querySelectorAll('.moon-nav').forEach((b) => {
@@ -537,7 +574,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         });
 
         const printBtn = document.getElementById('moon-print-btn');
-        if (printBtn) printBtn.addEventListener('click', printYear);
+        if (printBtn) {
+            printBtn.addEventListener('click', printYear);
+            // с телефона печатать некуда — там то же окно печати сохраняет PDF,
+            // поэтому и называем действие честно (вёрстка страниц всё равно A4, как на пк)
+            if (window.matchMedia('(hover: none)').matches) {
+                printBtn.textContent = '⤓ Сохранить год в PDF';
+            }
+        }
 
         render();
     </script>

@@ -327,6 +327,11 @@ import dispLat from '@fontsource/playfair-display/files/playfair-display-latin-4
   }
 
   /* --- сетка --- */
+  /* на узких экранах лист держит минимальную ширину и скроллится по горизонтали */
+  .pb-book #book {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
   .spread {
     margin-bottom: 2rem;
   }
@@ -431,6 +436,57 @@ import dispLat from '@fontsource/playfair-display/files/playfair-display-latin-4
   .cell:hover .rm,
   .cell:hover .rot {
     opacity: 1;
+  }
+  /* --- телефоны и планшеты ---
+     блок держим в конце файла: правила ниже базовых, иначе не перебивают их */
+  @media screen and (max-width: 900px) {
+    /* в одну колонку липкая панель наезжает на сетку */
+    .pb-panel {
+      position: static;
+    }
+    /* иначе лист шире экрана растягивает колонку и ломает страницу */
+    .pb-book {
+      min-width: 0;
+    }
+  }
+  @media screen and (max-width: 600px) {
+    .pb-panel {
+      padding: 0.9rem;
+    }
+    /* меньше 16px — iOS зумит страницу при фокусе в поле */
+    .fld input,
+    .fld select {
+      font-size: 1rem;
+    }
+    .acts button {
+      flex: 1 1 auto;
+    }
+    .pb-panel button {
+      padding: 0.55rem 0.7rem;
+    }
+    .pool figure {
+      width: 46px;
+      height: 46px;
+    }
+    .pager button {
+      width: 2.4rem;
+      height: 2.4rem;
+    }
+  }
+
+  /* тач: ховера нет — кнопки ячейки видны всегда и крупнее под палец */
+  @media (hover: none) {
+    .cell .rm,
+    .cell .rot {
+      opacity: 1;
+      width: 22px;
+      height: 22px;
+      font-size: 13px;
+    }
+    .cell .rot {
+      right: 27px;
+      font-size: 15px;
+    }
   }
 </style>
 
@@ -718,7 +774,10 @@ import dispLat from '@fontsource/playfair-display/files/playfair-display-latin-4
     const book = $('book');
     const f = getFormat(settings.format);
     const pageMm = f.trimW;
-    const avail = Math.min(book.clientWidth || 780, 880);
+    // на телефоне ячейка не должна становиться нечитаемой: лист не уже 560px,
+    // а контейнер #book в этом случае скроллится по горизонтали
+    const room = book.clientWidth || 780;
+    const avail = Math.min(Math.max(room, 560), 880);
 
     const { year, month } = ym(cursor);
     const mp = getMonth(year, month);
@@ -750,6 +809,16 @@ import dispLat from '@fontsource/playfair-display/files/playfair-display-latin-4
 
     save();
   }
+
+  // поворот телефона / смена размера окна меняет масштаб листа — пересобираем
+  let resizeT: number | undefined;
+  let lastW = window.innerWidth;
+  window.addEventListener('resize', () => {
+    if (window.innerWidth === lastW) return;
+    lastW = window.innerWidth;
+    clearTimeout(resizeT);
+    resizeT = window.setTimeout(renderBook, 150);
+  });
 
   $('prev').addEventListener('click', () => {
     cursor--;
