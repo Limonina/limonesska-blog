@@ -17,8 +17,10 @@ export async function getStaticPaths() {
     const d = a.data.pubDate.getTime() - b.data.pubDate.getTime();
     return d !== 0 ? d : a.id.localeCompare(b.id);
   });
+  // fmtDate объявлен снаружи, но getStaticPaths выносится в отдельный чанк — дублируем локально
+  const fmt = (d) => d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
   const brief = (e) =>
-    e ? { slug: slugOf(e), title: e.data.title ?? fmtDate(e.data.pubDate) } : null;
+    e ? { slug: slugOf(e), title: e.data.title ?? fmt(e.data.pubDate) } : null;
 
   return sorted.map((entry, i) => ({
     params: { slug: slugOf(entry) },
