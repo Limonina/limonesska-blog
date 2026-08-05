@@ -1,0 +1,186 @@
+---
+// Мини-демо правила «тот же месяц или уже новый». Читатель тыкает в дни
+// (это «заменил фото») и видит, что решают два правила: старое в штуках и
+// нынешнее в долях. Использование в MDX: <MonthRule />
+interface Props {
+  days?: number; // сколько дней в месяце
+  limit?: number; // старое правило — сколько замен прощаем «штуками»
+  share?: number; // нынешнее правило — какая доля месяца может поменяться
+  caption?: string;
+}
+const {
+  days = 30,
+  limit = 20,
+  share = 0.5,
+  caption = 'Потыкай в дни — это как будто ты заменила там фото.',
+} = Astro.props;
+---
+
+<figure class="mrule" data-days={days} data-limit={limit} data-share={share}>
+    <div class="mrule-grid" aria-label="Дни месяца"></div>
+
+    <p class="mrule-count"><b>0</b> замен из <span class="mrule-total">{days}</span></p>
+
+    <div class="mrule-out">
+        <div class="mrule-row" data-rule="count">
+            <span class="mrule-rule">Как придумала сначала <i>штуками, до {limit} замен</i></span>
+            <span class="mrule-verdict"></span>
+        </div>
+        <div class="mrule-row" data-rule="share">
+            <span class="mrule-rule">Как сделала в итоге <i>долей, до половины месяца</i></span>
+            <span class="mrule-verdict"></span>
+        </div>
+    </div>
+
+    {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style is:global>
+    .mrule {
+        margin: 2rem auto;
+        padding: 1rem 1.1rem 0.9rem;
+        max-width: 34rem;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--card-bg);
+        font-family: var(--font-ui);
+    }
+    .mrule-grid {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        gap: 5px;
+        margin-bottom: 0.85rem;
+    }
+    .mrule-cell {
+        aspect-ratio: 1;
+        display: grid;
+        place-items: center;
+        font-size: 0.62rem;
+        color: var(--text-muted);
+        background: var(--bg);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+    .mrule-cell:hover {
+        border-color: var(--accent);
+    }
+    .mrule-cell[aria-pressed='true'] {
+        color: var(--card-bg);
+        background: var(--accent);
+        border-color: var(--accent);
+    }
+
+    .mrule-count {
+        margin: 0 0 0.7rem;
+        font-size: var(--size-small);
+        color: var(--text-muted);
+    }
+    .mrule-count b {
+        color: var(--text);
+    }
+
+    .mrule-out {
+        display: grid;
+        gap: 0.35rem;
+        padding-top: 0.7rem;
+        border-top: 1px solid var(--line);
+    }
+    .mrule-row {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.6rem;
+        font-size: var(--size-small);
+    }
+    .mrule-rule {
+        color: var(--text);
+    }
+    /* пояснение к правилу — мельче и тише, идёт следом за названием */
+    .mrule-rule i {
+        display: block;
+        font-style: normal;
+        color: var(--text-muted);
+    }
+    .mrule-verdict {
+        font-weight: 600;
+        white-space: nowrap;
+        color: var(--accent-2);
+    }
+    .mrule-verdict.is-new {
+        color: var(--accent);
+    }
+
+    .mrule figcaption {
+        margin-top: 0.8rem;
+        font-size: var(--size-small);
+        color: var(--color-text-faint, var(--text-muted));
+        text-align: center;
+    }
+
+    @media (max-width: 520px) {
+        .mrule-grid {
+            grid-template-columns: repeat(6, 1fr);
+        }
+    }
+</style>
+
+<script>
+    document.querySelectorAll('.mrule').forEach((box) => {
+        const grid = box.querySelector('.mrule-grid') as HTMLElement | null;
+        const count = box.querySelector('.mrule-count b') as HTMLElement | null;
+        const total = box.querySelector('.mrule-total') as HTMLElement | null;
+        if (!grid || !count || !total) return;
+
+        const n = Number((box as HTMLElement).dataset.days || 30);
+        const limit = Number((box as HTMLElement).dataset.limit || 20);
+        const share = Number((box as HTMLElement).dataset.share || 0.5);
+        const say = (rule: string) =>
+            box.querySelector(`.mrule-row[data-rule="${rule}"] .mrule-verdict`) as HTMLElement | null;
+
+        const paint = () => {
+            const cells = [...grid.querySelectorAll('.mrule-cell')];
+            const changed = cells.filter((c) => c.getAttribute('aria-pressed') === 'true').length;
+            count.textContent = String(changed);
+            total.textContent = String(n);
+
+            // старое правило: пока замен не больше лимита — месяц тот же
+            // нынешнее: пока поменялось не больше доли от месяца
+            const byCount = changed <= limit;
+            const byShare = changed <= Math.floor(n * share);
+
+            for (const [rule, same] of [
+                ['count', byCount],
+                ['share', byShare],
+            ] as const) {
+                const el = say(rule);
+                if (!el) continue;
+                el.textContent = same ? 'тот же месяц' : 'уже другой месяц';
+                el.classList.toggle('is-new', !same);
+            }
+        };
+
+        const build = () => {
+            grid.innerHTML = '';
+            for (let i = 1; i <= n; i++) {
+                const cell = document.createElement('button');
+                cell.type = 'button';
+                cell.className = 'mrule-cell';
+                cell.setAttribute('aria-pressed', 'false');
+                cell.textContent = String(i);
+                cell.addEventListener('click', () => {
+                    cell.setAttribute(
+                        'aria-pressed',
+                        cell.getAttribute('aria-pressed') === 'true' ? 'false' : 'true',
+                    );
+                    paint();
+                });
+                grid.append(cell);
+            }
+            paint();
+        };
+
+        build();
+    });
+</script>

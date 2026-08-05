@@ -6,6 +6,7 @@ import Photo from '../../components/Photo.astro';
 import PhotoRow from '../../components/PhotoRow.astro';
 import Compare from '../../components/Compare.astro';
 import Recipe from '../../components/Recipe.astro';
+import MonthRule from '../../components/MonthRule.astro';
 
 const fmtDate = (d) => d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -74,7 +75,7 @@ const extraPhotos = allPhotos
 >
     {/* Фото из photos: больше НЕ выводятся стрипом сверху — они для календаря/галереи.
         В теле записи фото вставляются инлайн через <Photo src={frontmatter.photos[N]} …/> */}
-    <Content components={{ Photo, PhotoRow, Compare, Recipe }} />
+    <Content components={{ Photo, PhotoRow, Compare, Recipe, MonthRule }} />
 
     {extraPhotos.length > 0 && (
         <div class="dgal">
