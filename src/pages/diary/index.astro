@@ -25,6 +25,7 @@ const entriesData = entries.map((e) => {
         thumb: cl(u, 'f_auto,q_auto,w_600'),
         full: cl(u, 'f_auto,q_auto,w_1600'),
       })),
+    photoPos: e.data.photoPos ?? '',
     title: e.data.title ?? '',
     description: e.data.description ?? '',
     hasText: !!(e.body && e.body.trim()), // есть ли текст-запись (для «Читать запись»)
@@ -242,8 +243,13 @@ const initMonth = now.getMonth(); // 0 = январь
                     const main = photos[0];
                     const cap = hasEntry ? es[0].title : '';
 
+                    // Смещение кадра в квадратной ячейке берём у той записи, чьё фото стало главным
+                    const posOwner = es.find((x) => x.photos.length);
+                    const pos = posOwner ? posOwner.photoPos : '';
+
                     let inner = '';
-                    if (main) inner += '<img class="cal-photo" src="' + esc(main.thumb) + '" alt="" loading="lazy">';
+                    if (main) inner += '<img class="cal-photo" src="' + esc(main.thumb) + '" alt="" loading="lazy"'
+                        + (pos ? ' style="object-position: ' + esc(pos) + '"' : '') + '>';
                     inner += '<span class="cal-day">' + dnum + '</span>';
                     if (cap) inner += '<span class="cal-caption">' + esc(cap) + '</span>';
                     if (photos.length > 1) inner += '<span class="cal-badge">+' + (photos.length - 1) + '</span>';
