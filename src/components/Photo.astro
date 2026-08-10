@@ -15,8 +15,12 @@ interface Props {
   shiftY?: string | number; // тонкий сдвиг окна кропа от центра по вертикали (доля высоты: 0.08 — на 8% вниз, -0.08 — вверх)
   rotate?: string | number; // угол поворота в градусах (Cloudinary a_…): 90 — из вертикали в горизонталь
   clear?: 'left' | 'right' | 'both'; // сбросить обтекание предыдущим float (чтобы фото встало с нового ряда, а не сбоку)
+  shape?: 'square' | 'circle'; // обрезать в квадрат / круг (применяется ПОСЛЕ crop — сначала снимаем пилларбокс, потом режем 1:1)
+  shapeY?: string | number; // сдвиг квадратного окна по вертикали (доля высоты: -0.15 — выше, к лицу)
+  shapeGravity?: string; // куда прижать квадратное окно: center (по умолч.) | south (низ) | north (верх) | east | west
+  shapeFit?: 'cover' | 'pad'; // cover (по умолч.) — кадр режется до квадрата; pad — кадр влезает ЦЕЛИКОМ, поля добиваются размытым фоном
 }
-const { src, size = 'm', align = 'center', caption, alt, crop, gravity = 'center', shiftY, rotate, clear } = Astro.props;
+const { src, size = 'm', align = 'center', caption, alt, crop, gravity = 'center', shiftY, rotate, clear, shape, shapeY, shapeGravity = 'center', shapeFit = 'cover' } = Astro.props;
 
 // Видео Cloudinary отдаёт по пути /video/upload/ — рендерим <video> вместо <img>
 const isVideo = src.includes('/video/upload/');
@@ -29,6 +33,13 @@ const w = align === 'wide' ? 'w_1600' : widths[size];
 // съедает тонкую чёрную полосу вшитого пилларбокса у вертикальных видео.
 const cropT =
   (crop ? `c_crop,g_${gravity},ar_${crop}${shiftY ? `,y_${shiftY}` : ''}/c_crop,g_center,w_0.94/` : '') +
+  // квадрат/круг: cover — режем 1:1; pad — кадр влезает целиком, поля добиваются
+  // подобранным по кадру цветом (b_auto; b_blurred на видео Cloudinary не отдаёт — 400)
+  (shape
+    ? shapeFit === 'pad'
+      ? `c_pad,g_center,ar_1:1,b_auto/`
+      : `c_crop,g_${shapeGravity},ar_1:1${shapeY ? `,y_${shapeY}` : ''}/`
+    : '') +
   (rotate ? `a_${rotate}/` : '');
 const opt = (u: string) =>
   u.includes('res.cloudinary.com/') ? u.replace('/upload/', `/upload/${cropT}f_auto,q_auto,${w}/`) : u;
@@ -44,7 +55,7 @@ const poster = (u: string) =>
     : undefined;
 ---
 
-<figure class:list={["dphoto", `dphoto--${size}`, `dphoto--${align}`]} style={clear ? `clear:${clear}` : undefined}>
+<figure class:list={["dphoto", `dphoto--${size}`, `dphoto--${align}`, shape && `dphoto--${shape}`]} style={clear ? `clear:${clear}` : undefined}>
     {isVideo ? (
         <video src={videoSrc(src)} poster={poster(src)} controls playsinline preload="metadata"></video>
     ) : (
@@ -61,6 +72,13 @@ const poster = (u: string) =>
         margin: 0;
         border-radius: 12px;
         border: 1px solid var(--line);
+    }
+    /* квадрат / круг: кадр уже обрезан 1:1 на стороне Cloudinary, тут только скругление */
+    .dphoto--square img, .dphoto--square video { aspect-ratio: 1 / 1; object-fit: cover; }
+    .dphoto--circle img, .dphoto--circle video {
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
+        border-radius: 50%;
     }
     .dphoto figcaption {
         margin-top: 8px;
